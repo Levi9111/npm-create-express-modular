@@ -1,6 +1,6 @@
 {
     "name": "create-express-modular",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "description": "Scaffold a modular Express TS server",
     "bin": {
         "create-express-modular": "./bin/cli.js"
