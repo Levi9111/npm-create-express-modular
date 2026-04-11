@@ -4,7 +4,7 @@
 > A powerful interactive CLI to scaffold a scalable, database‑agnostic Express + TypeScript server — inspired by NestJS structure, but lightweight and flexible.
 
 [![npm version](https://img.shields.io/npm/v/create-express-modular.svg)](https://www.npmjs.com/package/create-express-modular)
-[![License: ISC](https://img.shields.io/badge/License-ISC-blue.svg)](https://opensource.org/licenses/ISC)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 Stop copying boilerplate manually. Define your modules once, and let `create-express-modular` generate a production‑ready, strictly typed Express application in seconds.
 
@@ -80,9 +80,9 @@ Because the tool generates standard Express + TypeScript code, you can easily ad
 
 ## 🤝 Contributing
 
-We welcome contributions! Feel free to open an issue or submit a pull request on [GitHub](https://github.com/yourusername/create-express-modular).
+We welcome contributions! Feel free to open an issue or submit a pull request on [GitHub](https://github.com/Levi9111/npm-create-express-modular).
 
 ## 📄 License
 
-This project is licensed under the [ISC License](https://opensource.org/licenses/ISC).
-```
+This project is licensed under the [MIT License](https://opensource.org/licenses/MIT).
+

@@ -1,16 +1,35 @@
 {
     "name": "create-express-modular",
     "version": "1.0.0",
-    "type": "commonjs",
     "description": "Scaffold a modular Express TS server",
-    "main": "index.js",
     "bin": {
         "create-express-modular": "./bin/cli.js"
     },
+    "files": [
+        "bin",
+        "template",
+        "README.md",
+        "package.json",
+        "LICENSE"
+    ],
     "scripts": {
         "test": "echo \"Error: no test specified\" && exit 1"
     },
-    "keywords": [],
-    "author": "",
-    "license": "ISC"
+    "keywords": [
+        "express",
+        "typescript",
+        "modular",
+        "scaffold",
+        "cli"
+    ],
+    "author": "levi9111",
+    "license": "MIT",
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/Levi9111/npm-create-express-modular.git"
+    },
+    "bugs": {
+        "url": "https://github.com/Levi9111/npm-create-express-modular/issues"
+    },
+    "homepage": "https://github.com/Levi9111/npm-create-express-modular#readme"
 }
