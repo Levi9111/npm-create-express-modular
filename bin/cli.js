@@ -112,10 +112,18 @@ async function runCLI() {
 
             // Create the 7 standard files for each module
             const fileTypes = ['controller', 'interface', 'model', 'route', 'service', 'utils', 'validation'];
+
             fileTypes.forEach((type) => {
+                let fileContent = `// TODO: Implement ${moduleName} ${type}\n`;
+
+                // Inject base router for the route file so Express doesn't crash!
+                if (type === 'route') {
+                    fileContent = `import express from 'express';\n\nconst router = express.Router();\n\nrouter.get('/', (req, res) => {\n  res.send('Hello from the ${moduleName} module!');\n});\n\nexport const ${moduleName}Routes = router;\n`;
+                }
+
                 fs.writeFileSync(
                     path.join(modulePath, `${fileName}.${type}.ts`),
-                    `// TODO: Implement ${moduleName} ${type}\n`
+                    fileContent
                 );
             });
 
