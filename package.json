@@ -1,0 +1,16 @@
+{
+    "name": "create-express-modular",
+    "version": "1.0.0",
+    "type": "commonjs",
+    "description": "Scaffold a modular Express TS server",
+    "main": "index.js",
+    "bin": {
+        "create-express-modular": "./bin/cli.js"
+    },
+    "scripts": {
+        "test": "echo \"Error: no test specified\" && exit 1"
+    },
+    "keywords": [],
+    "author": "",
+    "license": "ISC"
+}
