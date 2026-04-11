@@ -4,7 +4,8 @@
   "main": "src/server.ts",
   "scripts": {
     "generate": "node scripts/generate.js",
-    "build": "npm install && tsc",
+    "guard": "node scripts/guard.js",
+    "build": "npm run guard && tsc",
     "start": "node dist/server.js",
     "start:dev": "ts-node-dev --respawn --transpile-only src/server.ts",
     "lint": "eslint src --ignore-path .eslintignore --ext .ts",
