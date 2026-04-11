@@ -61,6 +61,8 @@ async function generateModule() {
 
     if (type === 'route') {
       content = `import express from 'express';\n\nconst router = express.Router();\n\nrouter.get('/', (req, res) => {\n  res.send('Hello from the ${moduleName} module!');\n});\n\nexport const ${moduleName}Routes = router;\n`;
+    } else if (type === 'controller') {
+      content = `import { Request, Response } from 'express';\nimport { StatusCodes } from 'http-status-codes';\nimport { catchAsync } from '../../utils/catchAsync';\nimport sendResponse from '../../utils/sendResponse';\n\nconst create${moduleName} = catchAsync(async (req: Request, res: Response) => {\n  // const result = await ${moduleName}Service.createIntoDB(req.body);\n\n  sendResponse(res, {\n    statusCode: StatusCodes.CREATED,\n    success: true,\n    message: '${moduleName} created successfully',\n    data: {}, // Replace with actual result\n  });\n});\n\nexport const ${moduleName}Controllers = {\n  create${moduleName},\n};\n`;
     }
 
     fs.writeFileSync(path.join(modulePath, `${fileName}.${type}.ts`), content);
