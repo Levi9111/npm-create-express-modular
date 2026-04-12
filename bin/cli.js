@@ -9,6 +9,9 @@ const readline = require('readline');
 const {
     scaffoldAuth
 } = require('../lib/authGenerator');
+const {
+    generateModule
+} = require('../lib/moduleGenerator');
 
 const rl = readline.createInterface({
     input: process.stdin,
@@ -17,9 +20,29 @@ const rl = readline.createInterface({
 const askQuestion = (query) => new Promise((resolve) => rl.question(query, resolve));
 
 async function runCLI() {
+    // Grab all arguments typed after the command
+    const args = process.argv.slice(2);
+
+    // ─── COMMAND ROUTER (Intercepts 'cem' aliases) ─────────────────────
+
+    // Example: cem add module User
+    if (args[0] === 'add' && args[1] === 'module') {
+        const moduleName = args[2]; // This might be 'User' or undefined
+        await generateModule(moduleName);
+        process.exit(0); // Stop the script here! Do not build a new project.
+    }
+
+    // Example: cem generate (Fallback interactive mode)
+    if (args[0] === 'generate' || args[0] === 'g') {
+        await generateModule();
+        process.exit(0);
+    }
+
+    // ─── NORMAL PROJECT SCAFFOLDING ────────────────────────────────────
+
     console.log('\n🚀 Welcome to Create Express Modular!\n');
 
-    let projectName = process.argv[2];
+    let projectName = args[0]; // Uses the first argument if provided
     if (!projectName) projectName = await askQuestion('📦 What is your project named? (e.g., my-api): ');
     if (!projectName) {
         console.error('❌ Project name is required.');
@@ -91,7 +114,7 @@ async function runCLI() {
 
     // Trigger Auth
     if (useAuth) {
-        scaffoldAuth(projectPath); // <-- Called perfectly here!
+        scaffoldAuth(projectPath);
     }
 
     console.log('\n📦 Installing dependencies (this takes a minute)...');
@@ -120,7 +143,7 @@ async function runCLI() {
     }
 
     console.log(`\n✅ Success! Your Express architecture is ready.`);
-    console.log(`\nNext steps:\n  cd ${projectName}\n  npm run generate\n  npm run start:dev\n`);
+    console.log(`\nNext steps:\n  cd ${projectName}\n  npm run start:dev\n  cem add module Product\n`);
 }
 
 runCLI();

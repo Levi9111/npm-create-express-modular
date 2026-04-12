@@ -11,7 +11,7 @@
 Inspired by NestJS — built for simplicity.
 
 ```bash
-npx create-express-modular my-awesome-api
+npm install -g create-express-modular
 ```
 
 </div>
@@ -28,12 +28,24 @@ Most Express projects start clean and turn messy within weeks. Routes end up in 
 
 ## Quick Start
 
-No global install required. Run this and you're done:
+To unlock the full power of the CLI — including the `cem` global alias — install it globally:
+
+```bash
+npm install -g create-express-modular
+```
+
+Then scaffold your new project:
+
+```bash
+cem my-awesome-api
+cd my-awesome-api
+npm run start:dev
+```
+
+Alternatively, run it as a one-off without installing:
 
 ```bash
 npx create-express-modular my-awesome-api
-cd my-awesome-api
-npm run start:dev
 ```
 
 The CLI will:
@@ -47,18 +59,19 @@ Your server is running with hot-reloading at `http://localhost:5000`.
 
 ## Generating Modules
 
-Instead of writing boilerplate by hand, use the built-in interactive generator:
+Instead of writing boilerplate by hand, use the global CLI to instantly generate new modules from anywhere inside your project:
 
 ```bash
-npm run generate
+cem add module Product
 ```
+
+If you don't provide a name upfront, just run `cem generate` and it will prompt you for one.
 
 **What happens:**
 
-1. It asks for a module name — e.g. `User`, `Product`, `Order`
-2. It scaffolds all the standard files inside `src/app/modules/YourModule/`
-3. It optionally creates `constants` and `utils` files for your module
-4. It **auto-wires** your new module into `src/app/routes/index.ts` — no manual imports needed
+1. It scaffolds all the standard files — Controller, Service, Route, Model, Interface, Validation — inside `src/app/modules/Product/`
+2. It asks if you optionally need `constants` and `utils` files for your new module
+3. It auto-wires your new module into `src/app/routes/index.ts` — no manual imports needed
 
 ---
 
@@ -72,7 +85,7 @@ src/
 │   ├── errors/                   # Global error handlers
 │   ├── middlewares/
 │   │   └── auth.ts               # JWT role guard — auth('ADMIN') (optional)
-│   ├── modules/                  # Run `npm run generate` to add modules here
+│   ├── modules/                  # Run `cem add module <name>` to add modules here
 │   │   ├── Auth/                 # Generated if auth is selected during setup
 │   │   │   ├── auth.controller.ts
 │   │   │   ├── auth.interface.ts
@@ -101,10 +114,19 @@ Every module is fully self-contained. Adding or removing a feature means adding 
 
 ## Available Commands
 
+### Global CLI
+
+| Command | Description |
+| --- | --- |
+| `cem <project-name>` | Scaffold a brand new Express project |
+| `cem add module <name>` | Generate a new domain module inside an existing project |
+| `cem generate` | Interactive module generator — prompts for a name if not provided |
+
+### Project Scripts
+
 | Command | Description |
 | --- | --- |
 | `npm run start:dev` | Start the development server with hot-reloading |
-| `npm run generate` | Open the interactive module generator |
 | `npm run build` | Compile TypeScript into `/dist` for production |
 | `npm start` | Run the compiled production build |
 | `npm run lint` | Check all files for ESLint errors |

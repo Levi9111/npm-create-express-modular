@@ -3,7 +3,8 @@
     "version": "1.2.6",
     "description": "Scaffold a modular Express TS server",
     "bin": {
-        "create-express-modular": "./bin/cli.js"
+        "create-express-modular": "./bin/cli.js",
+        "cem": "./bin/cli.js"
     },
     "files": [
         "bin",
