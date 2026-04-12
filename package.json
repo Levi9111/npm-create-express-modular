@@ -8,6 +8,7 @@
     "files": [
         "bin",
         "template",
+        "lib",
         "README.md",
         "package.json",
         "LICENSE"
