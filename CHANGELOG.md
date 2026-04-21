@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [2.0.2] - 2026-04-21
+
+### Fixed
+- `app.ts` now generates correctly without literal `${rateLimitImport}` / `${rateLimitUse}` strings.
+- Removed duplicate `globalErrorhandler.ts` from the template folder — it is now generated dynamically by the CLI only.
+- `handleZodError`, `handleCastError`, `handleValidationError`, `handleDuplicateError` are now correctly scaffolded in `src/app/errors/`.
+
 ## [2.0.0] - 2026-04-21
 
 ### Added
