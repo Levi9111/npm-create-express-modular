@@ -7,18 +7,14 @@ const path = require('path');
 const {
     execSync
 } = require('child_process');
+
+const ui = require('../lib/ui');
 const {
     scaffoldAuth
 } = require('../lib/authGenerator');
 const {
     generateModule
 } = require('../lib/moduleGenerator');
-const {
-    addEnvVar
-} = require('../lib/envGenerator');
-const {
-    generateMiddleware
-} = require('../lib/middlewareGenerator');
 const {
     getDbGenerator
 } = require('../lib/db');
@@ -29,98 +25,113 @@ const {
     buildGlobalErrorHandler
 } = require('../lib/core/globalErrorHandler/shell');
 const {
-    scaffoldCoreFiles
+    scaffoldCoreFiles,
+    scaffoldQueryBuilder
 } = require('../lib/core/scaffoldCore');
 
-// ─── INQUIRER BOOTSTRAP ────────────────────────────────────────────────────────
-// Dynamically require inquirer so we support both v8 (CJS) and v9+ (ESM)
+// Read own version from package.json
+let VERSION = '';
+try {
+    VERSION = require('../package.json').version;
+} catch {
+    /* ignore */ }
+
+// ─── INQUIRER BOOTSTRAP ───────────────────────────────────────────────────────
 let inquirer;
 try {
     inquirer = require('inquirer');
 } catch {
-    console.error('❌ Missing dependency: inquirer. Run: npm install inquirer');
-    process.exit(1);
+    ui.abort('Missing dependency: inquirer. Run: npm install inquirer');
 }
 
-// ─── HELPERS ──────────────────────────────────────────────────────────────────
+// ─── HELPERS ─────────────────────────────────────────────────────────────────
 function copyFolderSync(from, to) {
     fs.mkdirSync(to, {
         recursive: true
     });
-    fs.readdirSync(from).forEach((element) => {
-        const fromPath = path.join(from, element);
-        const toPath = path.join(to, element);
-        if (fs.lstatSync(fromPath).isFile()) {
-            fs.copyFileSync(fromPath, toPath);
-        } else {
-            copyFolderSync(fromPath, toPath);
-        }
+    fs.readdirSync(from).forEach((el) => {
+        const src = path.join(from, el);
+        const dest = path.join(to, el);
+        fs.lstatSync(src).isFile() ?
+            fs.copyFileSync(src, dest) :
+            copyFolderSync(src, dest);
     });
 }
 
 function runInstall(cwd, packages, dev = false) {
     const flag = dev ? '-D' : '';
-    execSync(`npm install ${flag} ${packages.join(' ')} --loglevel=error`, {
-        cwd,
-        stdio: 'inherit',
-    });
+    execSync(
+        `npm install ${flag} ${packages.join(' ')} --loglevel=error`, {
+            cwd,
+            stdio: 'pipe'
+        }, // pipe so npm noise doesn't bleed into our UI
+    );
 }
 
 // ─── CLI ENTRYPOINT ───────────────────────────────────────────────────────────
 async function runCLI() {
     const args = process.argv.slice(2);
 
-    // ── COMMAND ROUTER ────────────────────────────────────────────────────────
+    // ── COMMAND ROUTER ──────────────────────────────────────────────────────
     if (args[0] === 'add') {
-        const type = args[1];
+        const subcommand = args[1];
         const name = args[2];
 
-        if (type === 'module') {
+        if (subcommand === 'module') {
             await generateModule(name);
             process.exit(0);
         }
 
-        if (type === 'env') {
+        if (subcommand === 'env') {
             if (!name) {
-                console.error('❌ Error: Please provide a key name. Example: cem add env access_secret');
-                process.exit(1);
+                ui.abort('Please provide a key name. Example: cem add env ACCESS_SECRET');
             }
+            const {
+                addEnvVar
+            } = require('../lib/envGenerator');
             addEnvVar(name);
+            ui.success(`✅ Environment variable ${name} added to .env`);
             process.exit(0);
         }
 
-        if (type === 'middleware') {
+        if (subcommand === 'middleware') {
             if (!name) {
-                console.error('❌ Error: Please provide a middleware name. Example: cem add middleware calculate');
-                process.exit(1);
+                ui.abort('Please provide a middleware name. Example: cem add middleware calculate');
             }
+            const {
+                generateMiddleware
+            } = require('../lib/middlewareGenerator');
             generateMiddleware(name);
+            ui.success(`✅ Middleware ${name} generated in src/app/middlewares/`);
             process.exit(0);
         }
+
+        // If no valid subcommand, show help
+        ui.warn('Unknown add command. Available: module, env, middleware');
+        process.exit(0);
     }
 
-    // Kept for backwards compat but deprecated — recommend `cem add module`
     if (args[0] === 'generate' || args[0] === 'g') {
-        console.log('⚠️  "cem generate" is deprecated. Use "cem add module <name>" instead.\n');
+        ui.warn('"cem generate" is deprecated. Use "cem add module <name>" instead.');
+        ui.nl();
         await generateModule();
         process.exit(0);
     }
 
-    // ── PROJECT SCAFFOLDING ───────────────────────────────────────────────────
-    console.log('\n🚀 Welcome to Create Express Modular!\n');
+    // ── PROJECT SCAFFOLDING ─────────────────────────────────────────────────
+    ui.printBanner(VERSION);
 
-    // ── GATHER ALL ANSWERS UPFRONT ────────────────────────────────────────────
     const answers = await inquirer.prompt([{
             type: 'input',
             name: 'projectName',
-            message: '📦 Project name:',
+            message: 'Project name:',
             default: args[0] || 'my-api',
-            validate: (v) => (v.trim() ? true : 'Project name cannot be empty.'),
+            validate: (v) => v.trim() ? true : 'Project name cannot be empty.',
         },
         {
             type: 'list',
             name: 'db',
-            message: '🗄️  Which database are you using?',
+            message: 'Database:',
             choices: [{
                     name: 'MongoDB  (Mongoose)',
                     value: 'mongoose'
@@ -134,7 +145,7 @@ async function runCLI() {
                     value: 'mysql'
                 },
                 {
-                    name: 'MariaDB  (mariadb)',
+                    name: 'MariaDB',
                     value: 'mariadb'
                 },
                 {
@@ -142,7 +153,7 @@ async function runCLI() {
                     value: 'cockroachdb'
                 },
                 {
-                    name: 'Prisma  (ORM — configure your DB in prisma.schema)',
+                    name: 'Prisma  (ORM)',
                     value: 'prisma'
                 },
             ],
@@ -150,7 +161,7 @@ async function runCLI() {
         {
             type: 'list',
             name: 'validator',
-            message: '✅ Which validator do you want?',
+            message: 'Validator:',
             choices: [{
                     name: 'Zod',
                     value: 'zod'
@@ -160,7 +171,7 @@ async function runCLI() {
                     value: 'joi'
                 },
                 {
-                    name: 'Vine  (@vinejs/vine)',
+                    name: 'Vine',
                     value: 'vine'
                 },
                 {
@@ -172,7 +183,7 @@ async function runCLI() {
         {
             type: 'confirm',
             name: 'useAuth',
-            message: '🔐 Include a ready-to-use JWT Auth module?',
+            message: 'Include JWT Auth module?',
             default: false,
         },
     ]);
@@ -186,119 +197,180 @@ async function runCLI() {
     const projectPath = path.join(process.cwd(), projectName);
     const templatePath = path.join(__dirname, '../template');
 
-    // ── CREATE PROJECT DIR ────────────────────────────────────────────────────
+    // ── CREATE DIR ──────────────────────────────────────────────────────────
     try {
         fs.mkdirSync(projectPath);
-    } catch (err) {
-        if (err.code === 'EEXIST') {
-            console.error(`\n❌ Directory '${projectName}' already exists.`);
-        } else {
-            console.error(`\n❌ Failed to create directory: ${err.message}`);
+    } catch (e) {
+        ui.abort(
+            e.code === 'EEXIST' ?
+            `Directory '${projectName}' already exists.` :
+            `Failed to create directory: ${e.message}`,
+        );
+    }
+
+    // ── SCAFFOLDING PHASE ───────────────────────────────────────────────────
+    ui.sectionHeader('Scaffolding');
+
+    // Echo the chosen config back to the user
+    ui.step('Project', projectName);
+    ui.step('Database', db);
+    ui.step('Validator', validator);
+    ui.step('Auth', useAuth ? 'yes' : 'no');
+    ui.nl();
+
+    // Copy base template
+    const scaffoldSpin = ui.spinner('Writing project files...');
+    try {
+        copyFolderSync(templatePath, projectPath);
+
+        // Rename gitignore → .gitignore (npm strips dotfiles from published packages)
+        const gi = path.join(projectPath, 'gitignore');
+        if (fs.existsSync(gi)) fs.renameSync(gi, path.join(projectPath, '.gitignore'));
+
+        // Stamp project name
+        const pkgPath = path.join(projectPath, 'package.json');
+        if (fs.existsSync(pkgPath)) {
+            const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8'));
+            pkg.name = projectName.toLowerCase().replace(/\s+/g, '-');
+            fs.writeFileSync(pkgPath, JSON.stringify(pkg, null, 2));
         }
-        process.exit(1);
+
+        fs.mkdirSync(path.join(projectPath, 'src/app/modules'), {
+            recursive: true
+        });
+
+        // Load generators
+        const dbGen = getDbGenerator(db);
+        const valGen = getValidatorGenerator(validator);
+
+        // Write all files
+        scaffoldCoreFiles(projectPath);
+        if (db === 'mongoose') scaffoldQueryBuilder(projectPath);
+        dbGen.scaffoldServerAndConfig(projectPath);
+        dbGen.scaffoldErrorFiles(projectPath);
+        valGen.scaffoldValidateRequest(projectPath);
+        valGen.scaffoldErrorFile(projectPath);
+
+        // Assemble and write globalErrorHandler
+        const handler = buildGlobalErrorHandler(dbGen.errorBlock(), valGen.errorBlock());
+        fs.writeFileSync(
+            path.join(projectPath, 'src/app/middlewares/globalErrorHandler.ts'),
+            handler,
+        );
+
+        scaffoldSpin.succeed('Base architecture scaffolded');
+    } catch (e) {
+        scaffoldSpin.fail('Failed to scaffold project files');
+        ui.abort(e.message);
     }
 
-    // ── COPY BASE TEMPLATE ────────────────────────────────────────────────────
-    console.log(`\n📂 Scaffolding base architecture...`);
-    copyFolderSync(templatePath, projectPath);
+    // Substep file manifest
+    ui.substep('src/app.ts  ·  src/server.ts  ·  .env');
+    ui.substep('src/app/config/index.ts');
+    ui.substep('src/app/errors/    (AppError + db-specific handlers)');
+    ui.substep('src/app/utils/     (catchAsync · sendResponse · QueryBuilder · validateRequest)');
+    ui.substep('src/app/middlewares/  (globalErrorHandler · notFound)');
+    ui.substep('src/app/routes/index.ts');
+    ui.nl();
 
-    // Rename gitignore → .gitignore (npm strips dot-files from published packages)
-    const gitignorePath = path.join(projectPath, 'gitignore');
-    if (fs.existsSync(gitignorePath)) {
-        fs.renameSync(gitignorePath, path.join(projectPath, '.gitignore'));
-    }
-
-    // Stamp project name into package.json
-    const packageJsonPath = path.join(projectPath, 'package.json');
-    if (fs.existsSync(packageJsonPath)) {
-        const pkg = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));
-        pkg.name = projectName.toLowerCase().replace(/\s+/g, '-');
-        fs.writeFileSync(packageJsonPath, JSON.stringify(pkg, null, 2));
-    }
-
-    // Ensure modules dir exists
-    fs.mkdirSync(path.join(projectPath, 'src/app/modules'), {
-        recursive: true
-    });
-
-    // ── LOAD GENERATORS ───────────────────────────────────────────────────────
-    const dbGen = getDbGenerator(db);
-    const validatorGen = getValidatorGenerator(validator);
-
-    // ── SCAFFOLD CORE UNIVERSAL FILES ─────────────────────────────────────────
-    scaffoldCoreFiles(projectPath, useAuth);
-
-    // ── SCAFFOLD DB-SPECIFIC FILES ────────────────────────────────────────────
-    dbGen.scaffoldServerAndConfig(projectPath);
-    dbGen.scaffoldErrorFiles(projectPath);
-
-    // ── SCAFFOLD VALIDATOR-SPECIFIC FILES ─────────────────────────────────────
-    validatorGen.scaffoldValidateRequest(projectPath);
-    validatorGen.scaffoldErrorFile(projectPath);
-
-    // ── ASSEMBLE globalErrorHandler ───────────────────────────────────────────
-    const handlerContent = buildGlobalErrorHandler(
-        dbGen.errorBlock(),
-        validatorGen.errorBlock(),
-    );
-    const errHandlerDir = path.join(projectPath, 'src/app/middlewares');
-    fs.mkdirSync(errHandlerDir, {
-        recursive: true
-    });
-    fs.writeFileSync(path.join(errHandlerDir, 'globalErrorHandler.ts'), handlerContent);
-
-    // ── SCAFFOLD AUTH MODULE ───────────────────────────────────────────────────
+    // Auth module
     if (useAuth) {
-        scaffoldAuth(projectPath, db, validator);
+        const authSpin = ui.spinner('Scaffolding Auth module...');
+        try {
+            scaffoldAuth(projectPath, db, validator);
+            authSpin.succeed('Auth module scaffolded');
+            ui.substep('src/app/modules/Auth/  (controller · service · route · model · validation)');
+            ui.substep('src/app/utils/jwt.utils.ts  ·  src/app/middlewares/auth.ts');
+            ui.nl();
+            ui.warn('Replace stub credentials in auth.service.ts before going to production');
+        } catch (e) {
+            authSpin.fail('Auth scaffolding failed');
+            ui.err(e.message);
+        }
+        ui.nl();
     }
 
-    // ── INSTALL DEPENDENCIES ──────────────────────────────────────────────────
-    console.log('\n📦 Installing base dependencies...');
+    // ── INSTALL PHASE ───────────────────────────────────────────────────────
+    ui.sectionHeader('Installing dependencies');
+
+    // git init (silent)
     try {
         execSync('git init', {
             cwd: projectPath,
             stdio: 'ignore'
         });
+    } catch {
+        /* non-fatal */ }
+
+    const dbGen = getDbGenerator(db);
+    const valGen = getValidatorGenerator(validator);
+
+    // Base deps
+    const baseSpin = ui.spinner('Installing base dependencies...');
+    try {
         execSync('npm install --loglevel=error', {
             cwd: projectPath,
-            stdio: 'inherit'
+            stdio: 'pipe'
         });
-
-        // Universal deps
         runInstall(projectPath, ['dotenv', 'http-status-codes', 'express', 'cors', 'helmet']);
         runInstall(projectPath, ['@types/express', '@types/cors', 'typescript', 'ts-node-dev'], true);
-
-        // DB-specific deps
-        const dbDeps = dbGen.dependencies();
-        if (dbDeps.prod.length) runInstall(projectPath, dbDeps.prod);
-        if (dbDeps.dev.length) runInstall(projectPath, dbDeps.dev, true);
-
-        // Validator-specific deps
-        const valDeps = validatorGen.dependencies();
-        if (valDeps.prod.length) runInstall(projectPath, valDeps.prod);
-        if (valDeps.dev.length) runInstall(projectPath, valDeps.dev, true);
-
-        // Auth deps — only if requested
-        if (useAuth) {
-            runInstall(projectPath, ['bcrypt', 'jsonwebtoken', 'express-rate-limit']);
-            runInstall(projectPath, ['@types/bcrypt', '@types/jsonwebtoken'], true);
-        }
-    } catch (error) {
-        console.error('\n❌ Failed during dependency installation:', error.message);
-        process.exit(1);
+        baseSpin.succeed('Base dependencies installed');
+    } catch (e) {
+        baseSpin.fail('Base install failed');
+        ui.abort(e.message);
     }
 
-    console.log(`\n✅ Success! Your Express + TypeScript project is ready.`);
-    console.log(`\nDB:        ${db}`);
-    console.log(`Validator: ${validator}`);
-    console.log(`Auth:      ${useAuth ? 'included' : 'not included'}`);
-    console.log(`\nNext steps:`);
-    console.log(`  cd ${projectName}`);
-    console.log(`  npm run start:dev`);
-    console.log(`  cem add module Product\n`);
+    // DB deps
+    const dbDeps = dbGen.dependencies();
+    if (dbDeps.prod.length || dbDeps.dev.length) {
+        const dbSpin = ui.spinner(`Installing ${db} driver...`);
+        try {
+            if (dbDeps.prod.length) runInstall(projectPath, dbDeps.prod);
+            if (dbDeps.dev.length) runInstall(projectPath, dbDeps.dev, true);
+            dbSpin.succeed(`${db} driver installed`);
+        } catch (e) {
+            dbSpin.fail(`${db} install failed`);
+            ui.err(e.message);
+        }
+    }
+
+    // Validator deps
+    const valDeps = valGen.dependencies();
+    if (valDeps.prod.length) {
+        const valSpin = ui.spinner(`Installing ${validator}...`);
+        try {
+            runInstall(projectPath, valDeps.prod);
+            if (valDeps.dev.length) runInstall(projectPath, valDeps.dev, true);
+            valSpin.succeed(`${validator} installed`);
+        } catch (e) {
+            valSpin.fail(`${validator} install failed`);
+            ui.err(e.message);
+        }
+    }
+
+    // Auth deps
+    if (useAuth) {
+        const authDepSpin = ui.spinner('Installing auth dependencies...');
+        try {
+            runInstall(projectPath, ['bcrypt', 'jsonwebtoken']);
+            runInstall(projectPath, ['@types/bcrypt', '@types/jsonwebtoken'], true);
+            authDepSpin.succeed('Auth dependencies installed');
+        } catch (e) {
+            authDepSpin.fail('Auth dependency install failed');
+            ui.err(e.message);
+        }
+    }
+
+    // ── DONE ────────────────────────────────────────────────────────────────
+    ui.printSummary({
+        name: projectName,
+        db,
+        validator,
+        auth: useAuth
+    });
+    ui.printNextSteps(projectName);
 }
 
-runCLI().catch((err) => {
-    console.error('\n❌ Unexpected error:', err.message);
-    process.exit(1);
+runCLI().catch((e) => {
+    ui.abort(`Unexpected error: ${e.message}`);
 });
