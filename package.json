@@ -1,6 +1,6 @@
 {
     "name": "create-express-modular",
-    "version": "2.0.0",
+    "version": "2.0.1",
     "description": "Scaffold a modular, domain-driven Express + TypeScript backend. Choose your database (Mongoose, Prisma, pg, MySQL, MariaDB, CockroachDB) and validator (Zod, Joi, Vine, Yup).",
     "bin": {
         "create-express-modular": "./bin/cli.js",
