@@ -230,9 +230,11 @@ async function runCLI() {
 
     // ── SCAFFOLD DB-SPECIFIC FILES ────────────────────────────────────────────
     dbGen.scaffoldServerAndConfig(projectPath);
+    dbGen.scaffoldErrorFiles(projectPath);
 
     // ── SCAFFOLD VALIDATOR-SPECIFIC FILES ─────────────────────────────────────
     validatorGen.scaffoldValidateRequest(projectPath);
+    validatorGen.scaffoldErrorFile(projectPath);
 
     // ── ASSEMBLE globalErrorHandler ───────────────────────────────────────────
     const handlerContent = buildGlobalErrorHandler(
