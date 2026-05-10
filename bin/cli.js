@@ -111,6 +111,12 @@ async function runCLI() {
         process.exit(0);
     }
 
+    if (args[0] === 'build') {
+        const { runBuild } = require('../lib/builder');
+        runBuild();
+        process.exit(0);
+    }
+
     if (args[0] === 'generate' || args[0] === 'g') {
         ui.warn('"cem generate" is deprecated. Use "cem add module <name>" instead.');
         ui.nl();
