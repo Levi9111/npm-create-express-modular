@@ -117,6 +117,13 @@ async function runCLI() {
         process.exit(0);
     }
 
+    if (args[0] === 'dev') {
+        const { runDev } = require('../lib/dev');
+        runDev();
+        // runDev manages its own process lifecycle — no process.exit() here
+        return;
+    }
+
     if (args[0] === 'generate' || args[0] === 'g') {
         ui.warn('"cem generate" is deprecated. Use "cem add module <name>" instead.');
         ui.nl();
