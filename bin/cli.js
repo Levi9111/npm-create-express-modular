@@ -72,6 +72,10 @@ function runInstall(cwd, packages, dev = false) {
 async function runCLI() {
     const args = process.argv.slice(2);
 
+    // Fire off the update check in the background immediately
+    const { checkForUpdates, isUpdateAvailable } = require('../lib/updateNotifier');
+    const updateCheckPromise = checkForUpdates();
+
     // ── COMMAND ROUTER ──────────────────────────────────────────────────────
     if (args[0] === 'add') {
         const subcommand = args[1];
@@ -397,6 +401,12 @@ async function runCLI() {
         auth: useAuth
     });
     ui.printNextSteps(projectName);
+
+    // ── UPDATE CHECK ────────────────────────────────────────────────────────
+    const latestVersion = await updateCheckPromise;
+    if (isUpdateAvailable(VERSION, latestVersion)) {
+        ui.printUpdateNotice(VERSION, latestVersion);
+    }
 }
 
 runCLI().catch((e) => {
