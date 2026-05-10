@@ -7,27 +7,27 @@
     "build": "npm run guard && tsc",
     "start": "node dist/server.js",
     "start:dev": "ts-node-dev --respawn --transpile-only src/server.ts",
-    "lint": "eslint src --ignore-path .eslintignore --ext .ts",
-    "lint:fix": "eslint src --fix --ignore-path .eslintignore --ext .ts",
+    "lint": "eslint src",
+    "lint:fix": "eslint src --fix",
     "prettier": "prettier --ignore-path .gitignore --write \"./src/**/*.{js,ts,json}\"",
     "prettier:fix": "prettier --write src"
   },
   "dependencies": {
     "cors": "^2.8.5",
     "dotenv": "^16.3.1",
-    "express": "^4.18.2"
+    "express": "^4.18.2",
+    "http-status-codes": "^2.3.0"
   },
   "devDependencies": {
+    "@eslint/js": "^9.0.0",
     "@types/cors": "^2.8.13",
     "@types/express": "^4.17.17",
     "@types/node": "^20.4.5",
-    "@typescript-eslint/eslint-plugin": "^6.2.0",
-    "@typescript-eslint/parser": "^6.2.0",
-    "eslint": "^8.45.0",
-    "eslint-config-prettier": "^8.8.0",
+    "eslint": "^9.0.0",
+    "eslint-config-prettier": "^9.0.0",
     "prettier": "^3.0.0",
     "ts-node-dev": "^2.0.0",
-    "typescript": "^5.1.6",
-    "http-status-codes": "^2.3.0"
+    "typescript": "^5.5.0",
+    "typescript-eslint": "^8.0.0"
   }
 }

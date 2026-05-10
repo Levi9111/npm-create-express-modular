@@ -235,6 +235,12 @@ async function runCLI() {
             fs.writeFileSync(pkgPath, JSON.stringify(pkg, null, 2));
         }
 
+        // Remove legacy ESLint config files (replaced by flat config eslint.config.mjs)
+        const oldEslintRc = path.join(projectPath, '.eslintrc.json');
+        const oldEslintIgnore = path.join(projectPath, '.eslintignore');
+        if (fs.existsSync(oldEslintRc)) fs.unlinkSync(oldEslintRc);
+        if (fs.existsSync(oldEslintIgnore)) fs.unlinkSync(oldEslintIgnore);
+
         fs.mkdirSync(path.join(projectPath, 'src/app/modules'), {
             recursive: true
         });
@@ -313,7 +319,10 @@ async function runCLI() {
             stdio: 'pipe'
         });
         runInstall(projectPath, ['dotenv', 'http-status-codes', 'express', 'cors', 'helmet']);
-        runInstall(projectPath, ['@types/express', '@types/cors', 'typescript', 'ts-node-dev'], true);
+        runInstall(projectPath, [
+            '@types/express', '@types/cors', 'typescript', 'ts-node-dev',
+            'eslint', '@eslint/js', 'typescript-eslint', 'eslint-config-prettier', 'prettier'
+        ], true);
         baseSpin.succeed('Base dependencies installed');
     } catch (e) {
         baseSpin.fail('Base install failed');
@@ -352,7 +361,7 @@ async function runCLI() {
     if (useAuth) {
         const authDepSpin = ui.spinner('Installing auth dependencies...');
         try {
-            runInstall(projectPath, ['bcrypt', 'jsonwebtoken']);
+            runInstall(projectPath, ['bcrypt', 'jsonwebtoken', 'express-rate-limit']);
             runInstall(projectPath, ['@types/bcrypt', '@types/jsonwebtoken'], true);
             authDepSpin.succeed('Auth dependencies installed');
         } catch (e) {
