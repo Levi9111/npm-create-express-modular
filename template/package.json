@@ -6,6 +6,7 @@
     "build": "cem build",
     "start": "node dist/server.js",
     "start:dev": "cem dev",
+    "check": "cem check",
     "lint": "eslint src",
     "lint:fix": "eslint src --fix",
     "prettier": "prettier --ignore-path .gitignore --write \"./src/**/*.{js,ts,json}\"",

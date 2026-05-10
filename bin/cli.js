@@ -124,6 +124,12 @@ async function runCLI() {
         return;
     }
 
+    if (args[0] === 'check') {
+        const { runCheck } = require('../lib/checker');
+        runCheck();
+        return;
+    }
+
     if (args[0] === 'generate' || args[0] === 'g') {
         ui.warn('"cem generate" is deprecated. Use "cem add module <name>" instead.');
         ui.nl();
