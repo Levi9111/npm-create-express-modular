@@ -131,15 +131,15 @@ async function runCLI() {
         const name       = args[2];
 
         if (subcommand === 'module') {
-            removeModule(name);
+            await removeModule(name);
             process.exit(0);
         }
         if (subcommand === 'middleware') {
-            removeMiddleware(name);
+            await removeMiddleware(name);
             process.exit(0);
         }
         if (subcommand === 'env') {
-            removeEnvVar(name);
+            await removeEnvVar(name);
             process.exit(0);
         }
 
