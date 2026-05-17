@@ -79,7 +79,7 @@ Your server is live at `http://localhost:5000`. ✅
 
 ## `cem dev` — Dev Server
 
-Replaces `ts-node-dev` with a Vite-style terminal experience:
+Powered by [`tsx`](https://github.com/privatenumber/tsx) (esbuild-based, no type-checking overhead — restarts are near-instant):
 
 - Startup banner with your project name and timestamp
 - Color-coded log output (server start 🟢, DB connection 🟣, errors 🔴, restarts 🟡)
@@ -218,9 +218,13 @@ my-api/
 When you select **Yes** to Auth during setup, you get:
 
 - **`Auth` module** — Complete login flow with controller, service, model, and validation
+- **Real bcrypt authentication** — Passwords are salted and hashed at rest; `bcrypt.compare()` is used on login. No stub credentials — production-ready from day one.
 - **`auth.ts` middleware** — Role-based JWT guard for protecting routes
-- **`rateLimiter.ts`** — Global rate limiting (100 req / 15 min per IP)
+- **`rateLimiter.ts`** — Two limiters out of the box:
+  - Global: 100 requests / 15 min per IP
+  - Login endpoint: 5 attempts / 15 min per IP (skips successful logins)
 - **JWT refresh token support** — Both `jwt_access_secret` and `jwt_refresh_secret` pre-configured in `.env` and `config/index.ts`
+- **`AUTH_SETUP.md`** — A seed guide placed inside `src/app/modules/Auth/` explaining how to create the users table, seed a test user, test the login endpoint, and go to production.
 - **Installed packages** — `jsonwebtoken`, `bcrypt`, `express-rate-limit`
 
 Protecting a route:
@@ -266,6 +270,27 @@ The generated `globalErrorHandler.ts` is **stack-aware**. It maps errors specifi
 | `npm run lint` | `eslint src` |
 | `npm run lint:fix` | `eslint src --fix` |
 | `npm run prettier:fix` | `prettier --write src` |
+
+---
+
+## Unknown Commands
+
+If you accidentally run a project script through `cem` (e.g. `cem lint:fix`), the CLI will print a helpful error instead of launching the scaffold wizard:
+
+```
+✖  Unknown command: "lint:fix"
+
+⚠  Available commands:
+   cem                     — scaffold a new project
+   cem dev                 — start dev server with hot reload
+   cem build               — compile TypeScript to dist/
+   cem check               — run type-check without emitting
+   cem add module <name>   — generate a new module
+   cem add middleware <n>  — generate a middleware
+   cem add env <KEY>       — add an env variable
+
+⚠  Tip: scripts like lint, prettier, and start should be run with npm run, not cem.
+```
 
 ---
 
