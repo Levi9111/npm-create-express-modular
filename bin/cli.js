@@ -28,6 +28,17 @@ const {
     scaffoldCoreFiles,
     scaffoldQueryBuilder
 } = require('../lib/core/scaffoldCore');
+const {
+    removeModule,
+    removeMiddleware,
+    removeEnvVar
+} = require('../lib/remover');
+const {
+    listProject
+} = require('../lib/lister');
+const {
+    scaffoldDocker
+} = require('../lib/dockerScaffold');
 
 // Read own version from package.json
 let VERSION = '';
@@ -115,6 +126,38 @@ async function runCLI() {
         process.exit(0);
     }
 
+    if (args[0] === 'remove' || args[0] === 'rm') {
+        const subcommand = args[1];
+        const name       = args[2];
+
+        if (subcommand === 'module') {
+            removeModule(name);
+            process.exit(0);
+        }
+        if (subcommand === 'middleware') {
+            removeMiddleware(name);
+            process.exit(0);
+        }
+        if (subcommand === 'env') {
+            removeEnvVar(name);
+            process.exit(0);
+        }
+
+        ui.warn('Unknown remove subcommand. Available: module, middleware, env');
+        ui.nl();
+        console.log('   Examples:');
+        console.log('     cem remove module Product');
+        console.log('     cem remove middleware calculate');
+        console.log('     cem remove env STRIPE_SECRET_KEY');
+        ui.nl();
+        process.exit(1);
+    }
+
+    if (args[0] === 'list' || args[0] === 'ls') {
+        listProject();
+        process.exit(0);
+    }
+
     if (args[0] === 'build') {
         const { runBuild } = require('../lib/builder');
         runBuild();
@@ -148,13 +191,17 @@ async function runCLI() {
         ui.err(`Unknown command: "${args[0]}"`);
         ui.nl();
         ui.warn('Available commands:');
-        console.log('   cem                     — scaffold a new project');
-        console.log('   cem dev                 — start dev server with hot reload');
-        console.log('   cem build               — compile TypeScript to dist/');
-        console.log('   cem check               — run type-check without emitting');
-        console.log('   cem add module <name>   — generate a new module');
-        console.log('   cem add middleware <n>  — generate a middleware');
-        console.log('   cem add env <KEY>       — add an env variable');
+        console.log('   cem                          — scaffold a new project');
+        console.log('   cem dev                      — start dev server with hot reload');
+        console.log('   cem build                    — compile TypeScript to dist/');
+        console.log('   cem check                    — run type-check without emitting');
+        console.log('   cem list                     — list modules, middlewares, and env vars');
+        console.log('   cem add module <name>        — generate a new module');
+        console.log('   cem add middleware <name>    — generate a middleware');
+        console.log('   cem add env <KEY>            — add an env variable');
+        console.log('   cem remove module <name>     — delete a module and unwire its route');
+        console.log('   cem remove middleware <name> — delete a middleware file');
+        console.log('   cem remove env <KEY>         — remove an env var from .env and config');
         ui.nl();
         ui.warn('Tip: scripts like lint, prettier, and start should be run with npm run, not cem.');
         ui.nl();
@@ -229,13 +276,20 @@ async function runCLI() {
             message: 'Include JWT Auth module?',
             default: false,
         },
+        {
+            type: 'confirm',
+            name: 'useDocker',
+            message: 'Include Docker setup (Dockerfile + docker-compose)?',
+            default: false,
+        },
     ]);
 
     const {
         projectName,
         db,
         validator,
-        useAuth
+        useAuth,
+        useDocker
     } = answers;
     const projectPath = path.join(process.cwd(), projectName);
     const templatePath = path.join(__dirname, '../template');
@@ -337,6 +391,20 @@ async function runCLI() {
             ui.err(e.message);
         }
         ui.nl();
+    }
+
+    // Docker
+    if (useDocker) {
+        const dockerSpin = ui.spinner('Generating Docker files...');
+        try {
+            scaffoldDocker(projectPath, projectName, db);
+            dockerSpin.succeed('Docker files generated');
+            ui.substep('Dockerfile  ·  .dockerignore  ·  docker-compose.yml');
+            ui.nl();
+        } catch (e) {
+            dockerSpin.fail('Docker scaffold failed');
+            ui.err(e.message);
+        }
     }
 
     // ── INSTALL PHASE ───────────────────────────────────────────────────────
