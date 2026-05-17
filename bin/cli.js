@@ -141,6 +141,26 @@ async function runCLI() {
         process.exit(0);
     }
 
+    // ── UNKNOWN COMMAND GUARD ───────────────────────────────────────────────
+    // If the user passed a non-empty argument that wasn't caught above,
+    // treat it as a typo / wrong context instead of launching the scaffold wizard.
+    if (args[0]) {
+        ui.err(`Unknown command: "${args[0]}"`);
+        ui.nl();
+        ui.warn('Available commands:');
+        console.log('   cem                     — scaffold a new project');
+        console.log('   cem dev                 — start dev server with hot reload');
+        console.log('   cem build               — compile TypeScript to dist/');
+        console.log('   cem check               — run type-check without emitting');
+        console.log('   cem add module <name>   — generate a new module');
+        console.log('   cem add middleware <n>  — generate a middleware');
+        console.log('   cem add env <KEY>       — add an env variable');
+        ui.nl();
+        ui.warn('Tip: scripts like lint, prettier, and start should be run with npm run, not cem.');
+        ui.nl();
+        process.exit(1);
+    }
+
     // ── PROJECT SCAFFOLDING ─────────────────────────────────────────────────
     ui.printBanner(VERSION);
 
