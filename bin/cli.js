@@ -343,7 +343,7 @@ async function runCLI() {
         });
         runInstall(projectPath, ['dotenv', 'http-status-codes', 'express', 'cors', 'helmet']);
         runInstall(projectPath, [
-            '@types/express', '@types/cors', 'typescript', 'ts-node-dev',
+            '@types/express', '@types/cors', 'typescript', 'tsx',
             'eslint', '@eslint/js', 'typescript-eslint', 'eslint-config-prettier', 'prettier'
         ], true);
         baseSpin.succeed('Base dependencies installed');
