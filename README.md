@@ -34,11 +34,12 @@ npx create-express-modular my-api
 cem my-api
 ```
 
-The CLI will ask you three questions:
+The CLI will ask you four questions:
 
-1. **Database** — Mongoose, Prisma, PostgreSQL, MySQL, MariaDB, or CockroachDB
-2. **Validator** — Zod, Joi, Vine, or Yup
+1. **Database / ORM** — Mongoose, Prisma, or Drizzle
+2. **Validator** — Zod (recommended) or Joi
 3. **Auth** — Do you want a ready-to-use JWT Auth module?
+4. **Docker** — Do you want a Dockerfile, `.dockerignore`, and `docker-compose.yml`?
 
 After answering, it will:
 - Scaffold a clean, domain-driven folder structure
@@ -66,14 +67,23 @@ Your server is live at `http://localhost:5000`. ✅
 | `cem dev` | Start the dev server with live reload and a pretty terminal UI |
 | `cem build` | Run architecture guard + compile TypeScript to `dist/` |
 | `cem check` | Run type check, lint, and format check in one go |
+| `cem list` | List all modules, middlewares, and env vars in the current project |
 
-### Utility Commands
+### Add Commands
 
 | Command | Description |
 |---|---|
 | `cem add module <Name>` | Scaffold a complete feature module |
 | `cem add env <KEY>` | Add an env var to `.env` and inject it into `config/index.ts` |
 | `cem add middleware <name>` | Create a new middleware in `src/app/middlewares/` |
+
+### Remove Commands
+
+| Command | Description |
+|---|---|
+| `cem remove module <Name>` | Delete the module folder **and** unwire it from `routes/index.ts` |
+| `cem remove middleware <name>` | Delete a custom middleware file |
+| `cem remove env <KEY>` | Remove an env var from `.env` **and** `config/index.ts` |
 
 ---
 
@@ -142,6 +152,108 @@ If a check fails, the relevant error output is shown inline under the failed ste
 
 ---
 
+## `cem list` — Project Overview
+
+Get a live snapshot of your project from the terminal:
+
+```
+cem list
+
+  ────────────────────────────────────────────────────
+
+  [CEM]  my-api  project overview
+
+  ────────────────────────────────────────────────────
+
+  ◆  Modules  src/app/modules/
+
+     ◈  Auth    ● wired
+     ◈  Product ● wired
+        ·  product.controller.ts
+        ·  product.service.ts
+        ·  ...
+
+  ◆  Middlewares  src/app/middlewares/
+
+     ◇  globalErrorHandler.ts  [core]
+     ◇  notFound.ts            [core]
+     ◈  calculate.ts
+
+  ◆  Environment Variables  .env
+
+     ◈  NODE_ENV          development
+     ◈  PORT              5000
+     ◈  JWT_ACCESS_SECRET <hidden>
+```
+
+- **● wired** — module is registered in `routes/index.ts`
+- **○ not wired** — module folder exists but has no route entry (needs manual fix)
+- Secret keys (`SECRET`, `PASSWORD`, `TOKEN`, `KEY`, `API`) are automatically masked.
+
+---
+
+## `cem remove` — Remove Things Cleanly
+
+### Remove a module
+
+```bash
+cem remove module Product
+# or alias:
+cem rm module Product
+```
+
+- Deletes `src/app/modules/Product/` entirely
+- Removes the `import` line and route entry from `src/app/routes/index.ts` automatically
+
+### Remove a middleware
+
+```bash
+cem remove middleware calculate
+```
+
+- Deletes `src/app/middlewares/calculate.ts`
+- Core files (`globalErrorHandler`, `notFound`, `auth`, `rateLimiter`) are protected and cannot be removed this way.
+
+### Remove an env variable
+
+```bash
+cem remove env STRIPE_SECRET_KEY
+```
+
+- Removes the line from `.env`
+- Removes the corresponding line from `src/app/config/index.ts`
+
+---
+
+## Docker
+
+When you select **Yes** to Docker during setup, three files are generated:
+
+| File | Purpose |
+|---|---|
+| `Dockerfile` | Multi-stage build (build stage + minimal Alpine production image) |
+| `.dockerignore` | Excludes `node_modules`, `.env`, source files, and test files |
+| `docker-compose.yml` | App service + the correct database sidecar for your chosen stack |
+
+**Database sidecar mapping:**
+
+| Stack | Docker image |
+|---|---|
+| Mongoose | `mongo:7` |
+| Prisma | `postgres:16-alpine` |
+| Drizzle | `postgres:16-alpine` |
+
+```bash
+# Start everything locally
+docker-compose up --build
+
+# Production (single service, external DB)
+docker build -t my-api .
+docker run -p 5000:5000 --env-file .env my-api
+```
+
+---
+
 ## Adding a Feature Module
 
 ```bash
@@ -205,6 +317,9 @@ my-api/
 │   │       └── QueryBuilder.ts       # Mongoose only
 │   ├── app.ts                        # Express app setup
 │   └── server.ts                     # Server start & DB connection
+├── Dockerfile                        # Docker only
+├── .dockerignore                     # Docker only
+├── docker-compose.yml               # Docker only
 ├── .env
 ├── eslint.config.mjs                 # ESLint v9 flat config
 ├── tsconfig.json
@@ -253,9 +368,9 @@ The generated `globalErrorHandler.ts` is **stack-aware**. It maps errors specifi
 |---|---|
 | Mongoose | CastError, ValidationError, Duplicate Key (11000) |
 | Prisma | P2002 (Duplicate), P2025 (Not Found), P2003 (Invalid Ref) |
-| pg / mysql | Constraint violation codes |
+| Drizzle / pg | Constraint violation codes (23505, 23503) |
 | Zod | ZodError issues (v3 & v4 compatible) |
-| Joi / Vine / Yup | Validation errors |
+| Joi | Validation errors |
 
 ---
 

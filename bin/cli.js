@@ -221,30 +221,19 @@ async function runCLI() {
         {
             type: 'list',
             name: 'db',
-            message: 'Database:',
-            choices: [{
-                    name: 'MongoDB  (Mongoose)',
+            message: 'Database / ORM:',
+            choices: [
+                {
+                    name: 'Mongoose  (MongoDB)',
                     value: 'mongoose'
                 },
                 {
-                    name: 'PostgreSQL  (pg)',
-                    value: 'pg'
-                },
-                {
-                    name: 'MySQL  (mysql2)',
-                    value: 'mysql'
-                },
-                {
-                    name: 'MariaDB',
-                    value: 'mariadb'
-                },
-                {
-                    name: 'CockroachDB  (pg-compatible)',
-                    value: 'cockroachdb'
-                },
-                {
-                    name: 'Prisma  (ORM)',
+                    name: 'Prisma  (PostgreSQL / MySQL / SQLite)',
                     value: 'prisma'
+                },
+                {
+                    name: 'Drizzle  (PostgreSQL)',
+                    value: 'drizzle'
                 },
             ],
         },
@@ -252,21 +241,14 @@ async function runCLI() {
             type: 'list',
             name: 'validator',
             message: 'Validator:',
-            choices: [{
-                    name: 'Zod',
+            choices: [
+                {
+                    name: 'Zod  (recommended)',
                     value: 'zod'
                 },
                 {
-                    name: 'Joi',
+                    name: 'Joi  (legacy / alternative)',
                     value: 'joi'
-                },
-                {
-                    name: 'Vine',
-                    value: 'vine'
-                },
-                {
-                    name: 'Yup',
-                    value: 'yup'
                 },
             ],
         },
