@@ -310,12 +310,13 @@ if (args[0] === 'help' || args[0] === '--help' || args[0] === '-h') {
     if (fs.existsSync(gi)) fs.renameSync(gi, path.join(projectPath, '.gitignore'));
 
     // Stamp project name into package.json
-    const pkgPath = path.join(projectPath, 'package.json');
-    if (fs.existsSync(pkgPath)) {
-      const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8'));
-      pkg.name = projectName.toLowerCase().replace(/\s+/g, '-');
-      fs.writeFileSync(pkgPath, JSON.stringify(pkg, null, 2));
-    }
+   const pkgPath = path.join(projectPath, 'package.json');
+if (fs.existsSync(pkgPath)) {
+  const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8'));
+  pkg.name    = projectName.toLowerCase().replace(/\s+/g, '-');
+  pkg.engines = { node: '>=18', npm: '>=9' };
+  fs.writeFileSync(pkgPath, JSON.stringify(pkg, null, 2));
+}
 
     // Remove legacy ESLint config files (replaced by flat config eslint.config.mjs)
     const oldEslintRc     = path.join(projectPath, '.eslintrc.json');
