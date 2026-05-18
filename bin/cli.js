@@ -68,6 +68,8 @@ function printHelp() {
   console.log('   cem remove module <name>     — delete a module and unwire its route');
   console.log('   cem remove middleware <name> — delete a middleware file');
   console.log('   cem remove env <KEY>         — remove an env var from .env and config');
+  console.log('   cem --version                — print the installed version');
+  console.log('   cem --help                   — show this help message');
   ui.nl();
   ui.warn('Tip: scripts like lint and prettier should be run with npm run, not cem.');
   ui.nl();
@@ -82,6 +84,19 @@ async function runCLI() {
   const updateCheckPromise = checkForUpdates();
 
   // ── COMMAND ROUTER ────────────────────────────────────────────────────────
+
+// ── version
+if (args[0] === '--version' || args[0] === '-v') {
+  console.log(VERSION);
+  process.exit(0);
+}
+
+// ── help
+if (args[0] === 'help' || args[0] === '--help' || args[0] === '-h') {
+  ui.printBanner(VERSION);
+  printHelp();
+  process.exit(0);
+}
 
   // cem dev
   if (args[0] === 'dev') {
