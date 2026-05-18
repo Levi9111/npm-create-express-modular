@@ -334,7 +334,7 @@ async function runCLI() {
   ui.substep('src/app.ts  ·  src/server.ts  ·  .env');
   ui.substep('src/app/config/index.ts');
   ui.substep('src/app/errors/    (AppError + db-specific handlers)');
-  ui.substep('src/app/utils/     (catchAsync · sendResponse · QueryBuilder · validateRequest)');
+  ui.substep('src/app/utils/     (catchAsync · sendResponse · logger · QueryBuilder · validateRequest)');
   ui.substep('src/app/middlewares/  (globalErrorHandler · notFound)');
   ui.substep('src/app/routes/index.ts');
   ui.nl();
