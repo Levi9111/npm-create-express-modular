@@ -56,7 +56,7 @@ function printHelp() {
   ui.nl();
   ui.warn('Available commands:');
   ui.nl();
-  console.log('   cem                          — scaffold a new project');
+  console.log('   cem [project-name]           — scaffold a new project');
   console.log('   cem dev                      — start dev server with hot reload');
   console.log('   cem build                    — compile TypeScript to dist/');
   console.log('   cem start                    — start the production server');
@@ -227,10 +227,15 @@ if (args[0] === 'help' || args[0] === '--help' || args[0] === '-h') {
   }
 
   // ── UNKNOWN COMMAND GUARD ─────────────────────────────────────────────────
+  let initialProjectName = 'my-api';
   if (args[0]) {
-    ui.err(`Unknown command: "${args[0]}"`);
-    printHelp();
-    process.exit(1);
+    if (args[0].startsWith('-')) {
+      ui.err(`Unknown flag: "${args[0]}"`);
+      printHelp();
+      process.exit(1);
+    }
+    // If they supplied a positional argument, treat it as the default project name
+    initialProjectName = args[0];
   }
 
   // ── PROJECT SCAFFOLDING ───────────────────────────────────────────────────
@@ -244,7 +249,7 @@ if (args[0] === 'help' || args[0] === '--help' || args[0] === '-h') {
         type: 'input',
         name: 'projectName',
         message: 'Project name:',
-        default: args[0] || 'my-api',
+        default: initialProjectName,
         validate: (v) => v.trim() ? true : 'Project name cannot be empty.',
       },
       {

@@ -43,7 +43,7 @@ The CLI will ask you four questions:
 
 After answering, it will:
 - Scaffold a clean, domain-driven folder structure
-- Generate database config, error handling, and all boilerplate
+- Generate database config, error handling, `.env`, `.env.example`, and all boilerplate
 - Install all required dependencies automatically
 - Initialise a git repository
 
@@ -66,6 +66,7 @@ Your server is live at `http://localhost:5000`. ✅
 |---|---|
 | `cem dev` | Start the dev server with live reload and a pretty terminal UI |
 | `cem build` | Run architecture guard + compile TypeScript to `dist/` |
+| `cem start` | Start the production server with preflight checks and safety guards |
 | `cem check` | Run type check, lint, and format check in one go |
 | `cem list` | List all modules, middlewares, and env vars in the current project |
 
@@ -74,7 +75,7 @@ Your server is live at `http://localhost:5000`. ✅
 | Command | Description |
 |---|---|
 | `cem add module <Name>` | Scaffold a complete feature module |
-| `cem add env <KEY>` | Add an env var to `.env` and inject it into `config/index.ts` |
+| `cem add env <KEY>` | Add an env var to `.env` & `.env.example`, and inject into `config/index.ts` |
 | `cem add middleware <name>` | Create a new middleware in `src/app/middlewares/` |
 
 ### Remove Commands
@@ -83,7 +84,7 @@ Your server is live at `http://localhost:5000`. ✅
 |---|---|
 | `cem remove module <Name>` | Delete the module folder **and** unwire it from `routes/index.ts` |
 | `cem remove middleware <name>` | Delete a custom middleware file |
-| `cem remove env <KEY>` | Remove an env var from `.env` **and** `config/index.ts` |
+| `cem remove env <KEY>` | Remove an env var from `.env`, `.env.example`, and `config/index.ts` |
 
 ---
 
@@ -285,6 +286,7 @@ cem add env STRIPE_SECRET_KEY
 
 Result:
 - `.env` → `STRIPE_SECRET_KEY=<your_stripe_secret_key>`
+- `.env.example` → `STRIPE_SECRET_KEY=`
 - `config/index.ts` → `stripe_secret_key: process.env.STRIPE_SECRET_KEY,`
 
 Accepts any format: `UPPER_SNAKE_CASE`, `camelCase`, or `PascalCase` — always normalised correctly.
@@ -321,6 +323,7 @@ my-api/
 ├── .dockerignore                     # Docker only
 ├── docker-compose.yml               # Docker only
 ├── .env
+├── .env.example
 ├── eslint.config.mjs                 # ESLint v9 flat config
 ├── tsconfig.json
 └── package.json
@@ -381,7 +384,7 @@ The generated `globalErrorHandler.ts` is **stack-aware**. It maps errors specifi
 | `npm run start:dev` | `cem dev` |
 | `npm run build` | `cem build` |
 | `npm run check` | `cem check` |
-| `npm start` | `node dist/server.js` |
+| `npm start` | `cem start` |
 | `npm run lint` | `eslint src` |
 | `npm run lint:fix` | `eslint src --fix` |
 | `npm run prettier:fix` | `prettier --write src` |

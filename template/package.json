@@ -1,33 +1,33 @@
 {
-  "name": "template",
-  "version": "1.0.0",
-  "main": "src/server.ts",
-  "scripts": {
-    "build": "cem build",
-    "start": "cem start",
-    "start:dev": "cem dev",
-    "check": "cem check",
-    "lint": "eslint src",
-    "lint:fix": "eslint src --fix",
-    "prettier": "prettier --ignore-path .gitignore --write \"./src/**/*.{js,ts,json}\"",
-    "prettier:fix": "prettier --write src"
-  },
-  "dependencies": {
-    "cors": "^2.8.5",
-    "dotenv": "^16.3.1",
-    "express": "^4.18.2",
-    "http-status-codes": "^2.3.0"
-  },
-  "devDependencies": {
-    "@eslint/js": "^9.0.0",
-    "@types/cors": "^2.8.13",
-    "@types/express": "^4.17.17",
-    "@types/node": "^20.4.5",
-    "eslint": "^9.0.0",
-    "eslint-config-prettier": "^9.0.0",
-    "prettier": "^3.0.0",
-    "tsx": "^4.0.0",
-    "typescript": "^5.5.0",
-    "typescript-eslint": "^8.0.0"
-  }
+    "name": "template",
+    "version": "1.0.0",
+    "main": "src/server.ts",
+    "scripts": {
+        "build": "cem build",
+        "start": "cem start",
+        "start:dev": "cem dev",
+        "check": "cem check",
+        "lint": "eslint src",
+        "lint:fix": "eslint src --fix",
+        "prettier": "prettier --ignore-path .gitignore --write \"./src/**/*.{js,ts,json}\"",
+        "prettier:fix": "prettier --write src"
+    },
+    "dependencies": {
+        "cors": "^2.8.5",
+        "dotenv": "^16.3.1",
+        "express": "^4.18.2",
+        "http-status-codes": "^2.3.0"
+    },
+    "devDependencies": {
+        "@eslint/js": "^9.0.0",
+        "@types/cors": "^2.8.13",
+        "@types/express": "^4.17.17",
+        "@types/node": "^20.4.5",
+        "eslint": "^9.0.0",
+        "eslint-config-prettier": "^9.0.0",
+        "prettier": "^3.0.0",
+        "tsx": "^4.0.0",
+        "typescript": "^5.5.0",
+        "typescript-eslint": "^8.0.0"
+    }
 }
