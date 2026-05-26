@@ -83,6 +83,16 @@ async function runCLI() {
   const { checkForUpdates, isUpdateAvailable } = require('../lib/updateNotifier');
   const updateCheckPromise = checkForUpdates();
 
+  // ── notify helper — call before every clean exit ──────────────────────────
+  async function notifyIfUpdateAvailable() {
+    try {
+      const latest = await updateCheckPromise;
+      if (isUpdateAvailable(VERSION, latest)) {
+        ui.printUpdateNotice(VERSION, latest);
+      }
+    } catch { /* non-fatal */ }
+  }
+
   // ── COMMAND ROUTER ────────────────────────────────────────────────────────
 
 // ── version
@@ -110,6 +120,7 @@ if (args[0] === 'help' || args[0] === '--help' || args[0] === '-h') {
   if (args[0] === 'build') {
     const { runBuild } = require('../lib/builder');
     runBuild();
+    await notifyIfUpdateAvailable();
     process.exit(0);
   }
 
@@ -131,6 +142,7 @@ if (args[0] === 'help' || args[0] === '--help' || args[0] === '-h') {
   // cem list / cem ls
   if (args[0] === 'list' || args[0] === 'ls') {
     listProject();
+    await notifyIfUpdateAvailable();
     process.exit(0);
   }
 
@@ -141,6 +153,7 @@ if (args[0] === 'help' || args[0] === '--help' || args[0] === '-h') {
 
     if (subcommand === 'module') {
       await generateModule(name);
+      await notifyIfUpdateAvailable();
       process.exit(0);
     }
 
@@ -151,6 +164,7 @@ if (args[0] === 'help' || args[0] === '--help' || args[0] === '-h') {
       const { addEnvVar } = require('../lib/envGenerator');
       addEnvVar(name);
       ui.success(`Environment variable ${ui.cyan(name)} added to .env and config/index.ts`);
+      await notifyIfUpdateAvailable();
       process.exit(0);
     }
 
@@ -161,6 +175,7 @@ if (args[0] === 'help' || args[0] === '--help' || args[0] === '-h') {
       const { generateMiddleware } = require('../lib/middlewareGenerator');
       generateMiddleware(name);
       ui.success(`Middleware ${ui.cyan(name)} generated in src/app/middlewares/`);
+      await notifyIfUpdateAvailable();
       process.exit(0);
     }
 
@@ -180,14 +195,17 @@ if (args[0] === 'help' || args[0] === '--help' || args[0] === '-h') {
 
     if (subcommand === 'module') {
       await removeModule(name);
+      await notifyIfUpdateAvailable();
       process.exit(0);
     }
     if (subcommand === 'middleware') {
       await removeMiddleware(name);
+      await notifyIfUpdateAvailable();
       process.exit(0);
     }
     if (subcommand === 'env') {
       await removeEnvVar(name);
+      await notifyIfUpdateAvailable();
       process.exit(0);
     }
 
