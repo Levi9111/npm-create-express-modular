@@ -4,7 +4,7 @@
   "main": "src/server.ts",
   "scripts": {
     "build": "cem build",
-    "start": "node dist/server.js",
+    "start": "cem start",
     "start:dev": "cem dev",
     "check": "cem check",
     "lint": "eslint src",
