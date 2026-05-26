@@ -1,7 +1,7 @@
 {
     "name": "create-express-modular",
     "version": "2.2.7",
-    "description": "Scaffold a modular, domain-driven Express + TypeScript backend. Choose your database (Mongoose, Prisma, pg, MySQL, MariaDB, CockroachDB) and validator (Zod, Joi, Vine, Yup).",
+    "description": "Scaffold a modular, domain-driven Express + TypeScript backend. Choose your database (Mongoose, Prisma, or Drizzle) and validator (Zod or Joi). Optionally add JWT auth and Docker setup.",
     "bin": {
         "create-express-modular": "./bin/cli.js",
         "cem": "./bin/cli.js"
@@ -30,11 +30,16 @@
         "cli",
         "mongoose",
         "prisma",
+        "drizzle",
         "postgresql",
-        "mysql",
         "zod",
         "joi",
-        "domain-driven"
+        "jwt",
+        "auth",
+        "docker",
+        "domain-driven",
+        "backend",
+        "boilerplate"
     ],
     "author": "levi9111",
     "license": "MIT",
