@@ -278,6 +278,23 @@ if (args[0] === 'help' || args[0] === '--help' || args[0] === '-h') {
         default: false,
       },
       {
+        type: 'list',
+        name: 'authTokenDelivery',
+        message: 'Auth token delivery:',
+        when: (answers) => answers.useAuth,
+        choices: [
+          {
+            name: 'HTTP-only cookies  (recommended — XSS safe, browser clients)',
+            value: 'cookie',
+          },
+          {
+            name: 'Authorization header  (mobile / API clients)',
+            value: 'header',
+          },
+        ],
+        default: 'cookie',
+      },
+      {
         type: 'confirm',
         name: 'useDocker',
         message: 'Include Docker setup (Dockerfile + docker-compose)?',
@@ -294,7 +311,8 @@ if (args[0] === 'help' || args[0] === '--help' || args[0] === '-h') {
     throw e;
   }
 
-  const { projectName, db, validator, useAuth, useDocker } = answers;
+  const { projectName, db, validator, useAuth, useDocker, authTokenDelivery } = answers;
+  const tokenDelivery = useAuth ? (authTokenDelivery ?? 'cookie') : 'header';
   const projectPath = path.join(process.cwd(), projectName);
   const templatePath = path.join(__dirname, '../template');
 
@@ -350,7 +368,7 @@ if (fs.existsSync(pkgPath)) {
     fs.mkdirSync(path.join(projectPath, 'src/app/modules'), { recursive: true });
 
     // Write all generated files
-    scaffoldCoreFiles(projectPath);
+    scaffoldCoreFiles(projectPath, useAuth, tokenDelivery);
     if (db === 'mongoose') scaffoldQueryBuilder(projectPath);
     dbGen.scaffoldServerAndConfig(projectPath);
     dbGen.scaffoldErrorFiles(projectPath);
@@ -382,10 +400,11 @@ if (fs.existsSync(pkgPath)) {
   if (useAuth) {
     const authSpin = ui.spinner('Scaffolding Auth module...');
     try {
-      scaffoldAuth(projectPath, db, validator);
+      scaffoldAuth(projectPath, db, validator, tokenDelivery);
       authSpin.succeed('Auth module scaffolded');
       ui.substep('src/app/modules/Auth/  (controller · service · route · model · validation)');
       ui.substep('src/app/utils/jwt.utils.ts  ·  src/app/middlewares/auth.ts');
+      ui.substep(`Token delivery: ${tokenDelivery === 'cookie' ? 'HTTP-only cookies' : 'Authorization header'}`);
       ui.nl();
       ui.warn('Replace stub credentials in auth.service.ts before going to production.');
     } catch (e) {
@@ -470,6 +489,19 @@ if (fs.existsSync(pkgPath)) {
     } catch (e) {
       authDepSpin.fail('Auth dependency install failed');
       ui.err(e.message);
+    }
+
+    // cookie-parser is only needed when using cookie-based token delivery
+    if (tokenDelivery === 'cookie') {
+      const cookieSpin = ui.spinner('Installing cookie-parser...');
+      try {
+        runInstall(projectPath, ['cookie-parser']);
+        runInstall(projectPath, ['@types/cookie-parser'], true);
+        cookieSpin.succeed('cookie-parser installed');
+      } catch (e) {
+        cookieSpin.fail('cookie-parser install failed');
+        ui.err(e.message);
+      }
     }
   }
 
