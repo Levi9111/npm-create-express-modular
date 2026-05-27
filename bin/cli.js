@@ -378,7 +378,7 @@ if (fs.existsSync(pkgPath)) {
     // Assemble and write globalErrorHandler
     const handler = buildGlobalErrorHandler(dbGen.errorBlock(), valGen.errorBlock());
     fs.writeFileSync(
-      path.join(projectPath, 'src/app/middlewares/globalErrorHandler.ts'),
+      path.join(projectPath, 'src/app/middlewares/globalErrorHandler.middleware.ts'),
       handler,
     );
 
@@ -392,7 +392,7 @@ if (fs.existsSync(pkgPath)) {
   ui.substep('src/app/config/index.ts');
   ui.substep('src/app/errors/    (AppError + db-specific handlers)');
   ui.substep('src/app/utils/     (catchAsync · sendResponse · logger · QueryBuilder · validateRequest)');
-  ui.substep('src/app/middlewares/  (globalErrorHandler · notFound)');
+  ui.substep('src/app/middlewares/  (globalErrorHandler.middleware · notFound.middleware)');
   ui.substep('src/app/routes/index.ts');
   ui.nl();
 
@@ -403,7 +403,7 @@ if (fs.existsSync(pkgPath)) {
       scaffoldAuth(projectPath, db, validator, tokenDelivery);
       authSpin.succeed('Auth module scaffolded');
       ui.substep('src/app/modules/Auth/  (controller · service · route · model · validation)');
-      ui.substep('src/app/utils/jwt.utils.ts  ·  src/app/middlewares/auth.ts');
+      ui.substep('src/app/utils/jwt.utils.ts  ·  src/app/middlewares/auth.middleware.ts');
       ui.substep(`Token delivery: ${tokenDelivery === 'cookie' ? 'HTTP-only cookies' : 'Authorization header'}`);
       ui.nl();
       ui.warn('Replace stub credentials in auth.service.ts before going to production.');
