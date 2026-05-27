@@ -163,7 +163,7 @@ if (args[0] === 'help' || args[0] === '--help' || args[0] === '-h') {
       }
       const { addEnvVar } = require('../lib/envGenerator');
       addEnvVar(name);
-      ui.success(`Environment variable ${ui.cyan(name)} added to .env and config/index.ts`);
+      ui.success(`Environment variable ${ui.cyan(name)} added to .env, .env.example, and config/index.ts`);
       await notifyIfUpdateAvailable();
       process.exit(0);
     }
