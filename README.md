@@ -34,12 +34,13 @@ npx create-express-modular my-api
 cem my-api
 ```
 
-The CLI will ask you four questions:
+The CLI will ask you five questions:
 
 1. **Database / ORM** — Mongoose, Prisma, or Drizzle
 2. **Validator** — Zod (recommended) or Joi
 3. **Auth** — Do you want a ready-to-use JWT Auth module?
-4. **Docker** — Do you want a Dockerfile, `.dockerignore`, and `docker-compose.yml`?
+4. **Auth token delivery** _(only if Auth is yes)_ — HTTP-only cookies (recommended, XSS safe) or Authorization header (mobile / API clients)
+5. **Docker** — Do you want a Dockerfile, `.dockerignore`, and `docker-compose.yml`?
 
 After answering, it will:
 - Scaffold a clean, domain-driven folder structure
@@ -56,6 +57,8 @@ cem dev
 
 Your server is live at `http://localhost:5000`. ✅
 
+Visit `http://localhost:5000` in a browser to see the **CEM Welcome Page** — a styled landing page that shows project name, version, server status, and available routes.
+
 ---
 
 ## CLI Commands
@@ -65,7 +68,7 @@ Your server is live at `http://localhost:5000`. ✅
 | Command | Description |
 |---|---|
 | `cem dev` | Start the dev server with live reload and a pretty terminal UI |
-| `cem build` | Run architecture guard + compile TypeScript to `dist/` |
+| `cem build` | Run middleware convention guard + architecture guard + compile TypeScript to `dist/` |
 | `cem start` | Start the production server with preflight checks and safety guards |
 | `cem check` | Run type check, lint, and format check in one go |
 | `cem list` | List all modules, middlewares, and env vars in the current project |
@@ -76,14 +79,14 @@ Your server is live at `http://localhost:5000`. ✅
 |---|---|
 | `cem add module <Name>` | Scaffold a complete feature module |
 | `cem add env <KEY>` | Add an env var to `.env` & `.env.example`, and inject into `config/index.ts` |
-| `cem add middleware <name>` | Create a new middleware in `src/app/middlewares/` |
+| `cem add middleware <name>` | Create a new middleware as `<name>.middleware.ts` in `src/app/middlewares/` |
 
 ### Remove Commands
 
 | Command | Description |
 |---|---|
 | `cem remove module <Name>` | Delete the module folder **and** unwire it from `routes/index.ts` |
-| `cem remove middleware <name>` | Delete a custom middleware file |
+| `cem remove middleware <name>` | Delete a custom middleware file (`<name>.middleware.ts`) |
 | `cem remove env <KEY>` | Remove an env var from `.env`, `.env.example`, and `config/index.ts` |
 
 ---
@@ -113,19 +116,33 @@ Powered by [`tsx`](https://github.com/privatenumber/tsx) (esbuild-based, no type
 
 ## `cem build` — Build
 
-Runs two steps in sequence before compiling:
+Runs three steps in sequence before compiling:
 
-1. **Architecture guard** — validates that every file inside `src/app/modules/<Name>/` is correctly named `<name>.<type>.ts`. Aborts with a clear error if not.
-2. **TypeScript compilation** — runs `tsc` and emits to `dist/`
+1. **Middleware convention guard** — validates that every file inside `src/app/middlewares/` follows the `<name>.middleware.ts` naming convention. Aborts with a clear error if not.
+2. **Architecture guard** — validates that every file inside `src/app/modules/<Name>/` is correctly named `<name>.<type>.ts`. Aborts with a clear error if not.
+3. **TypeScript compilation** — runs `tsc` and emits to `dist/`
 
 ```bash
 cem build
 
-  🛡️  Running Architecture Guard...
-  ✅ Architecture validation passed.
+  ◆  Running Middleware Convention Guard…
+  ✔  Middleware naming convention valid.
 
-  📦 Compiling TypeScript...
-  ✅ Build successful.
+  ◆  Running Architecture Guard…
+  ✔  Architecture validation passed.
+
+  ◆  Compiling TypeScript…
+  ✔  Build successful.  312ms
+```
+
+If a middleware file doesn't follow the convention:
+
+```
+  ✖  Middleware naming violation: 'calculate.ts'
+     ·  Expected: 'calculate.middleware.ts'
+     ·  Rename the file and update any imports that reference it.
+
+  ✖  Build aborted — all middleware files must follow the <name>.middleware.ts convention.
 ```
 
 ---
@@ -176,9 +193,10 @@ cem list
 
   ◆  Middlewares  src/app/middlewares/
 
-     ◇  globalErrorHandler.ts  [core]
-     ◇  notFound.ts            [core]
-     ◈  calculate.ts
+     ◇  globalErrorHandler.middleware.ts  [core]
+     ◇  notFound.middleware.ts            [core]
+     ◇  auth.middleware.ts                [core]
+     ◈  calculate.middleware.ts
 
   ◆  Environment Variables  .env
 
@@ -190,6 +208,45 @@ cem list
 - **● wired** — module is registered in `routes/index.ts`
 - **○ not wired** — module folder exists but has no route entry (needs manual fix)
 - Secret keys (`SECRET`, `PASSWORD`, `TOKEN`, `KEY`, `API`) are automatically masked.
+
+---
+
+## Middleware Naming Convention
+
+All middleware files **must** follow the `<name>.middleware.ts` naming convention. This applies to both core (generated) and custom (user-created) middleware files.
+
+### Core generated middleware
+
+| File | Description |
+|---|---|
+| `globalErrorHandler.middleware.ts` | Stack-aware error handler |
+| `notFound.middleware.ts` | 404 handler for unknown routes |
+| `auth.middleware.ts` | JWT guard _(Auth only)_ |
+| `rateLimiter.middleware.ts` | Rate limiting _(Auth only)_ |
+
+### Adding a custom middleware
+
+```bash
+cem add middleware calculate
+```
+
+Creates `src/app/middlewares/calculate.middleware.ts`:
+
+```ts
+import { NextFunction, Request, Response } from 'express';
+import { catchAsync } from '../utils/catchAsync';
+
+const calculate = catchAsync(async (req: Request, res: Response, next: NextFunction) => {
+  // TODO: Implement middleware logic
+  next();
+});
+
+export default calculate;
+```
+
+### Build enforcement
+
+`cem build` runs a **Middleware Convention Guard** before compilation. Any `.ts` file in `src/app/middlewares/` that doesn't end with `.middleware.ts` will cause the build to fail with a clear error telling you exactly which file to rename.
 
 ---
 
@@ -212,7 +269,7 @@ cem rm module Product
 cem remove middleware calculate
 ```
 
-- Deletes `src/app/middlewares/calculate.ts`
+- Deletes `src/app/middlewares/calculate.middleware.ts`
 - Core files (`globalErrorHandler`, `notFound`, `auth`, `rateLimiter`) are protected and cannot be removed this way.
 
 ### Remove an env variable
@@ -300,54 +357,79 @@ my-api/
 ├── src/
 │   ├── app/
 │   │   ├── config/
-│   │   │   └── index.ts              # Central config — all env vars live here
-│   │   ├── errors/                   # Error handler helpers (per stack)
-│   │   ├── interfaces/               # Shared TypeScript types
+│   │   │   └── index.ts                          # Central config — all env vars live here
+│   │   ├── errors/                               # Error handler helpers (per stack)
+│   │   ├── interfaces/                           # Shared TypeScript types
 │   │   ├── middlewares/
-│   │   │   ├── globalErrorHandler.ts
-│   │   │   ├── notFound.ts
-│   │   │   ├── auth.ts               # JWT guard (Auth only)
-│   │   │   └── rateLimiter.ts        # Rate limiting (Auth only)
+│   │   │   ├── globalErrorHandler.middleware.ts   # Stack-aware error handler
+│   │   │   ├── notFound.middleware.ts             # 404 handler
+│   │   │   ├── auth.middleware.ts                 # JWT guard (Auth only)
+│   │   │   └── rateLimiter.middleware.ts          # Rate limiting (Auth only)
 │   │   ├── modules/
-│   │   │   └── Auth/                 # JWT Auth module (Auth only)
+│   │   │   └── Auth/                             # JWT Auth module (Auth only)
 │   │   ├── routes/
-│   │   │   └── index.ts              # Auto-registers all module routes
+│   │   │   └── index.ts                          # Auto-registers all module routes
 │   │   └── utils/
 │   │       ├── catchAsync.ts
 │   │       ├── sendResponse.ts
 │   │       ├── validateRequest.ts
-│   │       └── QueryBuilder.ts       # Mongoose only
-│   ├── app.ts                        # Express app setup
-│   └── server.ts                     # Server start & DB connection
-├── Dockerfile                        # Docker only
-├── .dockerignore                     # Docker only
-├── docker-compose.yml               # Docker only
+│   │       ├── welcomePage.ts                    # Styled HTML landing page for /
+│   │       ├── logger.ts
+│   │       └── QueryBuilder.ts                   # Mongoose only
+│   ├── app.ts                                    # Express app setup
+│   └── server.ts                                 # Server start & DB connection
+├── Dockerfile                                    # Docker only
+├── .dockerignore                                 # Docker only
+├── docker-compose.yml                            # Docker only
 ├── .env
 ├── .env.example
-├── eslint.config.mjs                 # ESLint v9 flat config
+├── eslint.config.mjs                             # ESLint v9 flat config
 ├── tsconfig.json
 └── package.json
 ```
 
 ---
 
+## Welcome Page
+
+Every scaffolded project includes a styled **CEM Welcome Page** served at the root URL (`/`).
+
+It features:
+- Dark background with cyan accents and monospace font — matching the CLI aesthetic
+- CEM badge, project name (with blinking cursor), and version
+- Live server status indicator
+- Available routes list with color-coded HTTP methods
+- Clickable `/health` check link
+- Footer with CEM branding
+
+The page is generated from `src/app/utils/welcomePage.ts` and reads the project name and version from `package.json` at runtime. You can customise or replace it at any time.
+
+---
+
 ## Authentication (Optional)
 
-When you select **Yes** to Auth during setup, you get:
+When you select **Yes** to Auth during setup, you get an additional prompt:
+
+- **HTTP-only cookies** _(recommended)_ — Tokens are stored in `httpOnly` cookies. The browser sends them automatically. XSS-safe. Includes a `/auth/logout` endpoint that clears both cookies.
+- **Authorization header** — Tokens are returned in the response body. The client stores them and sends via `Authorization: Bearer <token>`. Best for mobile / API clients.
+
+### What's generated
 
 - **`Auth` module** — Complete login flow with controller, service, model, and validation
 - **Real bcrypt authentication** — Passwords are salted and hashed at rest; `bcrypt.compare()` is used on login. No stub credentials — production-ready from day one.
-- **`auth.ts` middleware** — Role-based JWT guard for protecting routes
-- **`rateLimiter.ts`** — Two limiters out of the box:
+- **`auth.middleware.ts`** — Role-based JWT guard for protecting routes. Extracts the token from cookies or the Authorization header depending on your chosen delivery method.
+- **`rateLimiter.middleware.ts`** — Two limiters out of the box:
   - Global: 100 requests / 15 min per IP
   - Login endpoint: 5 attempts / 15 min per IP (skips successful logins)
 - **JWT refresh token support** — Both `jwt_access_secret` and `jwt_refresh_secret` pre-configured in `.env` and `config/index.ts`
 - **`AUTH_SETUP.md`** — A seed guide placed inside `src/app/modules/Auth/` explaining how to create the users table, seed a test user, test the login endpoint, and go to production.
-- **Installed packages** — `jsonwebtoken`, `bcrypt`, `express-rate-limit`
+- **Installed packages** — `jsonwebtoken`, `bcrypt`, `express-rate-limit` (+ `cookie-parser` for cookie mode)
 
 Protecting a route:
 
 ```ts
+import auth from '../../middlewares/auth.middleware';
+
 router.get('/dashboard', auth('ADMIN'), dashboardController.get);
 ```
 
@@ -355,7 +437,7 @@ router.get('/dashboard', auth('ADMIN'), dashboardController.get);
 
 ## Error Handling
 
-The generated `globalErrorHandler.ts` is **stack-aware**. It maps errors specific to your chosen database and validator into a consistent API response:
+The generated `globalErrorHandler.middleware.ts` is **stack-aware**. It maps errors specific to your chosen database and validator into a consistent API response:
 
 ```json
 {
@@ -399,15 +481,22 @@ If you accidentally run a project script through `cem` (e.g. `cem lint:fix`), th
 ✖  Unknown command: "lint:fix"
 
 ⚠  Available commands:
-   cem                     — scaffold a new project
-   cem dev                 — start dev server with hot reload
-   cem build               — compile TypeScript to dist/
-   cem check               — run type-check without emitting
-   cem add module <name>   — generate a new module
-   cem add middleware <n>  — generate a middleware
-   cem add env <KEY>       — add an env variable
+   cem [project-name]           — scaffold a new project
+   cem dev                      — start dev server with hot reload
+   cem build                    — compile TypeScript to dist/
+   cem start                    — start the production server
+   cem check                    — run type-check, lint, and format check
+   cem list                     — list modules, middlewares, and env vars
+   cem add module <name>        — generate a new module
+   cem add middleware <name>    — generate a middleware
+   cem add env <KEY>            — add an env variable
+   cem remove module <name>     — delete a module and unwire its route
+   cem remove middleware <name> — delete a middleware file
+   cem remove env <KEY>         — remove an env var from .env and config
+   cem --version                — print the installed version
+   cem --help                   — show this help message
 
-⚠  Tip: scripts like lint, prettier, and start should be run with npm run, not cem.
+⚠  Tip: scripts like lint and prettier should be run with npm run, not cem.
 ```
 
 ---
