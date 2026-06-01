@@ -16,6 +16,7 @@ const { scaffoldCoreFiles, scaffoldQueryBuilder } = require('../lib/core/scaffol
 const { removeModule, removeMiddleware, removeEnvVar } = require('../lib/remover');
 const { listProject }              = require('../lib/lister');
 const { scaffoldDocker }           = require('../lib/dockerScaffold');
+const { generateReadme }           = require('../lib/readmeGenerator');
 
 // ─── VERSION ──────────────────────────────────────────────────────────────────
 let VERSION = '';
@@ -427,6 +428,24 @@ if (fs.existsSync(pkgPath)) {
       ui.err(e.message);
     }
   }
+
+  // README
+  const readmeSpin = ui.spinner('Generating README.md...');
+  try {
+    generateReadme(projectPath, {
+      projectName,
+      db,
+      validator,
+      useAuth,
+      useDocker,
+      tokenDelivery,
+    });
+    readmeSpin.succeed('README.md generated');
+  } catch (e) {
+    readmeSpin.fail('README generation failed');
+    ui.err(e.message);
+  }
+  ui.nl();
 
   // ── INSTALL PHASE ─────────────────────────────────────────────────────────
   ui.sectionHeader('Installing dependencies');
