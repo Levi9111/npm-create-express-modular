@@ -50,7 +50,7 @@
     "bugs": {
         "url": "https://github.com/Levi9111/npm-create-express-modular/issues"
     },
-    "homepage": "https://create-express-modular.lovable.app/",
+    "homepage": "https://create-express-modular.lovable.app/docs",
     "dependencies": {
         "http-status-codes": "^2.3.0",
         "inquirer": "^8.2.7"
