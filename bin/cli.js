@@ -463,6 +463,7 @@ if (fs.existsSync(pkgPath)) {
     runInstall(projectPath, [
       '@types/express', '@types/cors', 'typescript', 'tsx',
       'eslint', '@eslint/js', 'typescript-eslint', 'eslint-config-prettier', 'prettier',
+      'create-express-modular',
     ], true);
     baseSpin.succeed('Base dependencies installed');
   } catch (e) {
