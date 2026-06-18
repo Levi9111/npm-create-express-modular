@@ -17,14 +17,30 @@ Choose your database, your validator, and optionally add JWT auth — all from o
 ## Installation
 
 ```bash
+# npm
 npm install -g create-express-modular
+
+# yarn
+yarn global add create-express-modular
+
+# pnpm
+pnpm add -g create-express-modular
 ```
 
-Or use without installing via `npx`:
+Or run without installing globally:
 
 ```bash
+# npm
 npx create-express-modular my-api
+
+# yarn
+yarn dlx create-express-modular my-api
+
+# pnpm
+pnpm dlx create-express-modular my-api
 ```
+
+The CLI **auto-detects** which package manager you used and adapts all install commands, generated files, and terminal output accordingly.
 
 ---
 
@@ -290,8 +306,16 @@ When you select **Yes** to Docker during setup, three files are generated:
 | File | Purpose |
 |---|---|
 | `Dockerfile` | Multi-stage build (build stage + minimal Alpine production image) |
-| `.dockerignore` | Excludes `node_modules`, `.env`, source files, and test files |
+| `.dockerignore` | Excludes `node_modules`, `.env`, unused lock files, and test files |
 | `docker-compose.yml` | App service + the correct database sidecar for your chosen stack |
+
+The Dockerfile is **package-manager-aware** — it uses the correct lock file, install command, and (for pnpm) enables `corepack`:
+
+| PM | Lock file copied | Install command |
+|---|---|---|
+| npm | `package-lock.json` | `npm ci` |
+| yarn | `yarn.lock` | `yarn install --frozen-lockfile` |
+| pnpm | `pnpm-lock.yaml` | `pnpm install --frozen-lockfile` |
 
 **Database sidecar mapping:**
 
@@ -461,15 +485,17 @@ The generated `globalErrorHandler.middleware.ts` is **stack-aware**. It maps err
 
 ## Generated Project Scripts
 
-| Script | Equivalent to |
-|---|---|
-| `npm run start:dev` | `cem dev` |
-| `npm run build` | `cem build` |
-| `npm run check` | `cem check` |
-| `npm start` | `cem start` |
-| `npm run lint` | `eslint src` |
-| `npm run lint:fix` | `eslint src --fix` |
-| `npm run prettier:fix` | `prettier --write src` |
+All scripts work with **npm**, **yarn**, or **pnpm** — the generated README and CLI output automatically use the correct syntax for your detected package manager.
+
+| Script (npm) | Script (yarn / pnpm) | Equivalent to |
+|---|---|---|
+| `npm run start:dev` | `yarn start:dev` / `pnpm start:dev` | `cem dev` |
+| `npm run build` | `yarn build` / `pnpm build` | `cem build` |
+| `npm run check` | `yarn check` / `pnpm check` | `cem check` |
+| `npm start` | `yarn start` / `pnpm start` | `cem start` |
+| `npm run lint` | `yarn lint` / `pnpm lint` | `eslint src` |
+| `npm run lint:fix` | `yarn lint:fix` / `pnpm lint:fix` | `eslint src --fix` |
+| `npm run prettier:fix` | `yarn prettier:fix` / `pnpm prettier:fix` | `prettier --write src` |
 
 ---
 
@@ -496,15 +522,33 @@ If you accidentally run a project script through `cem` (e.g. `cem lint:fix`), th
    cem --version                — print the installed version
    cem --help                   — show this help message
 
-⚠  Tip: scripts like lint and prettier should be run with npm run, not cem.
+⚠  Tip: scripts like lint and prettier should be run with your package manager, not cem.
 ```
+
+---
+
+## Package Manager Support
+
+The CLI auto-detects your package manager and adapts its behaviour:
+
+| Signal | Priority | Example |
+|---|---|---|
+| Lock file in project root | Highest | `pnpm-lock.yaml` → uses pnpm |
+| `npm_config_user_agent` env var | Medium | Set by npm/yarn/pnpm when they invoke scripts |
+| Default | Lowest | Falls back to npm |
+
+The detected PM affects:
+- **Scaffolding** — correct install commands during project creation
+- **Docker** — Dockerfile uses the right lock file, install commands, and corepack setup
+- **Generated README** — install and run-script commands match your PM
+- **CLI output** — update notices, error messages, and tips use the correct PM syntax
 
 ---
 
 ## Requirements
 
 - Node.js `>= 18`
-- npm `>= 9`
+- **One of:** npm `>= 9`, yarn `>= 1.22`, or pnpm `>= 8`
 - TypeScript `>= 5.5` (installed automatically)
 
 ---
