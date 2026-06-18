@@ -42,6 +42,12 @@ pnpm dlx create-express-modular my-api
 
 The CLI **auto-detects** which package manager you used and adapts all install commands, generated files, and terminal output accordingly.
 
+> **Yarn v1 users:** If `cem` is not found after `yarn global add`, your global bin directory likely isn't on your `PATH`. Fix it by running:
+> ```bash
+> export PATH="$(yarn global bin):$PATH"
+> ```
+> Add this line to your `~/.bashrc` or `~/.zshrc` to make it permanent.
+
 ---
 
 ## Creating a New Project
