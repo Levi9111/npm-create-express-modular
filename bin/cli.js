@@ -7,6 +7,7 @@ const path = require('path');
 const { execSync } = require('child_process');
 
 const ui = require('../lib/ui');
+const { detectPM, installCmd, initialInstallCmd, runScript } = require('../lib/pm');
 const { scaffoldAuth }             = require('../lib/authGenerator');
 const { generateModule }           = require('../lib/moduleGenerator');
 const { getDbGenerator }           = require('../lib/db');
@@ -29,7 +30,8 @@ let inquirer;
 try {
   inquirer = require('inquirer');
 } catch {
-  ui.abort('Missing dependency: inquirer. Run: npm install inquirer');
+  const _pm = detectPM();
+  ui.abort(`Missing dependency: inquirer. Run: ${installCmd(_pm, ['inquirer'])}`);
 }
 
 // ─── HELPERS ─────────────────────────────────────────────────────────────────
@@ -44,10 +46,9 @@ function copyFolderSync(from, to) {
   });
 }
 
-function runInstall(cwd, packages, dev = false) {
-  const flag = dev ? '-D' : '';
+function runInstall(cwd, packages, dev = false, pm = 'npm') {
   execSync(
-    `npm install ${flag} ${packages.join(' ')} --loglevel=error`,
+    installCmd(pm, packages, { dev }),
     { cwd, stdio: 'pipe' },
   );
 }
@@ -72,13 +73,16 @@ function printHelp() {
   console.log('   cem --version                — print the installed version');
   console.log('   cem --help                   — show this help message');
   ui.nl();
-  ui.warn('Tip: scripts like lint and prettier should be run with npm run, not cem.');
+  ui.warn('Tip: scripts like lint and prettier should be run with your package manager, not cem.');
   ui.nl();
 }
 
 // ─── CLI ENTRYPOINT ───────────────────────────────────────────────────────────
 async function runCLI() {
   const args = process.argv.slice(2);
+
+  // Detect the user's package manager
+  const pm = detectPM();
 
   // Fire off the update check in the background immediately
   const { checkForUpdates, isUpdateAvailable } = require('../lib/updateNotifier');
@@ -89,7 +93,7 @@ async function runCLI() {
     try {
       const latest = await updateCheckPromise;
       if (isUpdateAvailable(VERSION, latest)) {
-        ui.printUpdateNotice(VERSION, latest);
+        ui.printUpdateNotice(VERSION, latest, pm);
       }
     } catch { /* non-fatal */ }
   }
@@ -419,7 +423,7 @@ if (fs.existsSync(pkgPath)) {
   if (useDocker) {
     const dockerSpin = ui.spinner('Generating Docker files...');
     try {
-      scaffoldDocker(projectPath, projectName, db);
+      scaffoldDocker(projectPath, projectName, db, pm);
       dockerSpin.succeed('Docker files generated');
       ui.substep('Dockerfile  ·  .dockerignore  ·  docker-compose.yml');
       ui.nl();
@@ -439,6 +443,7 @@ if (fs.existsSync(pkgPath)) {
       useAuth,
       useDocker,
       tokenDelivery,
+      pm,
     });
     readmeSpin.succeed('README.md generated');
   } catch (e) {
@@ -458,13 +463,13 @@ if (fs.existsSync(pkgPath)) {
   // Base deps
   const baseSpin = ui.spinner('Installing base dependencies...');
   try {
-    execSync('npm install --loglevel=error', { cwd: projectPath, stdio: 'pipe' });
-    runInstall(projectPath, ['dotenv', 'http-status-codes', 'express', 'cors', 'helmet']);
+    execSync(initialInstallCmd(pm), { cwd: projectPath, stdio: 'pipe' });
+    runInstall(projectPath, ['dotenv', 'http-status-codes', 'express', 'cors', 'helmet'], false, pm);
     runInstall(projectPath, [
       '@types/express', '@types/cors', 'typescript', 'tsx',
       'eslint', '@eslint/js', 'typescript-eslint', 'eslint-config-prettier', 'prettier',
       'create-express-modular',
-    ], true);
+    ], true, pm);
     baseSpin.succeed('Base dependencies installed');
   } catch (e) {
     baseSpin.fail('Base install failed');
@@ -476,8 +481,8 @@ if (fs.existsSync(pkgPath)) {
   if (dbDeps.prod.length || dbDeps.dev.length) {
     const dbSpin = ui.spinner(`Installing ${db} driver...`);
     try {
-      if (dbDeps.prod.length) runInstall(projectPath, dbDeps.prod);
-      if (dbDeps.dev.length)  runInstall(projectPath, dbDeps.dev, true);
+      if (dbDeps.prod.length) runInstall(projectPath, dbDeps.prod, false, pm);
+      if (dbDeps.dev.length)  runInstall(projectPath, dbDeps.dev, true, pm);
       dbSpin.succeed(`${db} driver installed`);
     } catch (e) {
       dbSpin.fail(`${db} install failed`);
@@ -490,8 +495,8 @@ if (fs.existsSync(pkgPath)) {
   if (valDeps.prod.length) {
     const valSpin = ui.spinner(`Installing ${validator}...`);
     try {
-      runInstall(projectPath, valDeps.prod);
-      if (valDeps.dev.length) runInstall(projectPath, valDeps.dev, true);
+      runInstall(projectPath, valDeps.prod, false, pm);
+      if (valDeps.dev.length) runInstall(projectPath, valDeps.dev, true, pm);
       valSpin.succeed(`${validator} installed`);
     } catch (e) {
       valSpin.fail(`${validator} install failed`);
@@ -503,8 +508,8 @@ if (fs.existsSync(pkgPath)) {
   if (useAuth) {
     const authDepSpin = ui.spinner('Installing auth dependencies...');
     try {
-      runInstall(projectPath, ['bcrypt', 'jsonwebtoken', 'express-rate-limit']);
-      runInstall(projectPath, ['@types/bcrypt', '@types/jsonwebtoken'], true);
+      runInstall(projectPath, ['bcrypt', 'jsonwebtoken', 'express-rate-limit'], false, pm);
+      runInstall(projectPath, ['@types/bcrypt', '@types/jsonwebtoken'], true, pm);
       authDepSpin.succeed('Auth dependencies installed');
     } catch (e) {
       authDepSpin.fail('Auth dependency install failed');
@@ -515,8 +520,8 @@ if (fs.existsSync(pkgPath)) {
     if (tokenDelivery === 'cookie') {
       const cookieSpin = ui.spinner('Installing cookie-parser...');
       try {
-        runInstall(projectPath, ['cookie-parser']);
-        runInstall(projectPath, ['@types/cookie-parser'], true);
+        runInstall(projectPath, ['cookie-parser'], false, pm);
+        runInstall(projectPath, ['@types/cookie-parser'], true, pm);
         cookieSpin.succeed('cookie-parser installed');
       } catch (e) {
         cookieSpin.fail('cookie-parser install failed');
@@ -539,7 +544,7 @@ if (fs.existsSync(pkgPath)) {
   // ── UPDATE CHECK ──────────────────────────────────────────────────────────
   const latestVersion = await updateCheckPromise;
   if (isUpdateAvailable(VERSION, latestVersion)) {
-    ui.printUpdateNotice(VERSION, latestVersion);
+    ui.printUpdateNotice(VERSION, latestVersion, pm);
   }
 }
 
