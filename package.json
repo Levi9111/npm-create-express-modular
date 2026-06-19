@@ -11,6 +11,7 @@
         "template",
         "lib",
         "README.md",
+        "DOCS.md",
         "package.json",
         "LICENSE",
         "CHANGELOG.md"
