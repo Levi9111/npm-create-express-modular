@@ -93,7 +93,9 @@ Visit `http://localhost:5000` in a browser to see the **CEM Welcome Page** — a
 | `cem build` | Run middleware convention guard + architecture guard + compile TypeScript to `dist/` |
 | `cem start` | Start the production server with preflight checks and safety guards |
 | `cem check` | Run type check, lint, and format check in one go |
-| `cem list` | List all modules, middlewares, and env vars in the current project |
+| `cem list` \ `cem ls` | List all modules, middlewares, and env vars in the current project |
+
+> `cem ls` is an alias for `cem list`.
 
 ### Add Commands
 
@@ -274,6 +276,8 @@ export default calculate;
 
 ## `cem remove` — Remove Things Cleanly
 
+> `cem rm` is an alias for `cem remove` and works with all subcommands.
+
 ### Remove a module
 
 ```bash
@@ -289,6 +293,8 @@ cem rm module Product
 
 ```bash
 cem remove middleware calculate
+# or alias:
+cem rm middleware calculate
 ```
 
 - Deletes `src/app/middlewares/calculate.middleware.ts`
@@ -298,6 +304,8 @@ cem remove middleware calculate
 
 ```bash
 cem remove env STRIPE_SECRET_KEY
+# or alias:
+cem rm env STRIPE_SECRET_KEY
 ```
 
 - Removes the line from `.env`
@@ -322,6 +330,8 @@ The Dockerfile is **package-manager-aware** — it uses the correct lock file, i
 | npm | `package-lock.json` | `npm ci` |
 | yarn | `yarn.lock` | `yarn install --frozen-lockfile` |
 | pnpm | `pnpm-lock.yaml` | `pnpm install --frozen-lockfile` |
+
+> **pnpm users:** The generated Dockerfile automatically runs `corepack enable` to make pnpm available inside the Alpine image — no separate install step needed.
 
 **Database sidecar mapping:**
 
@@ -507,10 +517,10 @@ All scripts work with **npm**, **yarn**, or **pnpm** — the generated README an
 
 ## Unknown Commands
 
-If you accidentally run a project script through `cem` (e.g. `cem lint:fix`), the CLI will print a helpful error instead of launching the scaffold wizard:
+If you pass an unknown **flag** (e.g. `cem --fix`), the CLI prints a helpful error and exits:
 
 ```
-✖  Unknown command: "lint:fix"
+✖  Unknown flag: "--fix"
 
 ⚠  Available commands:
    cem [project-name]           — scaffold a new project
@@ -531,6 +541,8 @@ If you accidentally run a project script through `cem` (e.g. `cem lint:fix`), th
 ⚠  Tip: scripts like lint and prettier should be run with your package manager, not cem.
 ```
 
+> Bare words that aren't recognised commands (e.g. `cem lint:fix`) are treated as a project name and open the scaffold wizard instead.
+
 ---
 
 ## Package Manager Support
@@ -548,6 +560,8 @@ The detected PM affects:
 - **Docker** — Dockerfile uses the right lock file, install commands, and corepack setup
 - **Generated README** — install and run-script commands match your PM
 - **CLI output** — update notices, error messages, and tips use the correct PM syntax
+
+The generated `package.json` includes a `packageManager` field (e.g. `"packageManager": "pnpm@latest"`) for yarn and pnpm projects so Corepack and CI environments automatically enforce the correct PM without extra configuration.
 
 ---
 

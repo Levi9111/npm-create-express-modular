@@ -234,7 +234,6 @@ async function runCLI() {
                 generateMiddleware
             } = require('../lib/middlewareGenerator');
             generateMiddleware(name);
-            ui.success(`Middleware ${ui.cyan(name)} generated in src/app/middlewares/`);
             await notifyIfUpdateAvailable();
             process.exit(0);
         }
