@@ -12,6 +12,8 @@ Choose your database, your validator, and optionally add JWT auth — all from o
 
 ### [📖 Full Documentation →](https://create-express-modular.lovable.app/docs)
 
+*If you find this tool helpful, consider leaving a ⭐ **star** on GitHub to support the project!*
+
 </div>
 
 ---
@@ -56,21 +58,35 @@ Answer 5 prompts — get a complete, wired-up backend:
 
 ## CLI Commands
 
+### 🛠️ Project Management
+
 | Command | Description |
 |---|---|
-| `cem dev` | Dev server with live reload |
-| `cem build` | Guards + TypeScript compile to `dist/` |
-| `cem start` | Production server with preflight checks |
-| `cem check` | Type-check · lint · format in one command |
-| `cem list` | Snapshot of modules, middlewares, and env vars |
-| `cem add module <Name>` | Scaffold a full feature module |
-| `cem add middleware <name>` | Create a middleware file |
-| `cem add env <KEY>` | Add env var to `.env`, `.env.example`, and config |
-| `cem remove module <Name>` | Delete module + unwire route |
-| `cem remove middleware <name>` | Delete a custom middleware |
-| `cem remove env <KEY>` | Remove env var from all files |
+| **`cem dev`** | Start the dev server with live reload |
+| **`cem build`** | Run guards + compile TypeScript to `dist/` |
+| **`cem start`** | Start the production server with preflight checks |
+| **`cem check`** | Run type-check, lint, and format checks in one command |
+| **`cem list`** | Show a snapshot of modules, middlewares, and env vars |
 
-> `cem rm` is an alias for `cem remove`. `cem ls` is an alias for `cem list`.
+### ➕ Generating Features
+
+| Command | Description |
+|---|---|
+| **`cem add module <Name>`** | Scaffold a complete feature module |
+| **`cem add middleware <name>`** | Create a middleware file under `src/app/middlewares/` |
+| **`cem add env <KEY>`** | Add env var to `.env`, `.env.example`, and config |
+
+### ❌ Removing Features
+
+| Command | Description |
+|---|---|
+| **`cem remove module <Name>`** | Delete module directory and unwire route |
+| **`cem remove middleware <name>`** | Delete a custom middleware file |
+| **`cem remove env <KEY>`** | Remove env var from all configurations |
+
+> 💡 **Command Shortcuts / Aliases:**
+> * **`cem rm`** is an alias for **`cem remove`**
+> * **`cem ls`** is an alias for **`cem list`**
 
 ---
 
