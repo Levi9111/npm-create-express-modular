@@ -1,6 +1,6 @@
 {
     "name": "create-express-modular",
-    "version": "2.6.5",
+    "version": "2.6.6",
     "description": "Scaffold a modular, domain-driven Express + TypeScript backend. Choose your database (Mongoose, Prisma, or Drizzle) and validator (Zod or Joi). Optionally add JWT auth and Docker setup.",
     "bin": {
         "create-express-modular": "./bin/cli.js",
