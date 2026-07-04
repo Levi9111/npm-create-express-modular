@@ -80,9 +80,9 @@ Answer 5 prompts — get a complete, wired-up backend:
 
 | Command | Description |
 |---|---|
-| **`cem remove module <Name>`** | Delete module directory and unwire route |
-| **`cem remove middleware <name>`** | Delete a custom middleware file |
-| **`cem remove env <KEY>`** | Remove env var from all configurations |
+| **`cem remove module <Name...>`** | Delete module directory(ies) and unwire routes |
+| **`cem remove middleware <name...>`** | Delete one or more custom middleware files |
+| **`cem remove env <KEY...>`** | Remove env var(s) from all configurations |
 
 > 💡 **Command Shortcuts / Aliases:**
 > * **`cem rm`** is an alias for **`cem remove`**

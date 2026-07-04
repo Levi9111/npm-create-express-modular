@@ -108,9 +108,9 @@ function printHelp() {
     console.log('   cem add module <name...>     — generate one or more feature modules');
     console.log('   cem add middleware <name...> — generate one or more custom middlewares');
     console.log('   cem add env <KEY...>         — add one or more env variables');
-    console.log('   cem remove module <name>     — delete a module and unwire its route');
-    console.log('   cem remove middleware <name> — delete a middleware file');
-    console.log('   cem remove env <KEY>         — remove an env var from .env and config');
+    console.log('   cem remove module <name...>  — delete module(s) and unwire routes');
+    console.log('   cem remove middleware <name...> — delete middleware file(s)');
+    console.log('   cem remove env <KEY...>       — remove env var(s) from all config files');
     console.log('   cem --version                — print the installed version');
     console.log('   cem --help                   — show this help message');
     ui.nl();
@@ -259,29 +259,32 @@ async function runCLI() {
     // cem remove / cem rm
     if (args[0] === 'remove' || args[0] === 'rm') {
         const subcommand = args[1];
-        const name = args[2];
+        const targets = args.slice(2);
 
         if (subcommand === 'module') {
-            await removeModule(name);
+            if (targets.length === 0) ui.abort('Usage: cem remove module <Name...>');
+            await removeModule(targets);
             await notifyIfUpdateAvailable();
             process.exit(0);
         }
         if (subcommand === 'middleware') {
-            await removeMiddleware(name);
+            if (targets.length === 0) ui.abort('Usage: cem remove middleware <name...>');
+            await removeMiddleware(targets);
             await notifyIfUpdateAvailable();
             process.exit(0);
         }
         if (subcommand === 'env') {
-            await removeEnvVar(name);
+            if (targets.length === 0) ui.abort('Usage: cem remove env <KEY...>');
+            await removeEnvVar(targets);
             await notifyIfUpdateAvailable();
             process.exit(0);
         }
 
         ui.err('Unknown remove subcommand.');
         ui.nl();
-        ui.substep('cem remove module Product');
-        ui.substep('cem remove middleware calculate');
-        ui.substep('cem remove env STRIPE_SECRET_KEY');
+        ui.substep('cem remove module <Name...>');
+        ui.substep('cem remove middleware <name...>');
+        ui.substep('cem remove env <KEY...>');
         ui.nl();
         process.exit(1);
     }

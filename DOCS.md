@@ -124,9 +124,9 @@ Visit `http://localhost:5000` in a browser to see the **CEM Welcome Page** — a
 
 | Command | Description |
 |---|---|
-| `cem remove module <Name>` | Delete the module folder **and** unwire it from `routes/index.ts` |
-| `cem remove middleware <name>` | Delete a custom middleware file (`<name>.middleware.ts`) |
-| `cem remove env <KEY>` | Remove an env var from `.env`, `.env.example`, and `config/index.ts` |
+| `cem remove module <Name...>` | Delete module folder(s) **and** unwire from `routes/index.ts` |
+| `cem remove middleware <name...>` | Delete one or more custom middleware files |
+| `cem remove env <KEY...>` | Remove env var(s) from `.env`, `.env.example`, and `config/index.ts` |
 
 > `cem rm` is an alias for `cem remove` and works with all subcommands.
 
@@ -259,35 +259,51 @@ cem list
 ### Remove a module
 
 ```bash
+# Remove a single module
 cem remove module Product
+
+# Remove multiple modules at once
+cem remove module Product Category Review
+
 # or alias:
-cem rm module Product
+cem rm module Product Category
 ```
 
-- Deletes `src/app/modules/Product/` entirely
+- Deletes `src/app/modules/<Name>/` entirely for each specified module
 - Removes the `import` line and route entry from `src/app/routes/index.ts` automatically
+- Skips modules that don't exist with a warning
 
 ### Remove a middleware
 
 ```bash
+# Remove a single middleware
 cem remove middleware calculate
+
+# Remove multiple middlewares at once
+cem remove middleware calculate logger
+
 # or alias:
-cem rm middleware calculate
+cem rm middleware calculate logger
 ```
 
-- Deletes `src/app/middlewares/calculate.middleware.ts`
-- Core files (`globalErrorHandler`, `notFound`, `auth`, `rateLimiter`) are protected and cannot be removed this way.
+- Deletes `src/app/middlewares/<name>.middleware.ts` for each specified middleware
+- Core files (`globalErrorHandler`, `notFound`, `auth`, `rateLimiter`) are protected and cannot be removed this way — they are skipped with a warning.
 
 ### Remove an env variable
 
 ```bash
+# Remove a single env var
 cem remove env STRIPE_SECRET_KEY
+
+# Remove multiple env vars at once
+cem remove env CORS_ORIGIN BCRYPT_ROUNDS PASSWORD_RESET_SECRET
+
 # or alias:
-cem rm env STRIPE_SECRET_KEY
+cem rm env CORS_ORIGIN BCRYPT_ROUNDS
 ```
 
-- Removes the line from `.env` and `.env.example`
-- Removes the corresponding line from `src/app/config/index.ts`
+- Removes the line(s) from `.env` and `.env.example`
+- Removes the corresponding line(s) from `src/app/config/index.ts`
 
 ---
 
@@ -583,9 +599,9 @@ If you pass an unknown **flag** (e.g. `cem --fix`), the CLI prints a helpful err
    cem add module <name...>     — generate one or more feature modules
    cem add middleware <name...> — generate one or more custom middlewares
    cem add env <KEY...>         — add one or more env variables
-   cem remove module <name>     — delete a module and unwire its route
-   cem remove middleware <name> — delete a middleware file
-   cem remove env <KEY>         — remove an env var from .env and config
+   cem remove module <name...>  — delete module(s) and unwire routes
+   cem remove middleware <name...> — delete middleware file(s)
+   cem remove env <KEY...>       — remove env var(s) from all config files
    cem --version                — print the installed version
    cem --help                   — show this help message
 
