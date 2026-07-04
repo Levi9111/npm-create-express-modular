@@ -48,6 +48,9 @@ const {
 const {
     generateReadme
 } = require('../lib/readmeGenerator');
+const {
+    generateAgentDocs
+} = require('../lib/agentDocsGenerator');
 
 // ─── VERSION ──────────────────────────────────────────────────────────────────
 let VERSION = '';
@@ -550,6 +553,24 @@ async function runCLI() {
         readmeSpin.succeed('README.md generated');
     } catch (e) {
         readmeSpin.fail('README generation failed');
+        ui.err(e.message);
+    }
+
+    // Agent docs (AGENTS.md + CLAUDE.md)
+    const agentSpin = ui.spinner('Generating AGENTS.md & CLAUDE.md...');
+    try {
+        generateAgentDocs(projectPath, {
+            projectName,
+            db,
+            validator,
+            useAuth,
+            useDocker,
+            tokenDelivery,
+            pm,
+        });
+        agentSpin.succeed('AGENTS.md & CLAUDE.md generated');
+    } catch (e) {
+        agentSpin.fail('Agent docs generation failed');
         ui.err(e.message);
     }
     ui.nl();
