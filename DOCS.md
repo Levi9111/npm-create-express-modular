@@ -118,7 +118,7 @@ Visit `http://localhost:5000` in a browser to see the **CEM Welcome Page** — a
 |---|---|
 | `cem add module <Name...>` | Scaffold one or more complete feature modules |
 | `cem add env <KEY...>` | Add one or more env vars to `.env` & `.env.example`, and inject into `config/index.ts` |
-| `cem add middleware <name>` | Create a new middleware as `<name>.middleware.ts` in `src/app/middlewares/` |
+| `cem add middleware <name...>` | Create one or more new middlewares in `src/app/middlewares/` |
 
 ### Remove Commands
 
@@ -307,7 +307,11 @@ All middleware files **must** follow the `<name>.middleware.ts` naming conventio
 ### Adding a custom middleware
 
 ```bash
+# Add a single middleware
 cem add middleware calculate
+
+# Add multiple middlewares at once
+cem add middleware calculate rateLimiterGuard logger
 ```
 
 Creates `src/app/middlewares/calculate.middleware.ts`:
@@ -577,7 +581,7 @@ If you pass an unknown **flag** (e.g. `cem --fix`), the CLI prints a helpful err
    cem check                    — run type-check, lint, and format check
    cem list                     — list modules, middlewares, and env vars
    cem add module <name...>     — generate one or more feature modules
-   cem add middleware <name>    — generate a middleware
+   cem add middleware <name...> — generate one or more custom middlewares
    cem add env <KEY...>         — add one or more env variables
    cem remove module <name>     — delete a module and unwire its route
    cem remove middleware <name> — delete a middleware file

@@ -73,7 +73,7 @@ Answer 5 prompts — get a complete, wired-up backend:
 | Command | Description |
 |---|---|
 | **`cem add module <Name...>`** | Scaffold one or more complete feature modules |
-| **`cem add middleware <name>`** | Create a middleware file under `src/app/middlewares/` |
+| **`cem add middleware <name...>`** | Create one or more middleware files under `src/app/middlewares/` |
 | **`cem add env <KEY...>`** | Add one or more env vars to `.env`, `.env.example`, and config |
 
 ### ❌ Removing Features
