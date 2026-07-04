@@ -104,7 +104,7 @@ function printHelp() {
     console.log('   cem list                     — list modules, middlewares, and env vars');
     console.log('   cem add module <name>        — generate a new module');
     console.log('   cem add middleware <name>    — generate a middleware');
-    console.log('   cem add env <KEY>            — add an env variable');
+    console.log('   cem add env <KEY...>         — add one or more env variables');
     console.log('   cem remove module <name>     — delete a module and unwire its route');
     console.log('   cem remove middleware <name> — delete a middleware file');
     console.log('   cem remove env <KEY>         — remove an env var from .env and config');
@@ -212,16 +212,17 @@ async function runCLI() {
             await notifyIfUpdateAvailable();
             process.exit(0);
         }
-
         if (subcommand === 'env') {
-            if (!name) {
+            const keys = args.slice(2);
+            if (keys.length === 0) {
                 ui.abort('Please provide a key name. Example: cem add env ACCESS_SECRET');
             }
             const {
                 addEnvVar
             } = require('../lib/envGenerator');
-            addEnvVar(name);
-            ui.success(`Environment variable ${ui.cyan(name)} added to .env, .env.example, and config/index.ts`);
+            addEnvVar(keys);
+            const formattedKeys = keys.map(k => ui.cyan(k)).join(', ');
+            ui.success(`Environment variable(s) ${formattedKeys} added to .env, .env.example, and config/index.ts`);
             await notifyIfUpdateAvailable();
             process.exit(0);
         }
@@ -242,7 +243,7 @@ async function runCLI() {
         ui.nl();
         ui.substep('cem add module <name>');
         ui.substep('cem add middleware <name>');
-        ui.substep('cem add env <KEY>');
+        ui.substep('cem add env <KEY...>');
         ui.nl();
         process.exit(1);
     }

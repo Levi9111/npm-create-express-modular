@@ -117,7 +117,7 @@ Visit `http://localhost:5000` in a browser to see the **CEM Welcome Page** — a
 | Command | Description |
 |---|---|
 | `cem add module <Name>` | Scaffold a complete feature module |
-| `cem add env <KEY>` | Add an env var to `.env` & `.env.example`, and inject into `config/index.ts` |
+| `cem add env <KEY...>` | Add one or more env vars to `.env` & `.env.example`, and inject into `config/index.ts` |
 | `cem add middleware <name>` | Create a new middleware as `<name>.middleware.ts` in `src/app/middlewares/` |
 
 ### Remove Commands
@@ -356,13 +356,17 @@ Optionally include a `product.constant.ts` (ENUMs, search fields) and `product.u
 ## Adding an Env Variable
 
 ```bash
+# Add a single environment variable
 cem add env STRIPE_SECRET_KEY
+
+# Add multiple environment variables at the same time
+cem add env CORS_ORIGIN BCRYPT_ROUNDS PASSWORD_RESET_SECRET
 ```
 
 Result:
-- `.env` → `STRIPE_SECRET_KEY=<your_stripe_secret_key>`
-- `.env.example` → `STRIPE_SECRET_KEY=`
-- `config/index.ts` → `stripe_secret_key: process.env.STRIPE_SECRET_KEY,`
+- `.env` → Appends the keys with placeholder values (e.g. `STRIPE_SECRET_KEY=<your_stripe_secret_key>`)
+- `.env.example` → Appends the keys with empty values
+- `config/index.ts` → Injects config keys mapping to `process.env.*` (e.g. `stripe_secret_key: process.env.STRIPE_SECRET_KEY,`)
 
 Accepts any format: `UPPER_SNAKE_CASE`, `camelCase`, or `PascalCase` — always normalised correctly.
 
@@ -570,7 +574,7 @@ If you pass an unknown **flag** (e.g. `cem --fix`), the CLI prints a helpful err
    cem list                     — list modules, middlewares, and env vars
    cem add module <name>        — generate a new module
    cem add middleware <name>    — generate a middleware
-   cem add env <KEY>            — add an env variable
+   cem add env <KEY...>         — add one or more env variables
    cem remove module <name>     — delete a module and unwire its route
    cem remove middleware <name> — delete a middleware file
    cem remove env <KEY>         — remove an env var from .env and config
