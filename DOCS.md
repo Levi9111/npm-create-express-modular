@@ -116,7 +116,7 @@ Visit `http://localhost:5000` in a browser to see the **CEM Welcome Page** — a
 
 | Command | Description |
 |---|---|
-| `cem add module <Name>` | Scaffold a complete feature module |
+| `cem add module <Name...>` | Scaffold one or more complete feature modules |
 | `cem add env <KEY...>` | Add one or more env vars to `.env` & `.env.example`, and inject into `config/index.ts` |
 | `cem add middleware <name>` | Create a new middleware as `<name>.middleware.ts` in `src/app/middlewares/` |
 
@@ -333,7 +333,11 @@ export default calculate;
 ## Adding a Feature Module
 
 ```bash
+# Scaffold a single module
 cem add module Product
+
+# Scaffold multiple modules at once
+cem add module Product Category Review
 ```
 
 Creates a complete `Product` module in `src/app/modules/Product/`:
@@ -572,7 +576,7 @@ If you pass an unknown **flag** (e.g. `cem --fix`), the CLI prints a helpful err
    cem start                    — start the production server
    cem check                    — run type-check, lint, and format check
    cem list                     — list modules, middlewares, and env vars
-   cem add module <name>        — generate a new module
+   cem add module <name...>     — generate one or more feature modules
    cem add middleware <name>    — generate a middleware
    cem add env <KEY...>         — add one or more env variables
    cem remove module <name>     — delete a module and unwire its route

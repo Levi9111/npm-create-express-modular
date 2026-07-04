@@ -102,7 +102,7 @@ function printHelp() {
     console.log('   cem start                    — start the production server');
     console.log('   cem check                    — run type-check, lint, and format check');
     console.log('   cem list                     — list modules, middlewares, and env vars');
-    console.log('   cem add module <name>        — generate a new module');
+    console.log('   cem add module <name...>     — generate one or more feature modules');
     console.log('   cem add middleware <name>    — generate a middleware');
     console.log('   cem add env <KEY...>         — add one or more env variables');
     console.log('   cem remove module <name>     — delete a module and unwire its route');
@@ -208,7 +208,11 @@ async function runCLI() {
         const name = args[2];
 
         if (subcommand === 'module') {
-            await generateModule(name);
+            const moduleNames = args.slice(2);
+            if (moduleNames.length === 0) {
+                ui.abort('Please provide a module name. Example: cem add module Product');
+            }
+            await generateModule(moduleNames);
             await notifyIfUpdateAvailable();
             process.exit(0);
         }
@@ -241,7 +245,7 @@ async function runCLI() {
 
         ui.err('Unknown add subcommand.');
         ui.nl();
-        ui.substep('cem add module <name>');
+        ui.substep('cem add module <name...>');
         ui.substep('cem add middleware <name>');
         ui.substep('cem add env <KEY...>');
         ui.nl();
