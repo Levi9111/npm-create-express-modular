@@ -56,6 +56,15 @@ Answer 5 prompts — get a complete, wired-up backend:
 
 ---
 
+## 🤖 AI Coding Assistants (Cursor & Claude Ready)
+
+To support seamless development with AI assistants (Cursor, Claude Code, GitHub Copilot, etc.), the CLI automatically scaffolds custom configuration context files during project initialization:
+
+- **`AGENTS.md`** — Universal rules detailing code style, technology choices, strictly-enforced directory structure guidelines, and available CLI tools.
+- **`CLAUDE.md`** — Full project context for Claude with real boilerplates (Controllers, Services, Routes, schemas, and Models) specifically tailored to the scaffolded stack.
+
+---
+
 ## CLI Commands
 
 ### 🛠️ Project Management

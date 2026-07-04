@@ -84,6 +84,8 @@ taskflow-api/
 │   │       └── QueryBuilder.ts                   # Advanced Mongoose search/filter helper
 │   ├── app.ts                                    # Express server configurations
 │   └── server.ts                                 # DB connection & server initialization
+├── AGENTS.md                                     # AI coding assistant guidelines
+├── CLAUDE.md                                     # Claude-specific boilerplate context
 ├── .env
 ├── .env.example
 ├── Dockerfile
@@ -92,6 +94,12 @@ taskflow-api/
 ├── tsconfig.json
 └── package.json
 ```
+
+### 🤖 AI coding assistant integration
+
+To ensure AI assistants (like Cursor, Claude Code, and Copilot) understand the exact structure, directory rules, and boilerplate patterns of your specific tech stack, CEM automatically scaffolds:
+*   `AGENTS.md`: Concise configuration rules containing tech choices, middleware naming schemas, and CLI commands.
+*   `CLAUDE.md`: Customized complete code examples (Controllers, Services, Routes, Models, and Validation) mapping perfectly to your choices (e.g. Mongoose + Zod + HTTP-only cookies).
 
 ---
 
@@ -136,23 +144,24 @@ Test the health-check route by clicking **Check /health** or hitting `http://loc
 
 ## 🔑 Step 3: Managing Environment Variables (`cem add env`)
 
-Let's say we need to integrate an external service like **Stripe** or **Resend**. Rather than manually updating three separate files, we can use the environment manager command.
+Let's say we need to integrate external services like **Resend** and **Stripe**. Rather than manually updating three separate files for each key, we can use the environment manager command to add them all at once.
 
 Run:
 ```bash
-cem add env RESEND_API_KEY
+cem add env RESEND_API_KEY STRIPE_SECRET_KEY
 ```
 
 ### ⚡ What Just Happened?
-The CLI automatically updated three different locations:
-1.  **`.env`**: Appended `RESEND_API_KEY=<your_resend_api_key>`
-2.  **`.env.example`**: Appended `RESEND_API_KEY=`
-3.  **`src/app/config/index.ts`**: Automatically imported the key, normalized it to **`lower_snake_case`**, and injected it into the configuration export:
+The CLI automatically updated three different locations for both keys:
+1.  **`.env`**: Appends the keys with placeholders.
+2.  **`.env.example`**: Appends empty variables.
+3.  **`src/app/config/index.ts`**: Automatically imports both keys, normalizes them to camel/lower_snake case, and injects them into the configuration export:
     ```typescript
     resend_api_key: process.env.RESEND_API_KEY,
+    stripe_secret_key: process.env.STRIPE_SECRET_KEY,
     ```
 
-You can now import `config` anywhere in your application and have type-safe autocomplete access to `config.resend_api_key`!
+You can now import `config` anywhere in your application and have type-safe autocomplete access to `config.resend_api_key` and `config.stripe_secret_key`!
 
 ---
 
@@ -173,6 +182,8 @@ When prompted:
 
 ### ⚙️ Auto-Wiring
 The CLI generates the module directory inside `src/app/modules/Task/` and **automatically registers the router** inside `src/app/routes/index.ts`. No manual route imports or registration arrays required!
+
+> 💡 **Batch Tip**: You can scaffold multiple modules at once by listing them as space-separated arguments (e.g. `cem add module Task Category Comment`). The CLI will step through configuration questions for each module one by one.
 
 Let's implement the `Task` features step-by-step:
 
@@ -457,6 +468,8 @@ cem add middleware requestLogger
 ### 📂 What Just Happened?
 The CLI automatically created `src/app/middlewares/requestLogger.middleware.ts` with clean boilerplate using the `catchAsync` wrapper.
 
+> 💡 **Batch Tip**: You can generate multiple middlewares at the same time by running `cem add middleware requestLogger errorLogger corsHandler`.
+
 Let's implement the logger logic:
 ```typescript
 import { NextFunction, Request, Response } from 'express';
@@ -601,26 +614,26 @@ If any errors occur, the stack trace and linting output will print inline direct
 
 ## 🗑️ Step 9: Deleting Components Safely (`cem remove`)
 
-If you want to remove an environment key, custom middleware, or a feature module, CEM includes interactive, destructive guards to prevent accidental file deletion.
+If you want to remove environment keys, custom middlewares, or feature modules, CEM includes interactive, destructive guards to prevent accidental file deletion. All removal commands support batch operations.
 
-### Remove an Environment Variable
+### Remove Environment Variables
 ```bash
-cem remove env RESEND_API_KEY
+cem remove env RESEND_API_KEY STRIPE_SECRET_KEY
 ```
-This cleanly scrubs the key out of `.env`, `.env.example`, and your type-safe `src/app/config/index.ts`.
+This cleanly scrubs the specified keys out of `.env`, `.env.example`, and your type-safe `src/app/config/index.ts` in a single run with a single unified confirmation prompt.
 
-### Remove a Custom Middleware
+### Remove Custom Middlewares
 ```bash
-cem remove middleware requestLogger
+cem remove middleware requestLogger errorLogger
 ```
-Prompts for confirmation before permanently deleting `requestLogger.middleware.ts`.
-*Note: Core middlewares (`auth`, `globalErrorHandler`, `notFound`, `rateLimiter`) are protected and cannot be deleted.*
+Prompts for confirmation before permanently deleting each middleware file.
+*Note: Core middlewares (`auth`, `globalErrorHandler`, `notFound`, `rateLimiter`) are protected and cannot be deleted — the CLI will warn and skip them automatically.*
 
-### Remove a Module
+### Remove Feature Modules
 ```bash
-cem remove module Task
+cem remove module Task Category
 ```
-Prompts for confirmation, then deletes `src/app/modules/Task/` and **automatically unwires the route import & registration** in `src/app/routes/index.ts`!
+Deletes the module folders and **automatically unwires their route imports & registration lines** in `src/app/routes/index.ts`! Missing modules are skipped with a warning.
 
 ---
 

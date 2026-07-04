@@ -25,7 +25,8 @@
 17. [Package Manager Support](#package-manager-support)
 18. [Generated Project Scripts](#generated-project-scripts)
 19. [Unknown Commands](#unknown-commands)
-20. [Requirements](#requirements)
+20. [AI Coding Assistants Integration](#ai-coding-assistants-integration)
+21. [Requirements](#requirements)
 
 ---
 
@@ -609,6 +610,28 @@ If you pass an unknown **flag** (e.g. `cem --fix`), the CLI prints a helpful err
 ```
 
 > Bare words that aren't recognised commands (e.g. `cem lint:fix`) are treated as a project name and open the scaffold wizard instead.
+
+---
+
+## AI Coding Assistants Integration
+
+To speed up development when using AI assistants (such as Cursor, Claude Code, or GitHub Copilot), `create-express-modular` automatically scaffolds project-aware documentation in the root of your new project:
+
+### `AGENTS.md`
+A high-level set of strict rules and layout guides:
+*   Lists chosen stack parts (e.g. Mongoose + Joi + Cookies).
+*   Enforces modular folder organization.
+*   Enforces middleware naming (`<name>.middleware.ts`).
+*   Documents all helper commands for module/env addition or removal.
+
+### `CLAUDE.md`
+A highly comprehensive boilerplate context specifically customized to your exact scaffold choices:
+*   **Controller boilerplate**: Complete code pattern using `catchAsync` and `sendResponse`.
+*   **Model boilerplate**: Customized schema syntax (Mongoose model types, Prisma client singleton, or Drizzle schema tables).
+*   **Validation boilerplate**: Configured schemas (Zod or Joi syntax).
+*   **Route boilerplate**: Setup with automatic routing wiring and optional role-based protection guards.
+
+AI agents read these context files instantly, avoiding architectural confusion and keeping your generated code clean and matching original project specs.
 
 ---
 
