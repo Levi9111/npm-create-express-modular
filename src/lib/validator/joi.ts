@@ -1,17 +1,17 @@
 'use strict';
 
-const fs = require('fs');
-const path = require('path');
+import fs from 'fs';
+import path from 'path';
+import type { ValidatorGenerator, ErrorBlock, GeneratorDependencies } from '../types';
 
-function scaffoldValidateRequest(projectPath) {
+const joiGenerator: ValidatorGenerator = {
+  scaffoldValidateRequest(projectPath: string): void {
     const utilsDir = path.join(projectPath, 'src/app/utils');
-    fs.mkdirSync(utilsDir, {
-        recursive: true
-    });
+    fs.mkdirSync(utilsDir, { recursive: true });
 
     fs.writeFileSync(
-        path.join(utilsDir, 'validateRequest.ts'),
-        `import Joi from 'joi';
+      path.join(utilsDir, 'validateRequest.ts'),
+      `import Joi from 'joi';
 import { NextFunction, Request, Response } from 'express';
 import { catchAsync } from './catchAsync';
 
@@ -26,12 +26,12 @@ const validateRequest = (schema: Joi.ObjectSchema) => {
 export default validateRequest;
 `,
     );
-}
+  },
 
-function errorBlock() {
+  errorBlock(): ErrorBlock {
     return {
-        imports: `import Joi from 'joi';`,
-        handler: `
+      imports: `import Joi from 'joi';`,
+      handler: `
   if (err?.isJoi === true || err instanceof Joi.ValidationError) {
     statusCode = 400;
     message = 'Validation Error';
@@ -41,13 +41,13 @@ function errorBlock() {
     }));
   } else`,
     };
-}
+  },
 
-function scaffoldErrorFile(_projectPath) {
-    // Joi errors are handled inline in the globalErrorHandler block — no separate file needed
-}
+  scaffoldErrorFile(_projectPath: string): void {
+    // Joi errors are handled inline in the globalErrorHandler block
+  },
 
-function validationStub(moduleName) {
+  validationStub(moduleName: string): string {
     return `import Joi from 'joi';
 
 const create${moduleName}Schema = Joi.object({
@@ -64,19 +64,14 @@ export const ${moduleName}Validation = {
   update${moduleName}Schema,
 };
 `;
-}
+  },
 
-function dependencies() {
+  dependencies(): GeneratorDependencies {
     return {
-        prod: ['joi'],
-        dev: ['@types/joi']
+      prod: ['joi'],
+      dev: ['@types/joi'],
     };
-}
-
-module.exports = {
-    scaffoldValidateRequest,
-    scaffoldErrorFile,
-    errorBlock,
-    validationStub,
-    dependencies,
+  },
 };
+
+export default joiGenerator;

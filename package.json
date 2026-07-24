@@ -3,13 +3,12 @@
     "version": "2.6.10",
     "description": "Scaffold a modular, domain-driven Express + TypeScript backend. Choose your database (Mongoose, Prisma, or Drizzle) and validator (Zod or Joi). Optionally add JWT auth and Docker setup.",
     "bin": {
-        "create-express-modular": "./bin/cli.js",
-        "cem": "./bin/cli.js"
+        "create-express-modular": "./dist/bin/cli.js",
+        "cem": "./dist/bin/cli.js"
     },
     "files": [
-        "bin",
+        "dist",
         "template",
-        "lib",
         "README.md",
         "DOCS.md",
         "package.json",
@@ -21,6 +20,8 @@
         "npm": ">=9.0.0"
     },
     "scripts": {
+        "build": "tsup",
+        "prepublishOnly": "npm run build",
         "test": "echo \"Error: no test specified\" && exit 1"
     },
     "keywords": [
@@ -57,6 +58,7 @@
         "inquirer": "^8.2.7"
     },
     "devDependencies": {
+        "@types/inquirer": "^8.2.13",
         "@types/node": "^26.1.1",
         "tsup": "^8.5.1",
         "typescript": "^7.0.2"

@@ -26,8 +26,6 @@ export default defineConfig({
     'lib/validator/index': 'src/lib/validator/index.ts',
     'lib/validator/zod': 'src/lib/validator/zod.ts',
     'lib/validator/joi': 'src/lib/validator/joi.ts',
-    'lib/validator/vine': 'src/lib/validator/vine.ts',
-    'lib/validator/yup': 'src/lib/validator/yup.ts',
     'lib/core/scaffoldCore': 'src/lib/core/scaffoldCore.ts',
     'lib/core/globalErrorHandler/shell': 'src/lib/core/globalErrorHandler/shell.ts',
   },
@@ -37,8 +35,4 @@ export default defineConfig({
   minify: false,
   sourcemap: true,
   shims: true,
-  // Preserve the shebang on the CLI entrypoint
-  banner: {
-    js: '',
-  },
 });

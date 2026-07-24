@@ -43,9 +43,10 @@ function step(label: string, fn: () => void): boolean {
     return true;
   } catch (e: unknown) {
     process.stdout.write(`${CROSS}\n`);
+    const errObj = e as { stdout?: Buffer | string; stderr?: Buffer | string };
     const out = (
-      ((e as NodeJS.ErrnoException).stdout as Buffer | string | undefined) ||
-      ((e as NodeJS.ErrnoException).stderr as Buffer | string | undefined) ||
+      errObj.stdout ||
+      errObj.stderr ||
       (e instanceof Error ? e.message : '')
     )
       .toString()

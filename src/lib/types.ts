@@ -3,7 +3,7 @@
 export type PackageManager = 'npm' | 'yarn' | 'pnpm';
 
 export type DbChoice = 'mongoose' | 'prisma' | 'drizzle';
-export type ValidatorChoice = 'zod' | 'joi' | 'vine' | 'yup';
+export type ValidatorChoice = 'zod' | 'joi';
 export type TokenDelivery = 'cookie' | 'header';
 
 // ─── CLI Prompt Answers ────────────────────────────────────────────────────────

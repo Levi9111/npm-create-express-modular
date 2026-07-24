@@ -1,18 +1,17 @@
 'use strict';
 
-const fs = require('fs');
-const path = require('path');
+import fs from 'fs';
+import path from 'path';
+import type { ValidatorGenerator, ErrorBlock, GeneratorDependencies } from '../types';
 
-function scaffoldValidateRequest(projectPath) {
+const zodGenerator: ValidatorGenerator = {
+  scaffoldValidateRequest(projectPath: string): void {
     const utilsDir = path.join(projectPath, 'src/app/utils');
-    fs.mkdirSync(utilsDir, {
-        recursive: true
-    });
+    fs.mkdirSync(utilsDir, { recursive: true });
 
-    // Compatible with Zod v3 and v4: uses z.ZodObject / z.ZodEffects instead of removed named exports
     fs.writeFileSync(
-        path.join(utilsDir, 'validateRequest.ts'),
-        `import { z } from 'zod';
+      path.join(utilsDir, 'validateRequest.ts'),
+      `import { z } from 'zod';
 import { NextFunction, Request, Response } from 'express';
 import { catchAsync } from './catchAsync';
 
@@ -33,14 +32,13 @@ const validateRequest = (schema: z.ZodType) => {
 export default validateRequest;
 `,
     );
-}
+  },
 
-// The error block injected into globalErrorHandler
-function errorBlock() {
+  errorBlock(): ErrorBlock {
     return {
-        imports: `import { ZodError } from 'zod';
+      imports: `import { ZodError } from 'zod';
 import handleZodError from '../errors/handleZodError';`,
-        handler: `
+      handler: `
   if (err instanceof ZodError) {
     const simplified = handleZodError(err);
     statusCode = simplified.statusCode;
@@ -48,17 +46,14 @@ import handleZodError from '../errors/handleZodError';`,
     errorSources = simplified.errorSources;
   } else`,
     };
-}
+  },
 
-// The error handler file written to src/app/errors/
-function scaffoldErrorFile(projectPath) {
+  scaffoldErrorFile(projectPath: string): void {
     const errDir = path.join(projectPath, 'src/app/errors');
-    fs.mkdirSync(errDir, {
-        recursive: true
-    });
+    fs.mkdirSync(errDir, { recursive: true });
     fs.writeFileSync(
-        path.join(errDir, 'handleZodError.ts'),
-        `import { ZodError } from 'zod';
+      path.join(errDir, 'handleZodError.ts'),
+      `import { ZodError } from 'zod';
 import { TErrorSources, TGenericErrorResponse } from '../interfaces/error';
 
 const handleZodError = (err: ZodError): TGenericErrorResponse => {
@@ -72,10 +67,9 @@ const handleZodError = (err: ZodError): TGenericErrorResponse => {
 export default handleZodError;
 `,
     );
-}
+  },
 
-// The validation stub written into new modules
-function validationStub(moduleName) {
+  validationStub(moduleName: string): string {
     return `import { z } from 'zod';
 
 const create${moduleName}Schema = z.object({
@@ -96,19 +90,14 @@ export const ${moduleName}Validation = {
   update${moduleName}Schema,
 };
 `;
-}
+  },
 
-function dependencies() {
+  dependencies(): GeneratorDependencies {
     return {
-        prod: ['zod'],
-        dev: []
+      prod: ['zod'],
+      dev: [],
     };
-}
-
-module.exports = {
-    scaffoldValidateRequest,
-    scaffoldErrorFile,
-    errorBlock,
-    validationStub,
-    dependencies,
+  },
 };
+
+export default zodGenerator;

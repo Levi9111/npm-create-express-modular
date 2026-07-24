@@ -1,29 +1,29 @@
 'use strict';
 
-const fs = require('fs');
-const path = require('path');
+import fs from 'fs';
+import path from 'path';
+import type { TokenDelivery } from '../types';
 
-/**
- * Writes all universal files that never change regardless of DB or validator choice.
- * These are the stable core of every generated project.
- */
-function scaffoldCoreFiles(projectPath, useRateLimit = false, tokenDelivery = 'header') {
-    _scaffoldErrors(projectPath);
-    _scaffoldUtils(projectPath);
-    _scaffoldInterfaces(projectPath);
-    _scaffoldMiddlewares(projectPath);
-    _scaffoldRoutes(projectPath);
-    _scaffoldApp(projectPath, useRateLimit, tokenDelivery);
+export function scaffoldCoreFiles(
+  projectPath: string,
+  useRateLimit = false,
+  tokenDelivery: TokenDelivery = 'header',
+): void {
+  _scaffoldErrors(projectPath);
+  _scaffoldUtils(projectPath);
+  _scaffoldInterfaces(projectPath);
+  _scaffoldMiddlewares(projectPath);
+  _scaffoldRoutes(projectPath);
+  _scaffoldApp(projectPath, useRateLimit, tokenDelivery);
 }
 
-// ─── ERRORS ───────────────────────────────────────────────────────────────────
-function _scaffoldErrors(projectPath) {
-    const errDir = path.join(projectPath, 'src/app/errors');
-    fs.mkdirSync(errDir, { recursive: true });
+function _scaffoldErrors(projectPath: string): void {
+  const errDir = path.join(projectPath, 'src/app/errors');
+  fs.mkdirSync(errDir, { recursive: true });
 
-    fs.writeFileSync(
-        path.join(errDir, 'AppError.ts'),
-        `class AppError extends Error {
+  fs.writeFileSync(
+    path.join(errDir, 'AppError.ts'),
+    `class AppError extends Error {
   public statusCode: number;
 
   constructor(statusCode: number, message: string, stack: string = '') {
@@ -39,18 +39,16 @@ function _scaffoldErrors(projectPath) {
 
 export default AppError;
 `,
-    );
+  );
 }
 
-// ─── UTILS ────────────────────────────────────────────────────────────────────
-function _scaffoldUtils(projectPath) {
-    const utilsDir = path.join(projectPath, 'src/app/utils');
-    fs.mkdirSync(utilsDir, { recursive: true });
+function _scaffoldUtils(projectPath: string): void {
+  const utilsDir = path.join(projectPath, 'src/app/utils');
+  fs.mkdirSync(utilsDir, { recursive: true });
 
-    // catchAsync — wraps async route handlers, forwards errors to globalErrorHandler
-    fs.writeFileSync(
-        path.join(utilsDir, 'catchAsync.ts'),
-        `import { NextFunction, Request, RequestHandler, Response } from 'express';
+  fs.writeFileSync(
+    path.join(utilsDir, 'catchAsync.ts'),
+    `import { NextFunction, Request, RequestHandler, Response } from 'express';
 
 export const catchAsync = (fn: RequestHandler) => {
   return (req: Request, res: Response, next: NextFunction) => {
@@ -58,12 +56,11 @@ export const catchAsync = (fn: RequestHandler) => {
   };
 };
 `,
-    );
+  );
 
-    // sendResponse — standardized JSON response shape across every controller
-    fs.writeFileSync(
-        path.join(utilsDir, 'sendResponse.ts'),
-        `import { Response } from 'express';
+  fs.writeFileSync(
+    path.join(utilsDir, 'sendResponse.ts'),
+    `import { Response } from 'express';
 
 type TResponse<T> = {
   statusCode: number;
@@ -89,12 +86,11 @@ const sendResponse = <T>(res: Response, data: TResponse<T>): void => {
 
 export default sendResponse;
 `,
-    );
+  );
 
-    // logger — thin console wrapper, swap for pino/winston in production
-    fs.writeFileSync(
-        path.join(utilsDir, 'logger.ts'),
-        `type LogLevel = 'info' | 'warn' | 'error' | 'debug';
+  fs.writeFileSync(
+    path.join(utilsDir, 'logger.ts'),
+    `type LogLevel = 'info' | 'warn' | 'error' | 'debug';
 
 const isDev = process.env.NODE_ENV !== 'production';
 
@@ -128,22 +124,20 @@ const logger = {
 
 export default logger;
 `,
-    );
+  );
 
-    // QueryBuilder — stub for non-Mongoose projects, overwritten by Mongoose generator
-    fs.writeFileSync(
-        path.join(utilsDir, 'QueryBuilder.ts'),
-        `// This file is populated by the DB generator.
+  fs.writeFileSync(
+    path.join(utilsDir, 'QueryBuilder.ts'),
+    `// This file is populated by the DB generator.
 // For Mongoose projects: search, filter, sort, paginate, fields chaining.
 // For SQL/Prisma projects: replace with your own query helper as needed.
 export {};
 `,
-    );
+  );
 
-    // welcomePage — styled HTML landing page served at /
-    fs.writeFileSync(
-        path.join(utilsDir, 'welcomePage.ts'),
-        `export function cemWelcomePage(): string {
+  fs.writeFileSync(
+    path.join(utilsDir, 'welcomePage.ts'),
+    `export function cemWelcomePage(): string {
   const pkg = (() => {
     try {
       // eslint-disable-next-line @typescript-eslint/no-require-imports
@@ -419,17 +413,16 @@ export {};
 </html>\`;
 }
 `,
-    );
+  );
 }
 
-// ─── INTERFACES ───────────────────────────────────────────────────────────────
-function _scaffoldInterfaces(projectPath) {
-    const ifaceDir = path.join(projectPath, 'src/app/interfaces');
-    fs.mkdirSync(ifaceDir, { recursive: true });
+function _scaffoldInterfaces(projectPath: string): void {
+  const ifaceDir = path.join(projectPath, 'src/app/interfaces');
+  fs.mkdirSync(ifaceDir, { recursive: true });
 
-    fs.writeFileSync(
-        path.join(ifaceDir, 'error.ts'),
-        `export type TErrorSources = {
+  fs.writeFileSync(
+    path.join(ifaceDir, 'error.ts'),
+    `export type TErrorSources = {
   path: string | number;
   message: string;
 }[];
@@ -440,17 +433,16 @@ export type TGenericErrorResponse = {
   errorSources: TErrorSources;
 };
 `,
-    );
+  );
 }
 
-// ─── MIDDLEWARES ──────────────────────────────────────────────────────────────
-function _scaffoldMiddlewares(projectPath) {
-    const mwDir = path.join(projectPath, 'src/app/middlewares');
-    fs.mkdirSync(mwDir, { recursive: true });
+function _scaffoldMiddlewares(projectPath: string): void {
+  const mwDir = path.join(projectPath, 'src/app/middlewares');
+  fs.mkdirSync(mwDir, { recursive: true });
 
-    fs.writeFileSync(
-        path.join(mwDir, 'notFound.middleware.ts'),
-        `import { NextFunction, Request, Response } from 'express';
+  fs.writeFileSync(
+    path.join(mwDir, 'notFound.middleware.ts'),
+    `import { NextFunction, Request, Response } from 'express';
 import { StatusCodes } from 'http-status-codes';
 
 const notFound = (_req: Request, res: Response, _next: NextFunction): void => {
@@ -463,17 +455,16 @@ const notFound = (_req: Request, res: Response, _next: NextFunction): void => {
 
 export default notFound;
 `,
-    );
+  );
 }
 
-// ─── ROUTES ───────────────────────────────────────────────────────────────────
-function _scaffoldRoutes(projectPath) {
-    const routesDir = path.join(projectPath, 'src/app/routes');
-    fs.mkdirSync(routesDir, { recursive: true });
+function _scaffoldRoutes(projectPath: string): void {
+  const routesDir = path.join(projectPath, 'src/app/routes');
+  fs.mkdirSync(routesDir, { recursive: true });
 
-    fs.writeFileSync(
-        path.join(routesDir, 'index.ts'),
-        `import { Router } from 'express';
+  fs.writeFileSync(
+    path.join(routesDir, 'index.ts'),
+    `import { Router } from 'express';
 // --- INJECT IMPORTS HERE ---
 
 const router = Router();
@@ -486,91 +477,93 @@ moduleRoutes.forEach((route) => router.use(route.path, route.route));
 
 export default router;
 `,
-    );
+  );
 }
 
-// ─── APP.TS ───────────────────────────────────────────────────────────────────
-function _scaffoldApp(projectPath, useRateLimit, tokenDelivery = 'header') {
-    const useCookies = tokenDelivery === 'cookie';
-    const lines = [
-        "import express, { Application, Request, Response } from 'express';",
-        "import cors from 'cors';",
-        "import helmet from 'helmet';",
-        "import logger from './app/utils/logger';",
-        "import { cemWelcomePage } from './app/utils/welcomePage';",
-    ];
+function _scaffoldApp(
+  projectPath: string,
+  useRateLimit: boolean,
+  tokenDelivery: TokenDelivery = 'header',
+): void {
+  const useCookies = tokenDelivery === 'cookie';
+  const lines = [
+    "import express, { Application, Request, Response } from 'express';",
+    "import cors from 'cors';",
+    "import helmet from 'helmet';",
+    "import logger from './app/utils/logger';",
+    "import { cemWelcomePage } from './app/utils/welcomePage';",
+  ];
 
-    if (useCookies) {
-        lines.push("import cookieParser from 'cookie-parser';");
-    }
+  if (useCookies) {
+    lines.push("import cookieParser from 'cookie-parser';");
+  }
 
-    if (useRateLimit) {
-        lines.push("import { globalRateLimiter } from './app/middlewares/rateLimiter.middleware';");
-    }
+  if (useRateLimit) {
+    lines.push("import { globalRateLimiter } from './app/middlewares/rateLimiter.middleware';");
+  }
 
-    lines.push(
-        "import router from './app/routes';",
-        "import notFound from './app/middlewares/notFound.middleware';",
-        "import globalErrorHandler from './app/middlewares/globalErrorHandler.middleware';",
-        '',
-        'const app: Application = express();',
-        '',
-        '// ── Global Middlewares ────────────────────────────────────────────────────────',
-        'app.use(helmet());',
-        'app.use(cors());',
-    );
+  lines.push(
+    "import router from './app/routes';",
+    "import notFound from './app/middlewares/notFound.middleware';",
+    "import globalErrorHandler from './app/middlewares/globalErrorHandler.middleware';",
+    '',
+    'const app: Application = express();',
+    '',
+    '// ── Global Middlewares ────────────────────────────────────────────────────────',
+    'app.use(helmet());',
+    'app.use(cors());',
+  );
 
-    if (useRateLimit) {
-        lines.push('app.use(globalRateLimiter);');
-    }
+  if (useRateLimit) {
+    lines.push('app.use(globalRateLimiter);');
+  }
 
-    lines.push(
-        'app.use(express.json());',
-        'app.use(express.urlencoded({ extended: true }));',
-    );
+  lines.push(
+    'app.use(express.json());',
+    'app.use(express.urlencoded({ extended: true }));',
+  );
 
-    if (useCookies) {
-        lines.push('app.use(cookieParser());');
-    }
+  if (useCookies) {
+    lines.push('app.use(cookieParser());');
+  }
 
-    lines.push(
-        '',
-        '// ── Root ──────────────────────────────────────────────────────────────────────',
-        "app.get('/', (_req: Request, res: Response): void => {",
-        "  res.setHeader('Content-Type', 'text/html');",
-        '  res.send(cemWelcomePage());',
-        '});',
-        '',
-        '// ── Health Check ──────────────────────────────────────────────────────────────',
-        "app.get('/health', (_req: Request, res: Response): void => {",
-        '  const uptime = process.uptime();',
-        '  const timestamp = new Date().toISOString();',
-        '  logger.info(`Health check called — uptime: ${uptime.toFixed(2)}s`);',
-        '  res.status(200).json({',
-        "    status: 'ok',",
-        '    uptime: parseFloat(uptime.toFixed(2)),',
-        '    timestamp,',
-        '  });',
-        '});',
-        '',
-        '// ── Routes ────────────────────────────────────────────────────────────────────',
-        "app.use('/api/v1', router);",
-        '',
-        '// ── Error Handlers (must be last) ────────────────────────────────────────────',
-        'app.use(notFound);',
-        'app.use(globalErrorHandler);',
-        '',
-        'export default app;',
-    );
+  lines.push(
+    '',
+    '// ── Root ──────────────────────────────────────────────────────────────────────',
+    "app.get('/', (_req: Request, res: Response): void => {",
+    "  res.setHeader('Content-Type', 'text/html');",
+    '  res.send(cemWelcomePage());',
+    '});',
+    '',
+    '// ── Health Check ──────────────────────────────────────────────────────────────',
+    "app.get('/health', (_req: Request, res: Response): void => {",
+    '  const uptime = process.uptime();',
+    '  const timestamp = new Date().toISOString();',
+    '  logger.info(`Health check called — uptime: ${uptime.toFixed(2)}s`);',
+    '  res.status(200).json({',
+    "    status: 'ok',",
+    '    uptime: parseFloat(uptime.toFixed(2)),',
+    '    timestamp,',
+    '  });',
+    '});',
+    '',
+    '// ── Routes ────────────────────────────────────────────────────────────────────',
+    "app.use('/api/v1', router);",
+    '',
+    '// ── Error Handlers (must be last) ────────────────────────────────────────────',
+    'app.use(notFound);',
+    'app.use(globalErrorHandler);',
+    '',
+    'export default app;',
+  );
 
-    fs.writeFileSync(path.join(projectPath, 'src/app.ts'), lines.join('\n') + '\n');
+  fs.writeFileSync(path.join(projectPath, 'src/app.ts'), lines.join('\n') + '\n');
 }
 
-// ─── MONGOOSE QUERY BUILDER ───────────────────────────────────────────────────
-function scaffoldQueryBuilder(projectPath) {
-    fs.writeFileSync(
-        path.join(projectPath, 'src/app/utils/QueryBuilder.ts'),
-        `import { QueryFilter, Query } from 'mongoose';
+export function scaffoldQueryBuilder(projectPath: string): void {
+  fs.writeFileSync(
+    path.join(projectPath, 'src/app/utils/QueryBuilder.ts'),
+    `import { QueryFilter, Query } from 'mongoose';
 
 class QueryBuilder<T> {
   public modelQuery: Query<T[], T>;
@@ -639,10 +632,5 @@ class QueryBuilder<T> {
 
 export default QueryBuilder;
 `,
-    );
+  );
 }
-
-module.exports = {
-    scaffoldCoreFiles,
-    scaffoldQueryBuilder,
-};

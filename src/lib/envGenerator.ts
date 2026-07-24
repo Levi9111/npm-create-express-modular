@@ -1,14 +1,19 @@
 'use strict';
 
-const fs = require('fs');
-const path = require('path');
-const ui = require('./ui');
+import fs from 'fs';
+import path from 'path';
+import * as ui from './ui';
+
+export interface NormalisedKey {
+  upperKey: string;
+  lowerKey: string;
+}
 
 /**
  * Normalises any key format to UPPER_SNAKE and lower_snake
  * Handles: JWT_REFRESH_SECRET, jwtRefreshSecret, JwtRefreshSecret, jwt_refresh_secret
  */
-function normaliseKey(key) {
+export function normaliseKey(key: string): NormalisedKey {
   const upperKey = key
     .replace(/([a-z])([A-Z])/g, '$1_$2')
     .replace(/\s+/g, '_')
@@ -19,16 +24,15 @@ function normaliseKey(key) {
 
 /**
  * Adds one or more new environment variables to .env, .env.example, and config/index.ts
- * @param {string|string[]} key - The key name(s) in any format
  */
-function addEnvVar(key) {
+export function addEnvVar(key: string | string[]): void {
   const keys = Array.isArray(key) ? key : [key];
   if (keys.length === 0) return;
 
   const projectRoot = process.cwd();
-  const envPath        = path.join(projectRoot, '.env');
+  const envPath = path.join(projectRoot, '.env');
   const envExamplePath = path.join(projectRoot, '.env.example');
-  const configPath     = path.join(projectRoot, 'src/app/config/index.ts');
+  const configPath = path.join(projectRoot, 'src/app/config/index.ts');
 
   if (!fs.existsSync(envPath)) {
     ui.abort('.env file not found. Are you inside a cem project?');
@@ -71,7 +75,6 @@ function addEnvVar(key) {
       fs.writeFileSync(envExamplePath, exampleContent);
     }
   } else {
-    // .env.example doesn't exist yet — create it with these keys
     let exampleContent = '';
     for (const k of keys) {
       const { upperKey } = normaliseKey(k);
@@ -98,9 +101,7 @@ function addEnvVar(key) {
     }
 
     if (configUpdated) {
-      // Ensure the preceding line ends with a comma if it doesn't already
       configContent = configContent.replace(/([^,\s{])(\s*};\s*)$/, '$1,$2');
-
       const injectLine = injectBlock + '};';
       configContent = configContent.replace(/};\s*$/, injectLine);
       fs.writeFileSync(configPath, configContent);
@@ -112,17 +113,15 @@ function addEnvVar(key) {
 
 /**
  * Removes an env var from .env, .env.example, and config/index.ts
- * Called by cem remove env <KEY>
  */
-function removeEnvVarFromFiles(key) {
+export function removeEnvVarFromFiles(key: string): void {
   const projectRoot = process.cwd();
-  const envPath        = path.join(projectRoot, '.env');
+  const envPath = path.join(projectRoot, '.env');
   const envExamplePath = path.join(projectRoot, '.env.example');
-  const configPath     = path.join(projectRoot, 'src/app/config/index.ts');
+  const configPath = path.join(projectRoot, 'src/app/config/index.ts');
 
-  const { upperKey, lowerKey } = normaliseKey(key);
+  const { upperKey } = normaliseKey(key);
 
-  // ── .env ─────────────────────────────────────────────────────────────────
   if (fs.existsSync(envPath)) {
     const updated = fs.readFileSync(envPath, 'utf8')
       .split('\n')
@@ -131,7 +130,6 @@ function removeEnvVarFromFiles(key) {
     fs.writeFileSync(envPath, updated);
   }
 
-  // ── .env.example ─────────────────────────────────────────────────────────
   if (fs.existsSync(envExamplePath)) {
     const updated = fs.readFileSync(envExamplePath, 'utf8')
       .split('\n')
@@ -140,7 +138,6 @@ function removeEnvVarFromFiles(key) {
     fs.writeFileSync(envExamplePath, updated);
   }
 
-  // ── config/index.ts ──────────────────────────────────────────────────────
   if (fs.existsSync(configPath)) {
     const updated = fs.readFileSync(configPath, 'utf8')
       .split('\n')
@@ -149,5 +146,3 @@ function removeEnvVarFromFiles(key) {
     fs.writeFileSync(configPath, updated);
   }
 }
-
-module.exports = { addEnvVar, removeEnvVarFromFiles, normaliseKey };

@@ -1,16 +1,12 @@
 'use strict';
 
-/**
- * Assembles the globalErrorHandler.ts file from three parts:
- *   1. Universal shell (structure, response shape — never changes)
- *   2. DB-specific error block (Mongoose / Prisma / Drizzle)
- *   3. Validator-specific error block (Zod / Joi / Vine / Yup)
- *
- * The result is a single, fully-typed TypeScript file that handles every
- * error surface in the chosen stack — with the same response shape always.
- */
-function buildGlobalErrorHandler(dbBlock, validatorBlock) {
-    return `/* eslint-disable @typescript-eslint/no-explicit-any */
+import type { ErrorBlock } from '../../types';
+
+export function buildGlobalErrorHandler(
+  dbBlock: ErrorBlock,
+  validatorBlock: ErrorBlock,
+): string {
+  return `/* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { Request, Response, NextFunction } from 'express';
 import { TErrorSources } from '../interfaces/error';
@@ -63,7 +59,3 @@ const globalErrorHandler = (
 export default globalErrorHandler;
 `;
 }
-
-module.exports = {
-    buildGlobalErrorHandler
-};
