@@ -1,5 +1,3 @@
-'use strict';
-
 /**
  * src/lib/ui.ts
  *
@@ -10,7 +8,6 @@
 
 import type { SummaryOptions, Spinner, PackageManager } from './types';
 
-// ─── ANSI PRIMITIVES ─────────────────────────────────────────────────────────
 const ESC = '\x1b[';
 const R = '\x1b[0m'; // reset
 
@@ -202,7 +199,6 @@ export function printNextSteps(projectName: string): void {
   console.log();
 }
 
-// ─── UPDATE NOTICE ───────────────────────────────────────────────────────────
 export function printUpdateNotice(current: string, latest: string, pm: PackageManager = 'npm'): void {
   const W = 52;
   const border = (l: string, _m: string, r: string): string =>
@@ -229,7 +225,6 @@ export function printUpdateNotice(current: string, latest: string, pm: PackageMa
   console.log();
 }
 
-// ─── MODULE GENERATOR OUTPUT ─────────────────────────────────────────────────
 export function printModuleBanner(): void {
   console.log();
   console.log(`  ${cyan('◆')}  ${bold(white('CEM'))}  ${gray('module generator')}`);
@@ -254,7 +249,6 @@ export function printModuleSuccess(
   console.log();
 }
 
-// ─── ERROR / ABORT ────────────────────────────────────────────────────────────
 export function abort(message: string): never {
   console.log();
   err(message);

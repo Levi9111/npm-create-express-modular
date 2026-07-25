@@ -1,10 +1,15 @@
-'use strict';
+/**
+ * src/lib/pm.ts
+ *
+ * Package manager detection and command helpers.
+ * Supports npm, yarn, and pnpm with a consistent interface so the
+ * rest of the CLI never hard-codes PM-specific commands.
+ */
 
 import fs from 'fs';
 import path from 'path';
 import type { PackageManager } from './types';
 
-// ─── DETECTION ───────────────────────────────────────────────────────────────
 /**
  * Detect the package manager from the current context.
  * Priority: lock file → npm_config_user_agent → default npm.

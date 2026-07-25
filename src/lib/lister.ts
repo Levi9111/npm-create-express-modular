@@ -1,4 +1,9 @@
-'use strict';
+/**
+ * src/lib/lister.ts
+ *
+ * Implements `cem list` — prints a formatted overview of all modules,
+ * middlewares, env vars, and utilities in the current CEM project.
+ */
 
 import fs from 'fs';
 import path from 'path';
@@ -64,7 +69,7 @@ export function listProject(): void {
   console.log();
   console.log(`  ${line}`);
 
-  // ── MODULES ──────────────────────────────────────────────────────────────
+  // Modules
   const modulesDir = path.join(projectRoot, 'src/app/modules');
   console.log();
   console.log(`  ${ui.bold(ui.cyan('◆  Modules'))}  ${ui.gray('src/app/modules/')}`);
@@ -94,7 +99,7 @@ export function listProject(): void {
     console.log(`     ${ui.gray('(modules directory not found)')}`);
   }
 
-  // ── MIDDLEWARES ───────────────────────────────────────────────────────────
+  // Middlewares
   const mwDir = path.join(projectRoot, 'src/app/middlewares');
   console.log();
   console.log(
@@ -129,7 +134,7 @@ export function listProject(): void {
     console.log(`     ${ui.gray('(middlewares directory not found)')}`);
   }
 
-  // ── ENV VARS ─────────────────────────────────────────────────────────────
+  // Environment Variables
   console.log();
   console.log(`  ${ui.bold(ui.cyan('◆  Environment Variables'))}  ${ui.gray('.env')}`);
   console.log();
@@ -158,7 +163,7 @@ export function listProject(): void {
     }
   }
 
-  // ── UTILS ─────────────────────────────────────────────────────────────────
+  // Utils
   const utilsDir = path.join(projectRoot, 'src/app/utils');
   console.log();
   console.log(`  ${ui.bold(ui.cyan('◆  Utils'))}  ${ui.gray('src/app/utils/')}`);

@@ -1,9 +1,20 @@
-'use strict';
+/**
+ * src/lib/middlewareGenerator.ts
+ *
+ * Implements `cem add middleware` — creates a correctly-named
+ * `<name>.middleware.ts` stub in the project's middlewares directory.
+ */
 
 import fs from 'fs';
 import path from 'path';
 import * as ui from './ui';
 
+/**
+ * Creates one or more middleware stub files.
+ * Normalises the provided name(s) to the `<name>.middleware.ts` convention.
+ *
+ * @param providedName - One or more middleware names (with or without the `.middleware.ts` suffix).
+ */
 export function generateMiddleware(providedName: string | string[]): void {
   const projectRoot = process.cwd();
   const mwDir = path.join(projectRoot, 'src/app/middlewares');

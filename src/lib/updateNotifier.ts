@@ -1,4 +1,9 @@
-'use strict';
+/**
+ * src/lib/updateNotifier.ts
+ *
+ * Non-blocking npm update check. Queries the npm registry in the background
+ * and compares the result against the currently-installed version.
+ */
 
 import https from 'https';
 

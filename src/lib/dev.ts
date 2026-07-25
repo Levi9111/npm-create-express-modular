@@ -1,10 +1,15 @@
-'use strict';
+/**
+ * src/lib/dev.ts
+ *
+ * Implements `cem dev` — spawns `tsx watch src/server.ts` and re-formats
+ * every output line with a timestamp and semantic colour coding.
+ */
 
 import { spawn } from 'child_process';
 import path from 'path';
 import fs from 'fs';
 
-// ─── ANSI PRIMITIVES (zero deps) ─────────────────────────────────────────────
+
 const R = '\x1b[0m';
 const ESC = '\x1b[';
 
@@ -25,7 +30,7 @@ const bgCyan = (s: string): string =>
 
 const stripAnsi = (s: string): string => s.replace(/\x1b\[[0-9;]*m/g, '');
 
-// ─── HELPERS ─────────────────────────────────────────────────────────────────
+
 function timestamp(): string {
   const now = new Date();
   const date = now.toLocaleDateString('en-GB', {
@@ -52,7 +57,7 @@ function getProjectName(projectRoot: string): string {
   }
 }
 
-// ─── STARTUP BANNER ──────────────────────────────────────────────────────────
+
 function printDevBanner(projectName: string): void {
   const line = gray('─'.repeat(54));
   console.log();
@@ -68,7 +73,6 @@ function printDevBanner(projectName: string): void {
   console.log();
 }
 
-// ─── LOG LINE CLASSIFIER ─────────────────────────────────────────────────────
 function formatLine(raw: string): string | null {
   const line = raw.trimEnd();
   if (!line) return null;
@@ -100,7 +104,9 @@ function formatLine(raw: string): string | null {
   return `  ${gray('·')}  ${white(plain)}`;
 }
 
-// ─── MAIN DEV RUNNER ─────────────────────────────────────────────────────────
+/**
+ * Spawns `tsx watch src/server.ts` and formats all stdout/stderr lines.
+ */
 export function runDev(): void {
   const projectRoot = process.cwd();
   const projectName = getProjectName(projectRoot);

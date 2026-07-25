@@ -1,14 +1,23 @@
-'use strict';
+/**
+ * src/lib/start.ts
+ *
+ * Implements `cem start` — runs preflight checks then spawns the compiled
+ * `dist/server.js` as a production Node.js process.
+ */
 
 import { spawn } from 'child_process';
 import path from 'path';
 import fs from 'fs';
 import * as ui from './ui';
 
+/**
+ * Runs the compiled production server.
+ * Validates `dist/server.js` and `NODE_ENV` before spawning the process.
+ */
 export function runStart(): void {
   const projectRoot = process.cwd();
 
-  // ── Preflight checks ──────────────────────────────────────
+  // Preflight checks
   const distEntry = path.join(projectRoot, 'dist', 'server.js');
 
   if (!fs.existsSync(distEntry)) {
@@ -26,7 +35,7 @@ export function runStart(): void {
     ui.warn(`NODE_ENV is set to '${nodeEnv}' — expected 'production'.`);
   }
 
-  // ── Banner ────────────────────────────────────────────────
+  // Banner
   const pkg = JSON.parse(
     fs.readFileSync(path.join(projectRoot, 'package.json'), 'utf8'),
   ) as { name: string };
@@ -44,7 +53,7 @@ export function runStart(): void {
   console.log(`  ${line}`);
   console.log();
 
-  // ── Spawn ─────────────────────────────────────────────────
+  // Spawn
   const child = spawn('node', ['dist/server.js'], {
     cwd: projectRoot,
     env: {

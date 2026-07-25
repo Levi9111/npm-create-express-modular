@@ -1,15 +1,21 @@
-'use strict';
+/**
+ * src/lib/builder.ts
+ *
+ * Implements `cem build` — runs the middleware naming guard, architecture
+ * guard, and TypeScript compilation in sequence. Aborts on the first failure.
+ */
 
 import fs from 'fs';
 import path from 'path';
 import { execSync } from 'child_process';
 import * as ui from './ui';
 
-// ─── CONSTANTS ────────────────────────────────────────────────────────────────
+/** Files to ignore when scanning module directories. */
 const IGNORED_FILES = ['.DS_Store', 'README.md', '.gitkeep', '.gitignore'];
+/** The three file types every module must have. */
 const REQUIRED_TYPES = ['controller', 'service', 'route'];
 
-// ─── HELPERS ─────────────────────────────────────────────────────────────────
+
 function readRoutesFile(projectRoot: string): string {
   try {
     return fs.readFileSync(
@@ -27,7 +33,7 @@ function getModules(modulesPath: string): string[] {
     .filter((f) => fs.statSync(path.join(modulesPath, f)).isDirectory());
 }
 
-// ─── ARCHITECTURE GUARD ───────────────────────────────────────────────────────
+/** Return value for both guard functions. */
 interface GuardResult {
   hasError: boolean;
   warnCount: number;
@@ -98,7 +104,7 @@ function runArchitectureGuard(projectRoot: string): GuardResult {
   return { hasError, warnCount };
 }
 
-// ─── MIDDLEWARE GUARD ─────────────────────────────────────────────────────────
+
 function runMiddlewareGuard(projectRoot: string): GuardResult {
   const mwPath = path.join(projectRoot, 'src/app/middlewares');
   if (!fs.existsSync(mwPath)) return { hasError: false, warnCount: 0 };
@@ -121,7 +127,10 @@ function runMiddlewareGuard(projectRoot: string): GuardResult {
   return { hasError, warnCount };
 }
 
-// ─── MAIN ─────────────────────────────────────────────────────────────────────
+/**
+ * Runs all three build steps: middleware guard, architecture guard, and tsc.
+ * Aborts with a non-zero exit code on the first failure.
+ */
 export function runBuild(): void {
   const projectRoot = process.cwd();
 

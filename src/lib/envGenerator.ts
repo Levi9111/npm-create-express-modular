@@ -1,4 +1,9 @@
-'use strict';
+/**
+ * src/lib/envGenerator.ts
+ *
+ * Manages environment variable lifecycle for CEM projects:
+ * adds / removes keys from `.env`, `.env.example`, and `src/app/config/index.ts`.
+ */
 
 import fs from 'fs';
 import path from 'path';
@@ -38,7 +43,7 @@ export function addEnvVar(key: string | string[]): void {
     ui.abort('.env file not found. Are you inside a cem project?');
   }
 
-  // ── 1. Update .env ───────────────────────────────────────────────────────
+  // 1. Update .env
   let envContent = fs.readFileSync(envPath, 'utf8');
   let envUpdated = false;
 
@@ -56,7 +61,7 @@ export function addEnvVar(key: string | string[]): void {
     fs.writeFileSync(envPath, envContent);
   }
 
-  // ── 2. Update .env.example ───────────────────────────────────────────────
+  // 2. Update .env.example
   if (fs.existsSync(envExamplePath)) {
     let exampleContent = fs.readFileSync(envExamplePath, 'utf8');
     let exampleUpdated = false;
@@ -84,7 +89,7 @@ export function addEnvVar(key: string | string[]): void {
     ui.warn('.env.example was missing — created it.');
   }
 
-  // ── 3. Update config/index.ts ────────────────────────────────────────────
+  // 3. Update config/index.ts
   if (fs.existsSync(configPath)) {
     let configContent = fs.readFileSync(configPath, 'utf8');
     let configUpdated = false;

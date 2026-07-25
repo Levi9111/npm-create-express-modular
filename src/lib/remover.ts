@@ -1,10 +1,18 @@
-'use strict';
+/**
+ * src/lib/remover.ts
+ *
+ * Handles all `cem remove` sub-commands:
+ * - `cem remove module <Name...>` — deletes module directories and unwires routes
+ * - `cem remove middleware <name...>` — deletes middleware files (protects core files)
+ * - `cem remove env <KEY...>` — removes env vars from all config files
+ */
 
 import fs from 'fs';
 import path from 'path';
 import * as ui from './ui';
 import { detectPM, installCmd } from './pm';
 import { normaliseKey } from './envGenerator';
+import { pluralize } from './utils/string';
 
 let inquirer: typeof import('inquirer');
 try {
@@ -13,43 +21,9 @@ try {
   ui.abort(`Missing dependency: inquirer. Run: ${installCmd(detectPM(), ['inquirer'])}`);
 }
 
+/** Removes a directory and all its contents. */
 function rmDir(dir: string): void {
   fs.rmSync(dir, { recursive: true, force: true });
-}
-
-function pluralize(word: string): string {
-  const lower = word.toLowerCase();
-  const irregulars: Record<string, string> = {
-    person: 'people',
-    man: 'men',
-    woman: 'women',
-    child: 'children',
-    tooth: 'teeth',
-    foot: 'feet',
-    mouse: 'mice',
-    goose: 'geese',
-    leaf: 'leaves',
-    knife: 'knives',
-    wife: 'wives',
-    life: 'lives',
-    half: 'halves',
-    potato: 'potatoes',
-    tomato: 'tomatoes',
-    cactus: 'cacti',
-    focus: 'foci',
-    fungus: 'fungi',
-    nucleus: 'nuclei',
-    analysis: 'analyses',
-    thesis: 'theses',
-    crisis: 'crises',
-    phenomenon: 'phenomena',
-    criterion: 'criteria',
-    datum: 'data',
-  };
-  if (irregulars[lower]) return irregulars[lower];
-  if (/(?:s|ss|sh|ch|x|z)$/i.test(word)) return word + 'es';
-  if (/[^aeiou]y$/i.test(word)) return word.slice(0, -1) + 'ies';
-  return word + 's';
 }
 
 function assertCemProject(projectRoot: string): void {

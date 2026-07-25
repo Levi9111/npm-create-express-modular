@@ -1,10 +1,15 @@
-'use strict';
+/**
+ * src/lib/checker.ts
+ *
+ * Implements `cem check` — runs TypeScript type-checking, ESLint, and
+ * Prettier in sequence and prints a compact pass/fail summary.
+ */
 
 import { execSync } from 'child_process';
 import { detectPM, runScript } from './pm';
 import * as ui from './ui';
 
-// ─── ANSI PRIMITIVES (zero deps) ─────────────────────────────────────────────
+
 const R = '\x1b[0m';
 const ESC = '\x1b[';
 
@@ -21,7 +26,7 @@ const red = (s: string): string => paint(`${ESC}91m`, s);
 const bgCyan = (s: string): string =>
   NO_COLOR ? `[${s}]` : `${ESC}46m${ESC}1m${ESC}30m ${s} ${R}`;
 
-// ─── HELPERS ─────────────────────────────────────────────────────────────────
+
 function run(cmd: string, cwd: string): void {
   execSync(cmd, { cwd, stdio: 'pipe' });
 }
@@ -63,7 +68,7 @@ function step(label: string, fn: () => void): boolean {
   }
 }
 
-// ─── MAIN ─────────────────────────────────────────────────────────────────────
+
 export function runCheck(): void {
   const cwd = process.cwd();
 

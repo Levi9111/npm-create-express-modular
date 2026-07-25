@@ -1,4 +1,10 @@
-'use strict';
+/**
+ * src/lib/readmeGenerator.ts
+ *
+ * Generates `README.md` for a newly scaffolded CEM project.
+ * The generated document includes setup instructions, available CLI commands,
+ * and an API endpoint reference tailored to the user's choices.
+ */
 
 import fs from 'fs';
 import path from 'path';
