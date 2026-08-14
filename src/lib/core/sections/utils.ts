@@ -133,81 +133,174 @@ function buildWelcomePage(): string {
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>\${pkg.name} — API</title>
+  <title>\${pkg.name} — API Server</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
-      background: #0a0a0a;
-      color: #e2e8f0;
-      font-family: 'Cascadia Code', 'Fira Code', 'JetBrains Mono', monospace;
+      background-color: #06080d;
+      background-image: 
+        radial-gradient(circle at 50% -10%, rgba(6, 182, 212, 0.15) 0%, transparent 55%),
+        linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+      background-size: 100% 100%, 32px 32px, 32px 32px;
+      color: #f1f5f9;
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
       min-height: 100vh;
       display: flex;
       align-items: center;
       justify-content: center;
-      padding: 2rem;
+      padding: 2rem 1.25rem;
     }
 
-    .container { width: 100%; max-width: 680px; }
+    .container {
+      width: 100%;
+      max-width: 640px;
+      background: rgba(13, 18, 30, 0.75);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 14px;
+      padding: 2.25rem;
+      box-shadow: 
+        0 24px 48px -12px rgba(0, 0, 0, 0.5),
+        0 0 0 1px rgba(6, 182, 212, 0.15);
+    }
 
-    .badge {
-      display: inline-block;
-      background: #06b6d4;
-      color: #000;
-      font-weight: 700;
-      font-size: 0.75rem;
-      padding: 2px 10px;
-      border-radius: 2px;
-      letter-spacing: 0.08em;
+    .badge-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
       margin-bottom: 1.25rem;
     }
 
-    .header { margin-bottom: 2rem; }
-
-    .project-name {
-      font-size: 1.75rem;
-      font-weight: 700;
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      background: linear-gradient(135deg, rgba(6, 182, 212, 0.2), rgba(59, 130, 246, 0.2));
+      border: 1px solid rgba(34, 211, 238, 0.3);
       color: #22d3ee;
-      letter-spacing: -0.02em;
-      line-height: 1.2;
+      font-family: 'Fira Code', monospace;
+      font-weight: 700;
+      font-size: 0.72rem;
+      padding: 3px 10px;
+      border-radius: 6px;
+      letter-spacing: 0.06em;
     }
 
-    .version { color: #64748b; font-size: 0.85rem; margin-top: 0.4rem; }
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.45rem;
+      background: rgba(34, 197, 94, 0.08);
+      border: 1px solid rgba(34, 197, 94, 0.2);
+      color: #4ade80;
+      font-size: 0.75rem;
+      font-weight: 500;
+      padding: 3px 10px;
+      border-radius: 9999px;
+    }
+
+    .pulse-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #22c55e;
+      box-shadow: 0 0 8px #22c55e;
+      position: relative;
+    }
+
+    .header { margin-bottom: 1.75rem; }
+
+    .project-name {
+      font-family: 'Fira Code', monospace;
+      font-size: 1.65rem;
+      font-weight: 700;
+      color: #ffffff;
+      letter-spacing: -0.02em;
+      line-height: 1.25;
+      display: flex;
+      align-items: center;
+    }
+
+    .highlight { color: #22d3ee; }
+
+    .version {
+      font-family: 'Fira Code', monospace;
+      color: #64748b;
+      font-size: 0.8rem;
+      margin-top: 0.35rem;
+    }
 
     .tagline {
       color: #94a3b8;
-      font-size: 0.9rem;
-      margin-top: 0.75rem;
-      line-height: 1.6;
+      font-size: 0.88rem;
+      margin-top: 0.65rem;
+      line-height: 1.55;
     }
 
-    .divider { border: none; border-top: 1px solid #1e293b; margin: 1.75rem 0; }
+    .divider {
+      border: none;
+      height: 1px;
+      background: linear-gradient(90deg, rgba(255,255,255,0.08), rgba(255,255,255,0.02));
+      margin: 1.5rem 0;
+    }
 
-    .status-row {
+    .actions-group {
       display: flex;
+      gap: 0.75rem;
+      margin-bottom: 1.75rem;
+    }
+
+    .btn {
+      display: inline-flex;
       align-items: center;
+      justify-content: center;
       gap: 0.5rem;
-      margin-bottom: 1.5rem;
-      font-size: 0.85rem;
+      font-size: 0.825rem;
+      font-weight: 600;
+      text-decoration: none;
+      padding: 0.6rem 1.1rem;
+      border-radius: 8px;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      flex: 1;
     }
 
-    .dot {
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      background: #22c55e;
-      box-shadow: 0 0 6px #22c55e;
-      flex-shrink: 0;
+    .btn-primary {
+      background: linear-gradient(135deg, #06b6d4, #2563eb);
+      color: #ffffff;
+      box-shadow: 0 4px 14px rgba(6, 182, 212, 0.3);
+      border: 1px solid rgba(255, 255, 255, 0.1);
     }
 
-    .status-text { color: #22c55e; }
-    .status-time { color: #475569; margin-left: auto; }
+    .btn-primary:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 20px rgba(6, 182, 212, 0.45);
+      background: linear-gradient(135deg, #22d3ee, #3b82f6);
+    }
+
+    .btn-secondary {
+      background: rgba(30, 41, 59, 0.6);
+      color: #cbd5e1;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .btn-secondary:hover {
+      background: rgba(51, 65, 85, 0.8);
+      color: #ffffff;
+      border-color: rgba(255, 255, 255, 0.15);
+    }
 
     .section-label {
       font-size: 0.7rem;
-      letter-spacing: 0.12em;
+      letter-spacing: 0.1em;
       text-transform: uppercase;
-      color: #475569;
+      color: #64748b;
+      font-weight: 600;
       margin-bottom: 0.75rem;
     }
 
@@ -215,77 +308,67 @@ function buildWelcomePage(): string {
       list-style: none;
       display: flex;
       flex-direction: column;
-      gap: 0.4rem;
-      margin-bottom: 1.75rem;
+      gap: 0.5rem;
+      margin-bottom: 1.5rem;
     }
 
     .route-item {
       display: flex;
       align-items: center;
       gap: 0.75rem;
-      padding: 0.5rem 0.75rem;
-      border-radius: 4px;
-      background: #0f172a;
-      border: 1px solid #1e293b;
+      padding: 0.6rem 0.85rem;
+      border-radius: 8px;
+      background: rgba(15, 23, 42, 0.6);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      font-family: 'Fira Code', monospace;
       font-size: 0.82rem;
-      transition: border-color 0.15s;
+      transition: all 0.15s ease;
     }
 
-    .route-item:hover { border-color: #06b6d4; }
+    .route-item:hover {
+      background: rgba(30, 41, 59, 0.5);
+      border-color: rgba(6, 182, 212, 0.3);
+      transform: translateX(2px);
+    }
 
     .method {
       font-weight: 700;
-      font-size: 0.7rem;
-      min-width: 42px;
+      font-size: 0.68rem;
+      min-width: 44px;
       text-align: center;
       padding: 2px 6px;
-      border-radius: 3px;
-    }
-
-    .method-get    { background: #052e16; color: #22c55e; }
-    .method-post   { background: #1e1b4b; color: #818cf8; }
-    .method-patch  { background: #1c1917; color: #f59e0b; }
-    .method-delete { background: #1a0a0a; color: #f87171; }
-
-    .route-path { color: #22d3ee; }
-    .route-desc { color: #475569; margin-left: auto; font-size: 0.75rem; }
-
-    .health-link {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.5rem;
-      color: #475569;
-      font-size: 0.8rem;
-      text-decoration: none;
-      padding: 0.4rem 0.75rem;
-      border: 1px solid #1e293b;
       border-radius: 4px;
-      transition: all 0.15s;
-      margin-bottom: 1.75rem;
     }
 
-    .health-link:hover { border-color: #22c55e; color: #22c55e; }
+    .method-get    { background: rgba(34, 197, 94, 0.12); color: #4ade80; border: 1px solid rgba(34, 197, 94, 0.25); }
+    .method-post   { background: rgba(99, 102, 241, 0.12); color: #818cf8; border: 1px solid rgba(99, 102, 241, 0.25); }
+    .method-patch  { background: rgba(245, 158, 11, 0.12); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.25); }
+    .method-delete { background: rgba(239, 68, 68, 0.12); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.25); }
+
+    .route-path { color: #38bdf8; font-weight: 500; }
+    .route-desc { color: #64748b; margin-left: auto; font-size: 0.75rem; font-family: 'Inter', sans-serif; }
 
     .footer {
       display: flex;
       align-items: center;
       justify-content: space-between;
       font-size: 0.75rem;
-      color: #334155;
+      color: #475569;
     }
 
-    .footer a { color: #334155; text-decoration: none; transition: color 0.15s; }
-    .footer a:hover { color: #22d3ee; }
+    .footer a { color: #64748b; text-decoration: none; transition: color 0.15s; }
+    .footer a:hover { color: #38bdf8; }
 
     .cem-credit { display: flex; align-items: center; gap: 0.4rem; }
 
     .cem-badge-small {
-      background: #06b6d4;
-      color: #000;
+      background: rgba(6, 182, 212, 0.15);
+      color: #22d3ee;
+      border: 1px solid rgba(6, 182, 212, 0.3);
       font-weight: 700;
       font-size: 0.6rem;
       padding: 1px 5px;
-      border-radius: 2px;
+      border-radius: 3px;
     }
 
     .cursor {
@@ -293,60 +376,69 @@ function buildWelcomePage(): string {
       width: 2px;
       height: 1.1em;
       background: #22d3ee;
-      margin-left: 3px;
+      margin-left: 4px;
       vertical-align: middle;
-      animation: blink 1s step-end infinite;
+      animation: blink 1.2s step-end infinite;
     }
 
     @keyframes blink {
       0%, 100% { opacity: 1; }
-      50%       { opacity: 0; }
+      50% { opacity: 0; }
     }
   </style>
 </head>
 <body>
   <div class="container">
 
-    <div class="header">
-      <div class="badge">CEM</div>
-      <div class="project-name">\${pkg.name}<span class="cursor"></span></div>
-      <div class="version">v\${pkg.version}</div>
-      <div class="tagline">
-        Modular Express + TypeScript — production-ready API server.
+    <div class="badge-bar">
+      <div class="badge">
+        <span>⚡</span> CEM MODULAR
+      </div>
+      <div class="status-pill">
+        <span class="pulse-dot"></span>
+        <span>Online</span>
       </div>
     </div>
 
-    <hr class="divider" />
-
-    <div class="status-row">
-      <span class="dot"></span>
-      <span class="status-text">Server is running</span>
-      <span class="status-time">\${new Date().toLocaleTimeString('en-GB')}</span>
+    <div class="header">
+      <div class="project-name">
+        <span class="highlight">\${pkg.name}</span><span class="cursor"></span>
+      </div>
+      <div class="version">v\${pkg.version}</div>
+      <div class="tagline">
+        Modular Express + TypeScript architecture — production-ready server.
+      </div>
     </div>
 
-    <div class="section-label">Available Routes</div>
+    <div class="actions-group">
+      <a class="btn btn-primary" href="/docs" target="_blank">
+        <span>📖</span>
+        <span>Swagger API Docs</span>
+      </a>
+      <a class="btn btn-secondary" href="/health" target="_blank">
+        <span>◈</span>
+        <span>Health Check</span>
+      </a>
+    </div>
+
+    <div class="section-label">Default Core Routes</div>
     <ul class="route-list">
       <li class="route-item">
         <span class="method method-get">GET</span>
         <span class="route-path">/docs</span>
-        <span class="route-desc">Swagger API Specs (OpenAPI 3.0)</span>
+        <span class="route-desc">Swagger API specs (OpenAPI 3.0)</span>
       </li>
       <li class="route-item">
         <span class="method method-get">GET</span>
         <span class="route-path">/health</span>
-        <span class="route-desc">Health check</span>
+        <span class="route-desc">System health status check</span>
       </li>
       <li class="route-item">
         <span class="method method-get">GET</span>
         <span class="route-path">/api/v1/</span>
-        <span class="route-desc">API base</span>
+        <span class="route-desc">Base API router prefix</span>
       </li>
     </ul>
-
-    <a class="health-link" href="/docs" target="_blank">
-      <span>📖</span>
-      <span>Open Swagger Docs (/docs)</span>
-    </a>
 
     <hr class="divider" />
 

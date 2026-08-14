@@ -4,16 +4,17 @@ Welcome to the ultimate guide to **create-express-modular (CEM)**! In this tutor
 *   **Database / ORM**: MongoDB + Mongoose
 *   **Validator**: Zod (v4 compatible)
 *   **Authentication**: JWT Auth with HTTP-only cookies
+*   **API Documentation**: Interactive Swagger UI (OpenAPI 3.0) at `/docs`
 *   **Dockerization**: Multistage Docker build + Docker Compose with MongoDB database sidecar
 
-By the end of this tutorial, you will master all the features the CEM CLI has to offer, from automatic code generation and environment variable management to strict architecture guards and deployment setups.
+By the end of this tutorial, you will master all the features the CEM CLI has to offer, from automatic code generation and environment variable management to strict architecture guards, Swagger documentation, and deployment setups.
 
 ---
 
 ## 📑 Table of Contents
 1. [Prerequisites](#-prerequisites)
 2. [Step 1: Scaffolding a New Project (`cem`)](#-step-1-scaffolding-a-new-project-cem)
-3. [Step 2: Exploring the Live Dev Server (`cem dev`)](#-step-2-exploring-the-live-dev-server-cem-dev)
+3. [Step 2: Exploring the Live Dev Server & Swagger UI (`cem dev`)](#-step-2-exploring-the-live-dev-server--swagger-ui-cem-dev)
 4. [Step 3: Managing Environment Variables (`cem add env`)](#-step-3-managing-environment-variables-cem-add-env)
 5. [Step 4: Scaffolding a Feature Module (`cem add module`)](#-step-4-scaffolding-a-feature-module-cem-add-module)
 6. [Step 5: Writing Custom Middleware (`cem add middleware`)](#-step-5-writing-custom-middleware-cem-add-middleware)
@@ -44,7 +45,7 @@ npx create-express-modular taskflow-api
 *(Alternatively, if you have installed the package globally via `npm install -g create-express-modular`, you can simply run `cem taskflow-api`.)*
 
 ### Interactive Prompt Selections
-The wizard will guide you through 5 setup questions. For this tutorial, select the following options:
+The wizard will guide you through 6 setup questions. For this tutorial, select the following options:
 
 ```
 ? Project name: taskflow-api
@@ -53,6 +54,7 @@ The wizard will guide you through 5 setup questions. For this tutorial, select t
 ? Include JWT Auth module? Yes
 ? Auth token delivery: HTTP-only cookies  (recommended — XSS safe, browser clients)
 ? Include Docker setup (Dockerfile + docker-compose)? Yes
+? Include Swagger API documentation (OpenAPI 3.0)? Yes
 ```
 
 ### 📂 What Gets Generated?
@@ -63,7 +65,8 @@ taskflow-api/
 ├── src/
 │   ├── app/
 │   │   ├── config/
-│   │   │   └── index.ts                          # Centralized config (fully typed)
+│   │   │   ├── index.ts                          # Centralized config (fully typed)
+│   │   │   └── swagger.ts                        # OpenAPI 3.0 JSDoc spec generator
 │   │   ├── errors/                               # Generic AppError + Mongoose handler
 │   │   ├── interfaces/                           # Shared TS types (e.g. error sources)
 │   │   ├── middlewares/
@@ -79,11 +82,12 @@ taskflow-api/
 │   │       ├── catchAsync.ts                     # Wraps async handlers to avoid try-catch
 │   │       ├── sendResponse.ts                   # Standardized JSON response helper
 │   │       ├── validateRequest.ts                # Zod request parser middleware
-│   │       ├── welcomePage.ts                    # Brand new styled landing page
+│   │       ├── welcomePage.ts                    # Styled landing page for /
 │   │       ├── logger.ts                         # Lightweight console logger utility
 │   │       └── QueryBuilder.ts                   # Advanced Mongoose search/filter helper
-│   ├── app.ts                                    # Express server configurations
+│   ├── app.ts                                    # Express server & Swagger UI setup
 │   └── server.ts                                 # DB connection & server initialization
+├── cem-cli.json                                  # CEM project manifest (tracks stack & features)
 ├── AGENTS.md                                     # AI coding assistant guidelines
 ├── CLAUDE.md                                     # Claude-specific boilerplate context
 ├── .env
@@ -103,7 +107,7 @@ To ensure AI assistants (like Cursor, Claude Code, and Copilot) understand the e
 
 ---
 
-## 🟢 Step 2: Exploring the Live Dev Server (`cem dev`)
+## 🟢 Step 2: Exploring the Live Dev Server & Swagger UI (`cem dev`)
 
 Navigate into the newly created folder:
 ```bash
@@ -132,13 +136,16 @@ Powered by `tsx` (esbuild-based, near-instant restarts), you will see a color-co
   ◈  MongoDB connected
 ```
 
-### 💻 Styled Welcome Page
-Open your browser and navigate to `http://localhost:5000/`. Instead of a generic JSON error or raw text, you are greeted with a stunning terminal-aesthetic dashboard:
-*   **Branded Dark Mode**: Matches the CLI theme with vibrant cyan accents and custom typography.
+### 💻 Styled Welcome Page & Interactive Swagger Docs
+Open your browser and navigate to `http://localhost:5000/`. Instead of a generic JSON error or raw text, you are greeted with a terminal-aesthetic dashboard:
+*   **Branded Dark Mode**: Matches the CLI theme with cyan accents and custom typography.
 *   **Metadata**: Real-time project name, version (read from `package.json`), and live server uptime.
-*   **Endpoints Registry**: Lists `/health` and `/api/v1/` routes cleanly with color-coded HTTP methods.
+*   **Interactive Swagger Specs**: Click **Open Swagger Docs (/docs)** or navigate directly to `http://localhost:5000/docs`.
 
-Test the health-check route by clicking **Check /health** or hitting `http://localhost:5000/health`.
+#### 📖 Interactive OpenAPI 3.0 Documentation (`/docs`)
+At `http://localhost:5000/docs`, test your API endpoints interactively:
+- **Auth Routes**: `/auth/login`, `/auth/logout`, `/auth/profile`.
+- **JWT Authorization**: Test protected endpoints directly by clicking **Authorize** and supplying Bearer tokens or letting HTTP-only cookies send automatically.
 
 ---
 
@@ -509,6 +516,7 @@ CEM will inspect your working directory and output an aesthetic dashboard report
 ```
   ────────────────────────────────────────────────────
   [CEM]  taskflow-api  project overview
+  Config   DB: mongoose  |  Validator: zod  |  Auth: Yes  |  Swagger: Yes
   ────────────────────────────────────────────────────
 
   ◆  Modules  src/app/modules/

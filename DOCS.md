@@ -13,20 +13,21 @@
 5. [cem build — Build](#cem-build--build)
 6. [cem check — Quality Check](#cem-check--quality-check)
 7. [cem list — Project Overview](#cem-list--project-overview)
-8. [cem remove — Remove Things Cleanly](#cem-remove--remove-things-cleanly)
-9. [Middleware Naming Convention](#middleware-naming-convention)
-10. [Adding a Feature Module](#adding-a-feature-module)
-11. [Adding an Env Variable](#adding-an-env-variable)
-12. [Project Structure](#project-structure)
-13. [Welcome Page](#welcome-page)
-14. [Authentication (Optional)](#authentication-optional)
-15. [Error Handling](#error-handling)
-16. [Docker](#docker)
-17. [Package Manager Support](#package-manager-support)
-18. [Generated Project Scripts](#generated-project-scripts)
-19. [Unknown Commands](#unknown-commands)
-20. [AI Coding Assistants Integration](#ai-coding-assistants-integration)
-21. [Requirements](#requirements)
+8. [Swagger API Documentation (OpenAPI 3.0)](#swagger-api-documentation-openapi-30)
+9. [cem remove — Remove Things Cleanly](#cem-remove--remove-things-cleanly)
+10. [Middleware Naming Convention](#middleware-naming-convention)
+11. [Adding a Feature Module](#adding-a-feature-module)
+12. [Adding an Env Variable](#adding-an-env-variable)
+13. [Project Structure](#project-structure)
+14. [Welcome Page](#welcome-page)
+15. [Authentication (Optional)](#authentication-optional)
+16. [Error Handling](#error-handling)
+17. [Docker](#docker)
+18. [Package Manager Support](#package-manager-support)
+19. [Generated Project Scripts](#generated-project-scripts)
+20. [Unknown Commands](#unknown-commands)
+21. [AI Coding Assistants Integration](#ai-coding-assistants-integration)
+22. [Requirements](#requirements)
 
 ---
 
@@ -56,7 +57,7 @@ yarn dlx create-express-modular my-api
 pnpm dlx create-express-modular my-api
 ```
 
-The CLI **auto-detects** which package manager you used and adapts all install commands, generated files, and terminal output accordingly.
+The CLI **auto-detects** which package manager you used and adapts all install commands, generated files, and terminal output accordingly. Uses a **Batch 2-Pass Installer** (separate runtime & development passes) for ~80% faster project setup.
 
 > **Yarn v1 users:** If `cem` is not found after `yarn global add`, your global bin directory likely isn't on your `PATH`. Fix it by running:
 > ```bash
@@ -72,18 +73,19 @@ The CLI **auto-detects** which package manager you used and adapts all install c
 cem my-api
 ```
 
-The CLI will ask you five questions:
+The CLI will ask six setup questions:
 
 1. **Database / ORM** — Mongoose, Prisma, or Drizzle
 2. **Validator** — Zod (recommended) or Joi
 3. **Auth** — Do you want a ready-to-use JWT Auth module?
 4. **Auth token delivery** _(only if Auth is yes)_ — HTTP-only cookies (recommended, XSS safe) or Authorization header (mobile / API clients)
 5. **Docker** — Do you want a Dockerfile, `.dockerignore`, and `docker-compose.yml`?
+6. **Swagger** — Include Swagger API documentation (OpenAPI 3.0)?
 
 After answering, it will:
 - Scaffold a clean, domain-driven folder structure
-- Generate database config, error handling, `.env`, `.env.example`, and all boilerplate
-- Install all required dependencies automatically
+- Generate database config, error handling, `cem-cli.json` manifest, `.env`, `.env.example`, and all boilerplate
+- Install runtime & development dependencies in a fast 2-pass batch
 - Initialise a git repository
 
 Then just:
@@ -95,7 +97,7 @@ cem dev
 
 Your server is live at `http://localhost:5000`. ✅
 
-Visit `http://localhost:5000` in a browser to see the **CEM Welcome Page** — a styled landing page that shows project name, version, server status, and available routes.
+Visit `http://localhost:5000` in a browser to see the **CEM Welcome Page** — a styled landing page with links to `/health` and interactive Swagger docs (`/docs`).
 
 ---
 
@@ -109,7 +111,7 @@ Visit `http://localhost:5000` in a browser to see the **CEM Welcome Page** — a
 | `cem build` | Run middleware convention guard + architecture guard + compile TypeScript to `dist/` |
 | `cem start` | Start the production server with preflight checks and safety guards |
 | `cem check` | Run type check, lint, and format check in one go |
-| `cem list` \ `cem ls` | List all modules, middlewares, and env vars in the current project |
+| `cem list` \ `cem ls` | List all modules, middlewares, env vars, and Swagger configuration status |
 
 > `cem ls` is an alias for `cem list`.
 
@@ -250,6 +252,19 @@ cem list
 - **● wired** — module is registered in `routes/index.ts`
 - **○ not wired** — module folder exists but has no route entry (needs manual fix)
 - Secret keys (`SECRET`, `PASSWORD`, `TOKEN`, `KEY`, `API`) are automatically masked.
+
+---
+
+## Swagger API Documentation (OpenAPI 3.0)
+
+When you select **Yes** to Swagger during scaffolding:
+
+- **Interactive UI**: Mounted automatically at `/docs` (e.g. `http://localhost:5000/docs`).
+- **Configuration**: Scaffolds `src/app/config/swagger.ts` using `swagger-jsdoc` and `swagger-ui-express`.
+- **Pre-configured Auth**: Includes OpenAPI 3.0 `bearerAuth` security definitions for JWT tokens out of the box.
+- **Automatic JSDoc Scaffolding**: Every module generated with `cem add module <Name>` automatically includes `@openapi` annotations for CRUD routes (`GET`, `POST`, `GET /:id`, `PATCH /:id`, `DELETE /:id`).
+- **Auth Endpoints Spec**: Includes full OpenAPI specs for `/auth/login`, `/auth/logout`, and `/auth/profile`.
+- **Config Tracking**: Feature toggle recorded in `cem-cli.json` under `features.swagger`.
 
 ---
 
@@ -404,7 +419,8 @@ my-api/
 ├── src/
 │   ├── app/
 │   │   ├── config/
-│   │   │   └── index.ts                          # Central config — all env vars live here
+│   │   │   ├── index.ts                          # Central config — all env vars live here
+│   │   │   └── swagger.ts                        # OpenAPI 3.0 JSDoc spec generator (Swagger only)
 │   │   ├── errors/                               # Error handler helpers (per stack)
 │   │   ├── interfaces/                           # Shared TypeScript types
 │   │   ├── middlewares/
@@ -425,6 +441,7 @@ my-api/
 │   │       └── QueryBuilder.ts                   # Mongoose only
 │   ├── app.ts                                    # Express app setup
 │   └── server.ts                                 # Server start & DB connection
+├── cem-cli.json                                  # CEM project manifest (tracks stack & features)
 ├── Dockerfile                                    # Docker only
 ├── .dockerignore                                 # Docker only
 ├── docker-compose.yml                            # Docker only
