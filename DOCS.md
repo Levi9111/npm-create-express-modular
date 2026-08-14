@@ -69,11 +69,12 @@ The CLI **auto-detects** which package manager you used and adapts all install c
 
 ## Creating a New Project
 
+### Interactive Mode
 ```bash
 cem my-api
 ```
 
-The CLI will ask six setup questions:
+The CLI will prompt for your tech stack preferences:
 
 1. **Database / ORM** — Mongoose, Prisma, or Drizzle
 2. **Validator** — Zod (recommended) or Joi
@@ -82,10 +83,46 @@ The CLI will ask six setup questions:
 5. **Docker** — Do you want a Dockerfile, `.dockerignore`, and `docker-compose.yml`?
 6. **Swagger** — Include Swagger API documentation (OpenAPI 3.0)?
 
-After answering, it will:
+---
+
+### Non-Interactive Quick Mode (`-y` / `--yes`)
+To skip all prompts and instantly scaffold a project with **all recommended options**:
+
+```bash
+cem my-api -y
+# or
+npx create-express-modular my-api --yes
+```
+
+**Recommended Defaults Applied via `-y`:**
+- **Database**: Mongoose (MongoDB)
+- **Validator**: Zod
+- **Auth**: Enabled (JWT)
+- **Token Delivery**: HTTP-only cookies
+- **Docker**: Enabled
+- **Swagger**: Enabled (OpenAPI 3.0 at `/docs`)
+
+#### Customizing Flags with `-y`
+You can override specific settings while using `-y`:
+
+```bash
+# Non-interactive with Prisma & PostgreSQL instead of Mongoose:
+cem my-api -y --db prisma
+
+# Non-interactive without Docker:
+cem my-api -y --no-docker
+
+# Non-interactive with Drizzle, Joi, and Header auth:
+cem my-api -y --db drizzle --validator joi --header
+```
+
+---
+
+After setup, the CLI will:
+- Check for existing folder names upfront to prevent overwrites
 - Scaffold a clean, domain-driven folder structure
 - Generate database config, error handling, `cem-cli.json` manifest, `.env`, `.env.example`, and all boilerplate
-- Install runtime & development dependencies in a fast 2-pass batch
+- Perform a single-pass ultra-fast dependency installation
 - Initialise a git repository
 
 Then just:

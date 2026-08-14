@@ -63,7 +63,8 @@ function printHelp(): void {
   ui.nl();
   ui.warn('Available commands:');
   ui.nl();
-  console.log('   cem [project-name]           — scaffold a new project');
+  console.log('   cem [project-name]           — scaffold a new project (interactive)');
+  console.log('   cem [project-name] -y        — scaffold using recommended defaults (-y / --yes)');
   console.log('   cem dev                      — start dev server with hot reload');
   console.log('   cem build                    — compile TypeScript to dist/');
   console.log('   cem start                    — start the production server');
@@ -246,101 +247,165 @@ async function runCLI(): Promise<void> {
     process.exit(0);
   }
 
-  // ── UNKNOWN COMMAND GUARD ─────────────────────────────────────────────────
+  // ── FLAG PARSING FOR SCAFFOLDING ──────────────────────────────────────────
   let initialProjectName = 'my-api';
-  if (args[0]) {
-    if (args[0].startsWith('-')) {
-      ui.err(`Unknown flag: "${args[0]}"`);
+  let useDefaults = false;
+  let flagDb: DbChoice | undefined = undefined;
+  let flagValidator: ValidatorChoice | undefined = undefined;
+  let flagUseAuth: boolean | undefined = undefined;
+  let flagTokenDelivery: TokenDelivery | undefined = undefined;
+  let flagUseDocker: boolean | undefined = undefined;
+  let flagUseSwagger: boolean | undefined = undefined;
+
+  for (let i = 0; i < args.length; i++) {
+    const arg = args[i];
+    if (arg === '-y' || arg === '--yes' || arg === '--defaults') {
+      useDefaults = true;
+    } else if (arg === '--db') {
+      const val = args[i + 1];
+      if (['mongoose', 'prisma', 'drizzle'].includes(val)) {
+        flagDb = val as DbChoice;
+        i++;
+      } else {
+        ui.abort(`Invalid --db choice "${val}". Allowed: mongoose, prisma, drizzle`);
+      }
+    } else if (arg === '--validator') {
+      const val = args[i + 1];
+      if (['zod', 'joi'].includes(val)) {
+        flagValidator = val as ValidatorChoice;
+        i++;
+      } else {
+        ui.abort(`Invalid --validator choice "${val}". Allowed: zod, joi`);
+      }
+    } else if (arg === '--auth') {
+      flagUseAuth = true;
+    } else if (arg === '--no-auth') {
+      flagUseAuth = false;
+    } else if (arg === '--cookie') {
+      flagTokenDelivery = 'cookie';
+    } else if (arg === '--header') {
+      flagTokenDelivery = 'header';
+    } else if (arg === '--docker') {
+      flagUseDocker = true;
+    } else if (arg === '--no-docker') {
+      flagUseDocker = false;
+    } else if (arg === '--swagger') {
+      flagUseSwagger = true;
+    } else if (arg === '--no-swagger') {
+      flagUseSwagger = false;
+    } else if (!arg.startsWith('-')) {
+      initialProjectName = arg;
+    } else {
+      ui.err(`Unknown flag: "${arg}"`);
       printHelp();
       process.exit(1);
     }
-    initialProjectName = args[0];
   }
 
   // ── PROJECT SCAFFOLDING ───────────────────────────────────────────────────
   ui.printBanner(VERSION);
 
   let answers: PromptAnswers;
-  try {
-    answers = await inquirer.prompt<PromptAnswers>([
-      {
-        type: 'input',
-        name: 'projectName',
-        message: 'Project name:',
-        default: initialProjectName,
-        validate: (v: string) => {
-          const name = v.trim();
-          if (!name) return 'Project name cannot be empty.';
-          const targetPath = path.join(process.cwd(), name);
-          if (fs.existsSync(targetPath)) {
-            return `Directory '${name}' already exists in current folder. Please choose another name.`;
-          }
-          return true;
-        },
-      },
-      {
-        type: 'list',
-        name: 'db',
-        message: 'Database / ORM:',
-        choices: [
-          { name: 'Mongoose  (MongoDB)', value: 'mongoose' },
-          { name: 'Prisma    (PostgreSQL / MySQL / SQLite)', value: 'prisma' },
-          { name: 'Drizzle   (PostgreSQL)', value: 'drizzle' },
-        ],
-      },
-      {
-        type: 'list',
-        name: 'validator',
-        message: 'Validator:',
-        choices: [
-          { name: 'Zod  (recommended)', value: 'zod' },
-          { name: 'Joi  (alternative)', value: 'joi' },
-        ],
-      },
-      {
-        type: 'confirm',
-        name: 'useAuth',
-        message: 'Include JWT Auth module?',
-        default: false,
-      },
-      {
-        type: 'list',
-        name: 'authTokenDelivery',
-        message: 'Auth token delivery:',
-        when: (ans: PromptAnswers) => ans.useAuth,
-        choices: [
-          {
-            name: 'HTTP-only cookies  (recommended — XSS safe, browser clients)',
-            value: 'cookie',
-          },
-          {
-            name: 'Authorization header  (mobile / API clients)',
-            value: 'header',
-          },
-        ],
-        default: 'cookie',
-      },
-      {
-        type: 'confirm',
-        name: 'useDocker',
-        message: 'Include Docker setup (Dockerfile + docker-compose)?',
-        default: false,
-      },
-      {
-        type: 'confirm',
-        name: 'useSwagger',
-        message: 'Include Swagger API documentation (OpenAPI 3.0)?',
-        default: true,
-      },
-    ]);
-  } catch (e: any) {
-    if (e.name === 'ExitPromptError') {
-      ui.nl();
-      ui.warn('Scaffold cancelled.');
-      ui.nl();
-      process.exit(0);
+
+  if (useDefaults) {
+    const targetPath = path.join(process.cwd(), initialProjectName);
+    if (fs.existsSync(targetPath)) {
+      ui.abort(`Directory '${initialProjectName}' already exists in current folder.`);
     }
-    throw e;
+
+    answers = {
+      projectName: initialProjectName,
+      db: flagDb || 'mongoose',
+      validator: flagValidator || 'zod',
+      useAuth: flagUseAuth ?? true,
+      authTokenDelivery: flagTokenDelivery || 'cookie',
+      useDocker: flagUseDocker ?? true,
+      useSwagger: flagUseSwagger ?? true,
+    };
+  } else {
+    try {
+      answers = await inquirer.prompt<PromptAnswers>([
+        {
+          type: 'input',
+          name: 'projectName',
+          message: 'Project name:',
+          default: initialProjectName,
+          validate: (v: string) => {
+            const name = v.trim();
+            if (!name) return 'Project name cannot be empty.';
+            const targetPath = path.join(process.cwd(), name);
+            if (fs.existsSync(targetPath)) {
+              return `Directory '${name}' already exists in current folder. Please choose another name.`;
+            }
+            return true;
+          },
+        },
+        {
+          type: 'list',
+          name: 'db',
+          message: 'Database / ORM:',
+          default: flagDb || 'mongoose',
+          choices: [
+            { name: 'Mongoose  (MongoDB)', value: 'mongoose' },
+            { name: 'Prisma    (PostgreSQL / MySQL / SQLite)', value: 'prisma' },
+            { name: 'Drizzle   (PostgreSQL)', value: 'drizzle' },
+          ],
+        },
+        {
+          type: 'list',
+          name: 'validator',
+          message: 'Validator:',
+          default: flagValidator || 'zod',
+          choices: [
+            { name: 'Zod  (recommended)', value: 'zod' },
+            { name: 'Joi  (alternative)', value: 'joi' },
+          ],
+        },
+        {
+          type: 'confirm',
+          name: 'useAuth',
+          message: 'Include JWT Auth module?',
+          default: flagUseAuth ?? true,
+        },
+        {
+          type: 'list',
+          name: 'authTokenDelivery',
+          message: 'Auth token delivery:',
+          when: (ans: PromptAnswers) => ans.useAuth,
+          choices: [
+            {
+              name: 'HTTP-only cookies  (recommended — XSS safe, browser clients)',
+              value: 'cookie',
+            },
+            {
+              name: 'Authorization header  (mobile / API clients)',
+              value: 'header',
+            },
+          ],
+          default: flagTokenDelivery || 'cookie',
+        },
+        {
+          type: 'confirm',
+          name: 'useDocker',
+          message: 'Include Docker setup (Dockerfile + docker-compose)?',
+          default: flagUseDocker ?? true,
+        },
+        {
+          type: 'confirm',
+          name: 'useSwagger',
+          message: 'Include Swagger API documentation (OpenAPI 3.0)?',
+          default: flagUseSwagger ?? true,
+        },
+      ]);
+    } catch (e: any) {
+      if (e.name === 'ExitPromptError') {
+        ui.nl();
+        ui.warn('Scaffold cancelled.');
+        ui.nl();
+        process.exit(0);
+      }
+      throw e;
+    }
   }
 
   const { projectName, db, validator, useAuth, useDocker, useSwagger, authTokenDelivery } = answers;
