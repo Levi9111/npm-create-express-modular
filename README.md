@@ -18,17 +18,24 @@ Choose your database, your validator, and optionally add JWT auth — all from o
 
 ---
 
-## Quick Start
+## Installation
+
+To install the CLI globally:
 
 ```bash
-# npm
+npm install -g create-express-modular
+```
+
+## Quick Start
+
+Run the CLI using `npx` (no installation required) or call the globally installed command:
+
+```bash
+# Using npx (recommended)
 npx create-express-modular my-api
 
-# yarn
-yarn dlx create-express-modular my-api
-
-# pnpm
-pnpm dlx create-express-modular my-api
+# Or using the globally installed package
+cem my-api
 ```
 
 Then:
