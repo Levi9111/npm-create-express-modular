@@ -55,8 +55,7 @@ export function createInitialCemConfig(options: {
   version?: string;
 }): CemConfig {
   return {
-    $schema: 'https://create-express-modular.lovable.app/schema.json',
-    version: options.version || '3.0.0',
+    version: options.version || '3.2.0',
     project: {
       name: options.projectName,
       db: options.db,
