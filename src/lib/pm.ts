@@ -86,6 +86,6 @@ export function initialInstallCmd(pm: PackageManager): string {
     case 'pnpm':
       return 'pnpm install';
     default:
-      return 'npm install --loglevel=error';
+      return 'npm install --no-audit --no-fund --loglevel=error';
   }
 }

@@ -268,7 +268,15 @@ async function runCLI(): Promise<void> {
         name: 'projectName',
         message: 'Project name:',
         default: initialProjectName,
-        validate: (v: string) => (v.trim() ? true : 'Project name cannot be empty.'),
+        validate: (v: string) => {
+          const name = v.trim();
+          if (!name) return 'Project name cannot be empty.';
+          const targetPath = path.join(process.cwd(), name);
+          if (fs.existsSync(targetPath)) {
+            return `Directory '${name}' already exists in current folder. Please choose another name.`;
+          }
+          return true;
+        },
       },
       {
         type: 'list',
@@ -512,11 +520,12 @@ async function runCLI(): Promise<void> {
     /* non-fatal */
   }
 
-  // Collect all production and development dependencies for a fast 2-pass installation
+  // Collect all production and development dependencies
   const prodDeps: string[] = ['dotenv', 'http-status-codes', 'express', 'cors', 'helmet'];
   const devDeps: string[] = [
     '@types/express',
     '@types/cors',
+    '@types/node',
     'typescript',
     'tsx',
     'eslint',
@@ -552,21 +561,79 @@ async function runCLI(): Promise<void> {
   const uniqueProd = Array.from(new Set(prodDeps));
   const uniqueDev = Array.from(new Set(devDeps));
 
-  const prodSpin = ui.spinner(`Installing runtime dependencies (${db}, ${validator}${useAuth ? ', auth' : ''})...`);
-  try {
-    runInstall(projectPath, uniqueProd, false, pm);
-    prodSpin.succeed(`Runtime dependencies installed (${uniqueProd.length} packages)`);
-  } catch (e: any) {
-    prodSpin.fail('Runtime dependencies install failed');
-    ui.abort(e.message);
+  // Pre-populate package.json with dependencies & devDependencies
+  const pkgPath = path.join(projectPath, 'package.json');
+  if (fs.existsSync(pkgPath)) {
+    const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8'));
+    pkg.dependencies = pkg.dependencies || {};
+    pkg.devDependencies = pkg.devDependencies || {};
+
+    const versionMap: Record<string, string> = {
+      // Core
+      express: '^4.21.2',
+      cors: '^2.8.5',
+      dotenv: '^16.4.7',
+      'http-status-codes': '^2.3.0',
+      helmet: '^8.0.0',
+      // DB
+      mongoose: '^8.9.5',
+      prisma: '^6.2.1',
+      '@prisma/client': '^6.2.1',
+      'drizzle-orm': '^0.38.4',
+      'drizzle-kit': '^0.30.2',
+      pg: '^8.13.1',
+      // Validator
+      zod: '^3.24.1',
+      joi: '^17.13.3',
+      // Auth
+      bcrypt: '^5.1.1',
+      jsonwebtoken: '^9.0.2',
+      'express-rate-limit': '^7.5.0',
+      'cookie-parser': '^1.4.7',
+      // Swagger
+      'swagger-ui-express': '^5.0.1',
+      'swagger-jsdoc': '^6.2.8',
+      // Dev types & tools
+      '@types/express': '^5.0.0',
+      '@types/cors': '^2.8.17',
+      '@types/node': '^22.10.7',
+      '@types/pg': '^8.11.10',
+      '@types/joi': '^17.2.3',
+      '@types/bcrypt': '^5.0.2',
+      '@types/jsonwebtoken': '^9.0.8',
+      '@types/cookie-parser': '^1.4.8',
+      '@types/swagger-ui-express': '^4.1.7',
+      '@types/swagger-jsdoc': '^6.0.4',
+      typescript: '^5.7.3',
+      tsx: '^4.19.2',
+      eslint: '^9.18.0',
+      '@eslint/js': '^9.18.0',
+      'typescript-eslint': '^8.20.0',
+      'eslint-config-prettier': '^10.0.1',
+      prettier: '^3.4.2',
+    };
+
+    uniqueProd.forEach((p) => {
+      if (!pkg.dependencies[p]) {
+        pkg.dependencies[p] = versionMap[p] || 'latest';
+      }
+    });
+
+    uniqueDev.forEach((p) => {
+      if (!pkg.devDependencies[p]) {
+        pkg.devDependencies[p] = versionMap[p] || 'latest';
+      }
+    });
+
+    fs.writeFileSync(pkgPath, JSON.stringify(pkg, null, 2));
   }
 
-  const devSpin = ui.spinner('Installing development & tooling dependencies...');
+  const installSpin = ui.spinner(`Installing dependencies via ${pm}...`);
   try {
-    runInstall(projectPath, uniqueDev, true, pm);
-    devSpin.succeed(`Development dependencies installed (${uniqueDev.length} packages)`);
+    execSync(initialInstallCmd(pm), { cwd: projectPath, stdio: 'pipe' });
+    installSpin.succeed(`Dependencies installed (${uniqueProd.length} runtime, ${uniqueDev.length} dev)`);
   } catch (e: any) {
-    devSpin.fail('Development dependencies install failed');
+    installSpin.fail('Dependencies install failed');
     ui.abort(e.message);
   }
 
