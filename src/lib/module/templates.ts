@@ -100,13 +100,71 @@ export function buildInterface(moduleName: string): string {
  * @param fileName   - lowercase file prefix.
  */
 export function buildRoute(moduleName: string, fileName: string): string {
+  const plural = fileName.endsWith('s') ? fileName : `${fileName}s`;
   return `import express from 'express';
 import { ${moduleName}Controllers } from './${fileName}.controller';
 
 const router = express.Router();
 
+/**
+ * @openapi
+ * /${plural}:
+ *   post:
+ *     tags: [${moduleName}]
+ *     summary: Create a new ${moduleName}
+ *     responses:
+ *       201:
+ *         description: ${moduleName} created successfully
+ *   get:
+ *     tags: [${moduleName}]
+ *     summary: Retrieve all ${plural}
+ *     responses:
+ *       200:
+ *         description: List of ${plural}
+ */
 router.post('/', ${moduleName}Controllers.create${moduleName});
 router.get('/', ${moduleName}Controllers.getAll${moduleName}s);
+
+/**
+ * @openapi
+ * /${plural}/{id}:
+ *   get:
+ *     tags: [${moduleName}]
+ *     summary: Retrieve a single ${moduleName} by ID
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: ${moduleName} details
+ *   patch:
+ *     tags: [${moduleName}]
+ *     summary: Update a ${moduleName} by ID
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: ${moduleName} updated successfully
+ *   delete:
+ *     tags: [${moduleName}]
+ *     summary: Delete a ${moduleName} by ID
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: ${moduleName} deleted successfully
+ */
 router.get('/:id', ${moduleName}Controllers.getSingle${moduleName});
 router.patch('/:id', ${moduleName}Controllers.update${moduleName});
 router.delete('/:id', ${moduleName}Controllers.delete${moduleName});

@@ -23,6 +23,7 @@ export function scaffoldApp(
   projectPath: string,
   useRateLimit: boolean,
   tokenDelivery: TokenDelivery = 'header',
+  useSwagger = false,
 ): void {
   const useCookies = tokenDelivery === 'cookie';
 
@@ -33,6 +34,11 @@ export function scaffoldApp(
     "import logger from './app/utils/logger';",
     "import { cemWelcomePage } from './app/utils/welcomePage';",
   ];
+
+  if (useSwagger) {
+    lines.push("import swaggerUi from 'swagger-ui-express';");
+    lines.push("import { swaggerSpec } from './app/config/swagger';");
+  }
 
   if (useCookies) {
     lines.push("import cookieParser from 'cookie-parser';");
@@ -65,6 +71,14 @@ export function scaffoldApp(
 
   if (useCookies) {
     lines.push('app.use(cookieParser());');
+  }
+
+  if (useSwagger) {
+    lines.push(
+      '',
+      '// ── API Documentation ─────────────────────────────────────────────────────────',
+      "app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));",
+    );
   }
 
   lines.push(

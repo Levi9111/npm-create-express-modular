@@ -74,8 +74,9 @@ export function listProject(): void {
 
   if (config) {
     const authText = config.project.auth ? 'Yes' : 'No';
+    const swaggerText = config.features?.swagger ? 'Yes' : 'No';
     console.log(
-      `  ${ui.gray('Config')}   DB: ${ui.bold(config.project.db)}  |  Validator: ${ui.bold(config.project.validator)}  |  Auth: ${ui.bold(authText)}`,
+      `  ${ui.gray('Config')}   DB: ${ui.bold(config.project.db)}  |  Validator: ${ui.bold(config.project.validator)}  |  Auth: ${ui.bold(authText)}  |  Swagger: ${ui.bold(swaggerText)}`,
     );
   }
 

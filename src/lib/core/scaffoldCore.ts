@@ -14,6 +14,7 @@ import { scaffoldUtils } from './sections/utils';
 import { scaffoldMiddlewares, scaffoldInterfaces } from './sections/middlewares';
 import { scaffoldRoutes } from './sections/routes';
 import { scaffoldApp } from './sections/app';
+import { scaffoldSwagger } from './sections/swagger';
 
 /**
  * Runs the full core scaffold pipeline for a new CEM project.
@@ -23,18 +24,23 @@ import { scaffoldApp } from './sections/app';
  * @param projectPath   - Absolute path to the project root.
  * @param useRateLimit  - `true` when auth is enabled (adds rate limiter import to app.ts).
  * @param tokenDelivery - Determines whether cookie-parser is added to app.ts.
+ * @param useSwagger    - `true` to scaffold Swagger/OpenAPI documentation.
  */
 export function scaffoldCoreFiles(
   projectPath: string,
   useRateLimit = false,
   tokenDelivery: TokenDelivery = 'header',
+  useSwagger = false,
 ): void {
   scaffoldErrors(projectPath);
   scaffoldUtils(projectPath);
   scaffoldInterfaces(projectPath);
   scaffoldMiddlewares(projectPath);
   scaffoldRoutes(projectPath);
-  scaffoldApp(projectPath, useRateLimit, tokenDelivery);
+  if (useSwagger) {
+    scaffoldSwagger(projectPath);
+  }
+  scaffoldApp(projectPath, useRateLimit, tokenDelivery, useSwagger);
 }
 
 /**

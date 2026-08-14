@@ -89,6 +89,7 @@ interface PromptAnswers {
   useAuth: boolean;
   authTokenDelivery?: TokenDelivery;
   useDocker: boolean;
+  useSwagger: boolean;
 }
 
 // ─── CLI ENTRYPOINT ───────────────────────────────────────────────────────────
@@ -317,6 +318,12 @@ async function runCLI(): Promise<void> {
         message: 'Include Docker setup (Dockerfile + docker-compose)?',
         default: false,
       },
+      {
+        type: 'confirm',
+        name: 'useSwagger',
+        message: 'Include Swagger API documentation (OpenAPI 3.0)?',
+        default: true,
+      },
     ]);
   } catch (e: any) {
     if (e.name === 'ExitPromptError') {
@@ -328,7 +335,7 @@ async function runCLI(): Promise<void> {
     throw e;
   }
 
-  const { projectName, db, validator, useAuth, useDocker, authTokenDelivery } = answers;
+  const { projectName, db, validator, useAuth, useDocker, useSwagger, authTokenDelivery } = answers;
   const tokenDelivery: TokenDelivery = useAuth ? authTokenDelivery || 'cookie' : 'header';
   const projectPath = path.join(process.cwd(), projectName);
   const templatePath = path.join(__dirname, '../../template');
@@ -355,6 +362,7 @@ async function runCLI(): Promise<void> {
   ui.step('Validator', validator);
   ui.step('Auth', useAuth ? 'yes' : 'no');
   ui.step('Docker', useDocker ? 'yes' : 'no');
+  ui.step('Swagger', useSwagger ? 'yes' : 'no');
   ui.nl();
 
   const scaffoldSpin = ui.spinner('Writing project files...');
@@ -390,7 +398,7 @@ async function runCLI(): Promise<void> {
 
     fs.mkdirSync(path.join(projectPath, 'src/app/modules'), { recursive: true });
 
-    scaffoldCoreFiles(projectPath, useAuth, tokenDelivery);
+    scaffoldCoreFiles(projectPath, useAuth, tokenDelivery, useSwagger);
     if (db === 'mongoose') scaffoldQueryBuilder(projectPath);
     dbGen.scaffoldServerAndConfig(projectPath);
     dbGen.scaffoldErrorFiles(projectPath);
@@ -410,6 +418,7 @@ async function runCLI(): Promise<void> {
       useAuth,
       authTokenDelivery,
       useDocker,
+      useSwagger,
       packageManager: pm,
       version: VERSION,
     });
@@ -533,6 +542,11 @@ async function runCLI(): Promise<void> {
       prodDeps.push('cookie-parser');
       devDeps.push('@types/cookie-parser');
     }
+  }
+
+  if (useSwagger) {
+    prodDeps.push('swagger-ui-express', 'swagger-jsdoc');
+    devDeps.push('@types/swagger-ui-express', '@types/swagger-jsdoc');
   }
 
   const uniqueProd = Array.from(new Set(prodDeps));

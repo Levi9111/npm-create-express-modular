@@ -51,6 +51,7 @@ export function createInitialCemConfig(options: {
   useAuth: boolean;
   authTokenDelivery?: TokenDelivery;
   useDocker: boolean;
+  useSwagger?: boolean;
   packageManager?: PackageManager;
   version?: string;
 }): CemConfig {
@@ -76,7 +77,7 @@ export function createInitialCemConfig(options: {
     features: {
       testing: false,
       websocket: false,
-      swagger: false,
+      swagger: !!options.useSwagger,
     },
   };
 }

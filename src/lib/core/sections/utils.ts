@@ -328,6 +328,11 @@ function buildWelcomePage(): string {
     <ul class="route-list">
       <li class="route-item">
         <span class="method method-get">GET</span>
+        <span class="route-path">/docs</span>
+        <span class="route-desc">Swagger API Specs (OpenAPI 3.0)</span>
+      </li>
+      <li class="route-item">
+        <span class="method method-get">GET</span>
         <span class="route-path">/health</span>
         <span class="route-desc">Health check</span>
       </li>
@@ -338,9 +343,9 @@ function buildWelcomePage(): string {
       </li>
     </ul>
 
-    <a class="health-link" href="/health">
-      <span>◈</span>
-      <span>Check /health</span>
+    <a class="health-link" href="/docs" target="_blank">
+      <span>📖</span>
+      <span>Open Swagger Docs (/docs)</span>
     </a>
 
     <hr class="divider" />

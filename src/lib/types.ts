@@ -42,6 +42,7 @@ export interface CLIAnswers {
   useAuth: boolean;
   authTokenDelivery?: TokenDelivery;
   useDocker: boolean;
+  useSwagger: boolean;
 }
 
 // ─── Generator Interface ──────────────────────────────────────────────────────
