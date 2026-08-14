@@ -47,25 +47,78 @@ export default {
 
     fs.writeFileSync(
       path.join(projectPath, 'src/server.ts'),
-      `import mongoose from 'mongoose';
+      `import { Server } from 'http';
 import app from './app';
 import config from './app/config';
+import logger from './app/utils/logger';
+import { connectDB } from './app/utils/connectDB';
+
+let server: Server;
 
 async function bootstrap() {
   try {
-    await mongoose.connect(config.databaseUrl);
-    console.log('✅ MongoDB connected');
+    await connectDB();
 
-    app.listen(config.port, () => {
-      console.log(\`🚀 Server running on http://localhost:\${config.port}\`);
-    });
+    config.NODE_ENV === 'development' &&
+      (server = app.listen(config.port, () => {
+        logger.info(\`Server running on http://localhost:\${config.port}\`);
+      }));
   } catch (error) {
-    console.error('❌ Failed to connect to MongoDB:', error);
+    logger.error('Failed to start server:', error);
     process.exit(1);
   }
 }
 
 bootstrap();
+
+process.on('unhandledRejection', (reason) => {
+  logger.error('Unhandled Rejection detected, shutting down server...', reason);
+  if (server) {
+    server.close(() => {
+      process.exit(1);
+    });
+  } else {
+    process.exit(1);
+  }
+});
+
+process.on('uncaughtException', (error) => {
+  logger.error('Uncaught Exception detected, shutting down server...', error);
+  process.exit(1);
+});
+`,
+    );
+
+    const utilsDir = path.join(projectPath, 'src/app/utils');
+    fs.mkdirSync(utilsDir, { recursive: true });
+    fs.writeFileSync(
+      path.join(utilsDir, 'connectDB.ts'),
+      `import mongoose from 'mongoose';
+import config from '../config';
+import logger from './logger';
+import { MongoMemoryServer } from 'mongodb-memory-server';
+
+export async function connectDB(): Promise<void> {
+  let dbUrl = config.databaseUrl;
+
+  try {
+    await mongoose.connect(dbUrl, { serverSelectionTimeoutMS: 4000 });
+    logger.info('MongoDB connected successfully');
+  } catch (err) {
+    if (config.NODE_ENV === 'development') {
+      logger.warn(
+        'Local/Atlas MongoDB connection failed. Starting In-Memory MongoDB...',
+      );
+
+      const mongoServer = await MongoMemoryServer.create();
+      dbUrl = mongoServer.getUri();
+      await mongoose.connect(dbUrl);
+      logger.info(\`In-Memory MongoDB connected at \${dbUrl}\`);
+    } else {
+      throw err;
+    }
+  }
+}
 `,
     );
   },
@@ -159,7 +212,7 @@ export default handleDuplicateError;
   dependencies(): GeneratorDependencies {
     return {
       prod: ['mongoose'],
-      dev: ['@types/mongoose'],
+      dev: ['@types/mongoose', 'mongodb-memory-server'],
     };
   },
 
