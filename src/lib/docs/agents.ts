@@ -128,21 +128,24 @@ export function buildAgentsMd(opts: AgentDocsOptions): string {
   lines.push(modelPattern(db));
   lines.push('');
 
-  lines.push('## CLI Commands');
+  lines.push('## CLI Commands & Shortcuts');
   lines.push('');
   lines.push('Use the CEM CLI for scaffolding — do NOT create module/middleware files manually.');
   lines.push('');
-  lines.push('| Command | Effect |');
-  lines.push('|---|---|');
-  lines.push('| `cem add module <Name...>` | Scaffold module(s) with all files + auto-wire routes |');
-  lines.push('| `cem add middleware <name...>` | Create middleware file(s) with correct naming |');
-  lines.push('| `cem add env <KEY...>` | Add env var(s) to `.env`, `.env.example`, and `config/index.ts` |');
-  lines.push('| `cem remove module <Name...>` | Delete module(s) + unwire route(s) |');
-  lines.push('| `cem remove middleware <name...>` | Delete middleware file(s) |');
-  lines.push('| `cem remove env <KEY...>` | Remove env var(s) from all config files |');
-  lines.push('| `cem dev` | Start dev server with hot reload |');
-  lines.push('| `cem build` | Convention guards + TypeScript compilation |');
-  lines.push('| `cem check` | Type-check + lint + format check |');
+  lines.push('| Command | Alias / Shortcut | Description |');
+  lines.push('|---|---|---|');
+  lines.push('| `cem add module <Name...>` | — | Scaffold module(s) with all files + auto-wire routes |');
+  lines.push('| `cem add middleware <name...>` | — | Create middleware file(s) with correct naming |');
+  lines.push('| `cem add env <KEY...>` | — | Add env var(s) to `.env`, `.env.example`, and `config/index.ts` |');
+  lines.push('| `cem remove module <Name...>` | `cem rm module <Name...>` | Delete module(s) + unwire route(s) |');
+  lines.push('| `cem remove middleware <name...>` | `cem rm middleware <name...>` | Delete middleware file(s) |');
+  lines.push('| `cem remove env <KEY...>` | `cem rm env <KEY...>` | Remove env var(s) from all config files |');
+  lines.push('| `cem list` | `cem ls` | Display project modules, routes, middlewares, env vars, and `cem-cli.json` settings |');
+  lines.push('| `cem dev` | — | Start dev server with hot reload |');
+  lines.push('| `cem build` | — | Convention guards + TypeScript compilation |');
+  lines.push('| `cem check` | — | Type-check + lint + format check |');
+  lines.push('');
+  lines.push('> 💡 Project configuration is managed via `cem-cli.json` at the root.');
   lines.push('');
 
   const migrate = migrationCmd(db, pm);

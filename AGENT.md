@@ -21,8 +21,7 @@ This document provides specialized, machine-readable developer context for AI co
 ## 2. Directory Mapping & Architecture
 When executing code modification tasks, use this reference to locate components:
 
-| Feature / System | Implementation File(s) | Role |
-|---|---|---|
+| **Config Manager** | `src/lib/configLoader.ts` | Reads/writes `cem-cli.json` manifest for project preferences |
 | **CLI Routing Entry** | `src/bin/cli.ts` | Entry point, prompts orchestrator, routes sub-commands |
 | **Feature Module Generator** | `src/lib/module/` | Prompts & writes controllers, services, models, routes, validations |
 | **Auth Scaffold Generator** | `src/lib/auth/` | Creates JWT login/register, auth middlewares, token cookie config |
@@ -41,11 +40,12 @@ When `cem` is run to initialize a project:
 1. **Prompts**: Asks for project name, Database/ORM, Validator, Auth activation, Token delivery method, and Docker.
 2. **Template Copying**: Copies base directory config files from `template/` to target folder.
 3. **Core Scaffolding**: Triggers `scaffoldCoreFiles()` to write directory structures, utils (`logger`, `catchAsync`), global error handler shells, and `app.ts`.
-4. **Database Scaffolding**: Applies the selected adapter (Mongoose/Prisma/Drizzle) to write database-specific models, clients, schemas, and custom error parsers.
-5. **Validator Setup**: Copies validation schemas and validator middleware.
-6. **Optional Auth Setup**: If enabled, scaffolds the `Auth` module and rate-limiter middleware.
-7. **Document Generation**: Generates contextual docs (`README.md`, `CLAUDE.md`, and `AGENTS.md`) tailored to the project setup.
-8. **Dependency Installation**: Detects the package manager and installs dev/dependencies.
+4. **Config Scaffolding**: Writes `cem-cli.json` to store project stack selections and feature flags.
+5. **Database Scaffolding**: Applies the selected adapter (Mongoose/Prisma/Drizzle) to write database-specific models, clients, schemas, and custom error parsers.
+6. **Validator Setup**: Copies validation schemas and validator middleware.
+7. **Optional Auth Setup**: If enabled, scaffolds the `Auth` module and rate-limiter middleware.
+8. **Document Generation**: Generates contextual docs (`README.md`, `CLAUDE.md`, and `AGENTS.md`) tailored to the project setup.
+9. **Dependency Installation**: Detects the package manager and installs dev/dependencies.
 
 ---
 

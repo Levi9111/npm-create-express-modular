@@ -157,6 +157,7 @@ export function buildClaudeMd(opts: AgentDocsOptions): string {
   lines.push('## Project Structure');
   lines.push('');
   lines.push('```');
+  lines.push('cem-cli.json                      # Project configuration & stack manifest');
   lines.push('src/');
   lines.push('├── app/');
   lines.push('│   ├── config/index.ts           # Centralized config — ALL env vars');

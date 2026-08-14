@@ -26,6 +26,7 @@ import { runStart } from '../lib/start';
 import { runCheck } from '../lib/checker';
 import { addEnvVar } from '../lib/envGenerator';
 import { generateMiddleware } from '../lib/middlewareGenerator';
+import { createInitialCemConfig, saveCemConfig } from '../lib/configLoader';
 import type { DbChoice, ValidatorChoice, TokenDelivery, PackageManager } from '../lib/types';
 import inquirer from 'inquirer';
 
@@ -402,13 +403,25 @@ async function runCLI(): Promise<void> {
       handler,
     );
 
+    const cemConfig = createInitialCemConfig({
+      projectName,
+      db,
+      validator,
+      useAuth,
+      authTokenDelivery,
+      useDocker,
+      packageManager: pm,
+      version: VERSION,
+    });
+    saveCemConfig(cemConfig, projectPath);
+
     scaffoldSpin.succeed('Base architecture scaffolded');
   } catch (e: any) {
     scaffoldSpin.fail('Failed to scaffold project files');
     ui.abort(e.message);
   }
 
-  ui.substep('src/app.ts  ·  src/server.ts  ·  .env');
+  ui.substep('cem-cli.json   ·  src/app.ts  ·  src/server.ts  ·  .env');
   ui.substep('src/app/config/index.ts');
   ui.substep('src/app/errors/    (AppError + db-specific handlers)');
   ui.substep('src/app/utils/     (catchAsync · sendResponse · logger · welcomePage · QueryBuilder · validateRequest)');

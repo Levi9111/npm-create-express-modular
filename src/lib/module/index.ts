@@ -10,7 +10,9 @@ import fs from 'fs';
 import path from 'path';
 import inquirer from 'inquirer';
 import * as ui from '../ui';
-import type { ValidatorChoice } from '../types';
+import { loadCemConfig } from '../configLoader';
+import { getDbGenerator } from '../db';
+import type { DbChoice, ValidatorChoice } from '../types';
 import { pluralize, capitalize } from '../utils/string';
 import { injectRoute } from '../utils/inject';
 import {
@@ -24,11 +26,13 @@ import {
 } from './templates';
 
 /**
- * Detects the validation library used by the project at `projectRoot`
- * by inspecting its `package.json` dependencies.
- * Falls back to `'zod'` if detection fails.
+ * Detects the validation library used by the project at `projectRoot`.
+ * Checks `cem.json` first, then falls back to inspecting `package.json`.
  */
-function detectValidator(projectRoot: string): ValidatorChoice {
+function resolveValidator(projectRoot: string): ValidatorChoice {
+  const config = loadCemConfig(projectRoot);
+  if (config?.project?.validator) return config.project.validator;
+
   try {
     const pkg = JSON.parse(
       fs.readFileSync(path.join(projectRoot, 'package.json'), 'utf8'),
@@ -39,6 +43,15 @@ function detectValidator(projectRoot: string): ValidatorChoice {
     // fall through to default
   }
   return 'zod';
+}
+
+/**
+ * Resolves the database choice used by the project at `projectRoot`.
+ * Checks `cem.json` first.
+ */
+function resolveDb(projectRoot: string): DbChoice | null {
+  const config = loadCemConfig(projectRoot);
+  return config?.project?.db ?? null;
 }
 
 /**
@@ -87,7 +100,8 @@ export async function generateModule(providedName?: string | string[]): Promise<
     names = [answer.moduleName];
   }
 
-  const validator = detectValidator(projectRoot);
+  const validator = resolveValidator(projectRoot);
+  const dbChoice = resolveDb(projectRoot);
 
   for (const name of names) {
     const moduleName = capitalize(name.trim());
@@ -122,10 +136,14 @@ export async function generateModule(providedName?: string | string[]): Promise<
 
     fs.mkdirSync(modulePath, { recursive: true });
 
+    const modelContent = dbChoice
+      ? getDbGenerator(dbChoice).modelStub(moduleName)
+      : `// TODO: Define your ${moduleName} model/schema here\n`;
+
     const files: Record<string, string> = {
       controller: buildController(moduleName, fileName),
       interface: buildInterface(moduleName),
-      model: `// TODO: Define your ${moduleName} model/schema here\n`,
+      model: modelContent,
       route: buildRoute(moduleName, fileName),
       service: buildService(moduleName),
       validation: buildValidation(moduleName, validator),

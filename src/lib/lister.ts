@@ -8,6 +8,7 @@
 import fs from 'fs';
 import path from 'path';
 import * as ui from './ui';
+import { loadCemConfig } from './configLoader';
 
 function assertCemProject(projectRoot: string): void {
   if (!fs.existsSync(path.join(projectRoot, 'src/app'))) {
@@ -30,7 +31,7 @@ function _isModuleWired(projectRoot: string, moduleName: string): boolean {
   const indexPath = path.join(projectRoot, 'src/app/routes/index.ts');
   const content = readFileSafe(indexPath);
   if (!content) return false;
-  return content.includes(`${moduleName}Routes`);
+  return content.includes(moduleName);
 }
 
 function _isSensitive(key: string): boolean {
@@ -49,14 +50,18 @@ export function listProject(): void {
   const projectRoot = process.cwd();
   assertCemProject(projectRoot);
 
-  let projectName = path.basename(projectRoot);
-  try {
-    const pkg = JSON.parse(
-      fs.readFileSync(path.join(projectRoot, 'package.json'), 'utf8'),
-    ) as { name?: string };
-    if (pkg.name) projectName = pkg.name;
-  } catch {
-    /* fallback to dirname */
+  const config = loadCemConfig(projectRoot);
+
+  let projectName = config?.project?.name || path.basename(projectRoot);
+  if (!config) {
+    try {
+      const pkg = JSON.parse(
+        fs.readFileSync(path.join(projectRoot, 'package.json'), 'utf8'),
+      ) as { name?: string };
+      if (pkg.name) projectName = pkg.name;
+    } catch {
+      /* fallback to dirname */
+    }
   }
 
   const line = ui.gray('─'.repeat(52));
@@ -66,6 +71,14 @@ export function listProject(): void {
   console.log(
     `  ${ui.badge('CEM')}  ${ui.bold(ui.cyan(projectName))}  ${ui.gray('project overview')}`,
   );
+
+  if (config) {
+    const authText = config.project.auth ? 'Yes' : 'No';
+    console.log(
+      `  ${ui.gray('Config')}   DB: ${ui.bold(config.project.db)}  |  Validator: ${ui.bold(config.project.validator)}  |  Auth: ${ui.bold(authText)}`,
+    );
+  }
+
   console.log();
   console.log(`  ${line}`);
 

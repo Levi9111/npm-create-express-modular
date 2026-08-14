@@ -19,6 +19,7 @@ export default defineConfig({
     'lib/lister': 'src/lib/lister.ts',
     'lib/envGenerator': 'src/lib/envGenerator.ts',
     'lib/middlewareGenerator': 'src/lib/middlewareGenerator.ts',
+    'lib/configLoader': 'src/lib/configLoader.ts',
     'lib/db/index': 'src/lib/db/index.ts',
     'lib/db/mongoose': 'src/lib/db/mongoose.ts',
     'lib/db/prisma': 'src/lib/db/prisma.ts',

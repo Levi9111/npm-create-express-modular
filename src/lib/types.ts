@@ -6,6 +6,34 @@ export type DbChoice = 'mongoose' | 'prisma' | 'drizzle';
 export type ValidatorChoice = 'zod' | 'joi';
 export type TokenDelivery = 'cookie' | 'header';
 
+// ─── CEM Project Configuration (cem-cli.json) ──────────────────────────────────
+export interface CemConfig {
+  $schema?: string;
+  version: string;
+  project: {
+    name: string;
+    db: DbChoice;
+    validator: ValidatorChoice;
+    auth: boolean;
+    authTokenDelivery?: TokenDelivery;
+    docker: boolean;
+    packageManager: PackageManager;
+  };
+  structure: {
+    srcDir: string;
+    appDir: string;
+    modulesDir: string;
+    middlewaresDir: string;
+    utilsDir: string;
+    configDir: string;
+  };
+  features: {
+    testing?: 'vitest' | 'jest' | false;
+    websocket?: boolean;
+    swagger?: boolean;
+  };
+}
+
 // ─── CLI Prompt Answers ────────────────────────────────────────────────────────
 export interface CLIAnswers {
   projectName: string;
