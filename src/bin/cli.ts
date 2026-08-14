@@ -503,81 +503,57 @@ async function runCLI(): Promise<void> {
     /* non-fatal */
   }
 
-  const baseSpin = ui.spinner('Installing base dependencies...');
+  // Collect all production and development dependencies for a fast 2-pass installation
+  const prodDeps: string[] = ['dotenv', 'http-status-codes', 'express', 'cors', 'helmet'];
+  const devDeps: string[] = [
+    '@types/express',
+    '@types/cors',
+    'typescript',
+    'tsx',
+    'eslint',
+    '@eslint/js',
+    'typescript-eslint',
+    'eslint-config-prettier',
+    'prettier',
+  ];
+
+  const dbDeps = dbGen.dependencies();
+  prodDeps.push(...dbDeps.prod);
+  devDeps.push(...dbDeps.dev);
+
+  const valDeps = valGen.dependencies();
+  prodDeps.push(...valDeps.prod);
+  devDeps.push(...valDeps.dev);
+
+  if (useAuth) {
+    prodDeps.push('bcrypt', 'jsonwebtoken', 'express-rate-limit');
+    devDeps.push('@types/bcrypt', '@types/jsonwebtoken');
+
+    if (tokenDelivery === 'cookie') {
+      prodDeps.push('cookie-parser');
+      devDeps.push('@types/cookie-parser');
+    }
+  }
+
+  const uniqueProd = Array.from(new Set(prodDeps));
+  const uniqueDev = Array.from(new Set(devDeps));
+
+  const prodSpin = ui.spinner(`Installing runtime dependencies (${db}, ${validator}${useAuth ? ', auth' : ''})...`);
   try {
-    execSync(initialInstallCmd(pm), { cwd: projectPath, stdio: 'pipe' });
-    runInstall(projectPath, ['dotenv', 'http-status-codes', 'express', 'cors', 'helmet'], false, pm);
-    runInstall(
-      projectPath,
-      [
-        '@types/express',
-        '@types/cors',
-        'typescript',
-        'tsx',
-        'eslint',
-        '@eslint/js',
-        'typescript-eslint',
-        'eslint-config-prettier',
-        'prettier',
-        'create-express-modular',
-      ],
-      true,
-      pm,
-    );
-    baseSpin.succeed('Base dependencies installed');
+    runInstall(projectPath, uniqueProd, false, pm);
+    prodSpin.succeed(`Runtime dependencies installed (${uniqueProd.length} packages)`);
   } catch (e: any) {
-    baseSpin.fail('Base install failed');
+    prodSpin.fail('Runtime dependencies install failed');
     ui.abort(e.message);
   }
 
-  const dbDeps = dbGen.dependencies();
-  if (dbDeps.prod.length || dbDeps.dev.length) {
-    const dbSpin = ui.spinner(`Installing ${db} driver...`);
-    try {
-      if (dbDeps.prod.length) runInstall(projectPath, dbDeps.prod, false, pm);
-      if (dbDeps.dev.length) runInstall(projectPath, dbDeps.dev, true, pm);
-      dbSpin.succeed(`${db} driver installed`);
-    } catch (e: any) {
-      dbSpin.fail(`${db} install failed`);
-      ui.err(e.message);
-    }
-  }
-
-  const valDeps = valGen.dependencies();
-  if (valDeps.prod.length) {
-    const valSpin = ui.spinner(`Installing ${validator}...`);
-    try {
-      runInstall(projectPath, valDeps.prod, false, pm);
-      if (valDeps.dev.length) runInstall(projectPath, valDeps.dev, true, pm);
-      valSpin.succeed(`${validator} installed`);
-    } catch (e: any) {
-      valSpin.fail(`${validator} install failed`);
-      ui.err(e.message);
-    }
-  }
-
-  if (useAuth) {
-    const authDepSpin = ui.spinner('Installing auth dependencies...');
-    try {
-      runInstall(projectPath, ['bcrypt', 'jsonwebtoken', 'express-rate-limit'], false, pm);
-      runInstall(projectPath, ['@types/bcrypt', '@types/jsonwebtoken'], true, pm);
-      authDepSpin.succeed('Auth dependencies installed');
-    } catch (e: any) {
-      authDepSpin.fail('Auth dependency install failed');
-      ui.err(e.message);
-    }
-
-    if (tokenDelivery === 'cookie') {
-      const cookieSpin = ui.spinner('Installing cookie-parser...');
-      try {
-        runInstall(projectPath, ['cookie-parser'], false, pm);
-        runInstall(projectPath, ['@types/cookie-parser'], true, pm);
-        cookieSpin.succeed('cookie-parser installed');
-      } catch (e: any) {
-        cookieSpin.fail('cookie-parser install failed');
-        ui.err(e.message);
-      }
-    }
+  const devSpin = ui.spinner('Installing development & tooling dependencies...');
+  try {
+    runInstall(projectPath, uniqueDev, true, pm);
+    devSpin.succeed(`Development dependencies installed (${uniqueDev.length} packages)`);
+  } catch (e: any) {
+    devSpin.fail('Development dependencies install failed');
+    ui.abort(e.message);
   }
 
   // ── DONE ──────────────────────────────────────────────────────────────────
