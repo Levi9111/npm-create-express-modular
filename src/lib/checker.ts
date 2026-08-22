@@ -5,10 +5,12 @@
  * Prettier in sequence and prints a compact pass/fail summary.
  */
 
-import { execSync } from 'child_process';
+import { exec } from 'child_process';
+import { promisify } from 'util';
 import { detectPM, runScript } from './pm';
 import * as ui from './ui';
 
+const execAsync = promisify(exec);
 
 const R = '\x1b[0m';
 const ESC = '\x1b[';
@@ -26,74 +28,97 @@ const red = (s: string): string => paint(`${ESC}91m`, s);
 const bgCyan = (s: string): string =>
   NO_COLOR ? `[${s}]` : `${ESC}46m${ESC}1m${ESC}30m ${s} ${R}`;
 
-
-function run(cmd: string, cwd: string): void {
-  execSync(cmd, { cwd, stdio: 'pipe' });
+interface CheckTask {
+  id: string;
+  label: string;
+  cmd: string;
 }
 
-function step(label: string, fn: () => void): boolean {
-  const TICK = green('✔');
-  const CROSS = red('✖');
-  const pad = 24;
-  const display = `${cyan('◆')}  ${white(label.padEnd(pad))}`;
+interface CheckResult {
+  id: string;
+  label: string;
+  passed: boolean;
+  durationMs: number;
+  output?: string;
+}
 
-  process.stdout.write(`  ${display}`);
+async function runTask(task: CheckTask, cwd: string): Promise<CheckResult> {
   const start = Date.now();
-
   try {
-    fn();
-    const ms = Date.now() - start;
-    const timing = gray(`${ms}ms`);
-    process.stdout.write(`${TICK}  ${timing}\n`);
-    return true;
+    await execAsync(task.cmd, { cwd });
+    return {
+      id: task.id,
+      label: task.label,
+      passed: true,
+      durationMs: Date.now() - start,
+    };
   } catch (e: unknown) {
-    process.stdout.write(`${CROSS}\n`);
-    const errObj = e as { stdout?: Buffer | string; stderr?: Buffer | string };
+    const errObj = e as { stdout?: Buffer | string; stderr?: Buffer | string; message?: string };
     const out = (
       errObj.stdout ||
       errObj.stderr ||
-      (e instanceof Error ? e.message : '')
+      errObj.message ||
+      ''
     )
       .toString()
       .trim();
-    if (out) {
-      out
-        .split('\n')
-        .slice(0, 20)
-        .forEach((line: string) => {
-          console.log(`       ${red(line)}`);
-        });
-    }
-    return false;
+    return {
+      id: task.id,
+      label: task.label,
+      passed: false,
+      durationMs: Date.now() - start,
+      output: out,
+    };
   }
 }
 
-
-export function runCheck(): void {
+export async function runCheck(): Promise<void> {
   const cwd = process.cwd();
 
   console.log();
   console.log(
-    `  ${bgCyan('CEM')}  ${bold(cyan('cem check'))}  ${gray('type · lint · format')}`,
+    `  ${bgCyan('CEM')}  ${bold(cyan('cem check'))}  ${gray('type · lint · format (concurrent)')}`,
   );
   console.log(`  ${gray('─'.repeat(50))}`);
   console.log();
 
-  const results: Record<string, boolean> = {
-    types: step('Type check (tsc)…', () => run('node_modules/.bin/tsc --noEmit', cwd)),
-    lint: step('Lint (eslint)…', () => run('node_modules/.bin/eslint src', cwd)),
-    format: step('Format check (prettier)…', () =>
-      run('node_modules/.bin/prettier --check src', cwd),
-    ),
-  };
+  const tasks: CheckTask[] = [
+    { id: 'types', label: 'Type check (tsc)…', cmd: 'node_modules/.bin/tsc --noEmit' },
+    { id: 'lint', label: 'Lint (eslint)…', cmd: 'node_modules/.bin/eslint src' },
+    { id: 'format', label: 'Format check (prettier)…', cmd: 'node_modules/.bin/prettier --check src' },
+  ];
+
+  const results = await Promise.all(tasks.map((task) => runTask(task, cwd)));
+
+  const TICK = green('✔');
+  const CROSS = red('✖');
+  const pad = 24;
+
+  results.forEach((res) => {
+    const display = `${cyan('◆')}  ${white(res.label.padEnd(pad))}`;
+    const timing = gray(`${res.durationMs}ms`);
+    if (res.passed) {
+      console.log(`  ${display}${TICK}  ${timing}`);
+    } else {
+      console.log(`  ${display}${CROSS}  ${timing}`);
+      if (res.output) {
+        res.output
+          .split('\n')
+          .slice(0, 20)
+          .forEach((line: string) => {
+            console.log(`       ${red(line)}`);
+          });
+      }
+    }
+  });
 
   console.log();
   console.log(`  ${gray('─'.repeat(50))}`);
   console.log();
 
-  const passed = Object.values(results).every(Boolean);
-  const total = Object.keys(results).length;
-  const failed = Object.values(results).filter((v) => !v).length;
+  const passed = results.every((r) => r.passed);
+  const total = results.length;
+  const failed = results.filter((r) => !r.passed).length;
 
   if (passed) {
     console.log(

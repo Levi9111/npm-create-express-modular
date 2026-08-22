@@ -33,7 +33,8 @@ export default defineConfig({
   format: ['cjs'],
   clean: true,
   dts: false,
-  minify: false,
-  sourcemap: true,
+  minify: true,
+  sourcemap: false,
+  treeshake: true,
   shims: true,
 });

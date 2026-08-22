@@ -7,28 +7,9 @@ import path from 'path';
 import { execSync } from 'child_process';
 
 import * as ui from '../lib/ui';
-import { detectPM, installCmd, initialInstallCmd } from '../lib/pm';
-import { scaffoldAuth } from '../lib/authGenerator';
-import { generateModule } from '../lib/moduleGenerator';
-import { getDbGenerator } from '../lib/db';
-import { getValidatorGenerator } from '../lib/validator';
-import { buildGlobalErrorHandler } from '../lib/core/globalErrorHandler/shell';
-import { scaffoldCoreFiles, scaffoldQueryBuilder } from '../lib/core/scaffoldCore';
-import { removeModule, removeMiddleware, removeEnvVar } from '../lib/remover';
-import { listProject } from '../lib/lister';
-import { scaffoldDocker } from '../lib/dockerScaffold';
-import { generateReadme } from '../lib/readmeGenerator';
-import { generateAgentDocs } from '../lib/agentDocsGenerator';
+import { detectPM, initialInstallCmd } from '../lib/pm';
 import { checkForUpdates, isUpdateAvailable } from '../lib/updateNotifier';
-import { runDev } from '../lib/dev';
-import { runBuild } from '../lib/builder';
-import { runStart } from '../lib/start';
-import { runCheck } from '../lib/checker';
-import { addEnvVar } from '../lib/envGenerator';
-import { generateMiddleware } from '../lib/middlewareGenerator';
-import { createInitialCemConfig, saveCemConfig } from '../lib/configLoader';
 import type { DbChoice, ValidatorChoice, TokenDelivery, PackageManager } from '../lib/types';
-import inquirer from 'inquirer';
 
 // ─── VERSION ──────────────────────────────────────────────────────────────────
 let VERSION = '';
@@ -41,21 +22,18 @@ try {
 
 // ─── HELPERS ─────────────────────────────────────────────────────────────────
 function copyFolderSync(from: string, to: string): void {
-  fs.mkdirSync(to, { recursive: true });
-  fs.readdirSync(from).forEach((el) => {
-    const src = path.join(from, el);
-    const dest = path.join(to, el);
-    fs.lstatSync(src).isFile()
-      ? fs.copyFileSync(src, dest)
-      : copyFolderSync(src, dest);
-  });
-}
-
-function runInstall(cwd: string, packages: string[], dev = false, pm: PackageManager = 'npm'): void {
-  execSync(installCmd(pm, packages, { dev }), {
-    cwd,
-    stdio: 'pipe',
-  });
+  if (typeof fs.cpSync === 'function') {
+    fs.cpSync(from, to, { recursive: true });
+  } else {
+    fs.mkdirSync(to, { recursive: true });
+    fs.readdirSync(from).forEach((el) => {
+      const src = path.join(from, el);
+      const dest = path.join(to, el);
+      fs.lstatSync(src).isFile()
+        ? fs.copyFileSync(src, dest)
+        : copyFolderSync(src, dest);
+    });
+  }
 }
 
 // ─── UNKNOWN COMMAND HELP ─────────────────────────────────────────────────────
@@ -97,6 +75,19 @@ interface PromptAnswers {
 async function runCLI(): Promise<void> {
   const args = process.argv.slice(2);
 
+  // ── version (instant exit without background network or PM checks)
+  if (args[0] === '--version' || args[0] === '-v') {
+    console.log(VERSION);
+    process.exit(0);
+  }
+
+  // ── help (instant exit without background network or PM checks)
+  if (args[0] === 'help' || args[0] === '--help' || args[0] === '-h') {
+    ui.printBanner(VERSION);
+    printHelp();
+    process.exit(0);
+  }
+
   // Detect the user's package manager
   const pm = detectPM();
 
@@ -117,27 +108,16 @@ async function runCLI(): Promise<void> {
 
   // ── COMMAND ROUTER ────────────────────────────────────────────────────────
 
-  // ── version
-  if (args[0] === '--version' || args[0] === '-v') {
-    console.log(VERSION);
-    process.exit(0);
-  }
-
-  // ── help
-  if (args[0] === 'help' || args[0] === '--help' || args[0] === '-h') {
-    ui.printBanner(VERSION);
-    printHelp();
-    process.exit(0);
-  }
-
   // cem dev
   if (args[0] === 'dev') {
+    const { runDev } = await import('../lib/dev');
     runDev();
     return;
   }
 
   // cem build
   if (args[0] === 'build') {
+    const { runBuild } = await import('../lib/builder');
     runBuild();
     await notifyIfUpdateAvailable();
     process.exit(0);
@@ -145,18 +125,21 @@ async function runCLI(): Promise<void> {
 
   // cem start
   if (args[0] === 'start') {
+    const { runStart } = await import('../lib/start');
     runStart();
     return;
   }
 
   // cem check
   if (args[0] === 'check') {
-    runCheck();
+    const { runCheck } = await import('../lib/checker');
+    await runCheck();
     return;
   }
 
   // cem list / cem ls
   if (args[0] === 'list' || args[0] === 'ls') {
+    const { listProject } = await import('../lib/lister');
     listProject();
     await notifyIfUpdateAvailable();
     process.exit(0);
@@ -171,6 +154,7 @@ async function runCLI(): Promise<void> {
       if (moduleNames.length === 0) {
         ui.abort('Please provide a module name. Example: cem add module Product');
       }
+      const { generateModule } = await import('../lib/moduleGenerator');
       await generateModule(moduleNames);
       await notifyIfUpdateAvailable();
       process.exit(0);
@@ -180,6 +164,7 @@ async function runCLI(): Promise<void> {
       if (keys.length === 0) {
         ui.abort('Please provide a key name. Example: cem add env ACCESS_SECRET');
       }
+      const { addEnvVar } = await import('../lib/envGenerator');
       addEnvVar(keys);
       const formattedKeys = keys.map((k) => ui.cyan(k)).join(', ');
       ui.success(`Environment variable(s) ${formattedKeys} added to .env, .env.example, and config/index.ts`);
@@ -192,6 +177,7 @@ async function runCLI(): Promise<void> {
       if (middlewareNames.length === 0) {
         ui.abort('Please provide a middleware name. Example: cem add middleware calculate');
       }
+      const { generateMiddleware } = await import('../lib/middlewareGenerator');
       generateMiddleware(middlewareNames);
       await notifyIfUpdateAvailable();
       process.exit(0);
@@ -210,6 +196,7 @@ async function runCLI(): Promise<void> {
   if (args[0] === 'remove' || args[0] === 'rm') {
     const subcommand = args[1];
     const targets = args.slice(2);
+    const { removeModule, removeMiddleware, removeEnvVar } = await import('../lib/remover');
 
     if (subcommand === 'module') {
       if (targets.length === 0) ui.abort('Usage: cem remove module <Name...>');
@@ -243,6 +230,7 @@ async function runCLI(): Promise<void> {
   if (args[0] === 'generate' || args[0] === 'g') {
     ui.warn('"cem generate" is deprecated. Use "cem add module <name>" instead.');
     ui.nl();
+    const { generateModule } = await import('../lib/moduleGenerator');
     await generateModule(args[1]);
     process.exit(0);
   }
@@ -324,6 +312,7 @@ async function runCLI(): Promise<void> {
     };
   } else {
     try {
+      const inquirer = (await import('inquirer')).default;
       answers = await inquirer.prompt<PromptAnswers>([
         {
           type: 'input',
@@ -412,6 +401,21 @@ async function runCLI(): Promise<void> {
   const tokenDelivery: TokenDelivery = useAuth ? authTokenDelivery || 'cookie' : 'header';
   const projectPath = path.join(process.cwd(), projectName);
   const templatePath = path.join(__dirname, '../../template');
+
+  // Lazy load generator logic
+  const [
+    { getDbGenerator },
+    { getValidatorGenerator },
+    { buildGlobalErrorHandler },
+    { scaffoldCoreFiles, scaffoldQueryBuilder },
+    { createInitialCemConfig, saveCemConfig },
+  ] = await Promise.all([
+    import('../lib/db'),
+    import('../lib/validator'),
+    import('../lib/core/globalErrorHandler/shell'),
+    import('../lib/core/scaffoldCore'),
+    import('../lib/configLoader'),
+  ]);
 
   const dbGen = getDbGenerator(db);
   const valGen = getValidatorGenerator(validator);
@@ -514,6 +518,7 @@ async function runCLI(): Promise<void> {
   if (useAuth) {
     const authSpin = ui.spinner('Scaffolding Auth module...');
     try {
+      const { scaffoldAuth } = await import('../lib/authGenerator');
       scaffoldAuth(projectPath, db, validator, tokenDelivery, pm);
       authSpin.succeed('Auth module scaffolded');
       ui.substep('src/app/modules/Auth/  (controller · service · route · model · validation)');
@@ -531,6 +536,7 @@ async function runCLI(): Promise<void> {
   if (useDocker) {
     const dockerSpin = ui.spinner('Generating Docker files...');
     try {
+      const { scaffoldDocker } = await import('../lib/dockerScaffold');
       scaffoldDocker(projectPath, projectName, db, pm);
       dockerSpin.succeed('Docker files generated');
       ui.substep('Dockerfile  ·  .dockerignore  ·  docker-compose.yml');
@@ -543,6 +549,7 @@ async function runCLI(): Promise<void> {
 
   const readmeSpin = ui.spinner('Generating README.md...');
   try {
+    const { generateReadme } = await import('../lib/readmeGenerator');
     generateReadme(projectPath, {
       projectName,
       db,
@@ -560,6 +567,7 @@ async function runCLI(): Promise<void> {
 
   const agentSpin = ui.spinner('Generating AGENTS.md & CLAUDE.md...');
   try {
+    const { generateAgentDocs } = await import('../lib/agentDocsGenerator');
     generateAgentDocs(projectPath, {
       projectName,
       db,

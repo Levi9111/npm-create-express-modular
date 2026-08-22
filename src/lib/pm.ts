@@ -82,10 +82,10 @@ export function installCmd(
 export function initialInstallCmd(pm: PackageManager): string {
   switch (pm) {
     case 'yarn':
-      return 'yarn install';
+      return 'yarn install --prefer-offline';
     case 'pnpm':
-      return 'pnpm install';
+      return 'pnpm install --prefer-offline';
     default:
-      return 'npm install --no-audit --no-fund --loglevel=error';
+      return 'npm install --no-audit --no-fund --loglevel=error --prefer-offline';
   }
 }

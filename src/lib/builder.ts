@@ -29,8 +29,9 @@ function readRoutesFile(projectRoot: string): string {
 
 function getModules(modulesPath: string): string[] {
   return fs
-    .readdirSync(modulesPath)
-    .filter((f) => fs.statSync(path.join(modulesPath, f)).isDirectory());
+    .readdirSync(modulesPath, { withFileTypes: true })
+    .filter((dirent) => dirent.isDirectory())
+    .map((dirent) => dirent.name);
 }
 
 /** Return value for both guard functions. */
