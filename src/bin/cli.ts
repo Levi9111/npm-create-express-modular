@@ -594,10 +594,11 @@ async function runCLI(): Promise<void> {
   }
 
   // Collect all production and development dependencies
-  const prodDeps: string[] = ['dotenv', 'http-status-codes', 'express', 'cors', 'helmet'];
+  const prodDeps: string[] = ['dotenv', 'http-status-codes', 'express', 'cors', 'helmet', 'compression'];
   const devDeps: string[] = [
     '@types/express',
     '@types/cors',
+    '@types/compression',
     '@types/node',
     'typescript',
     'tsx',
@@ -648,6 +649,7 @@ async function runCLI(): Promise<void> {
       dotenv: '^16.4.7',
       'http-status-codes': '^2.3.0',
       helmet: '^8.0.0',
+      compression: '^1.8.0',
       // DB
       mongoose: '^8.9.5',
       prisma: '^6.2.1',
@@ -669,6 +671,7 @@ async function runCLI(): Promise<void> {
       // Dev types & tools
       '@types/express': '^5.0.0',
       '@types/cors': '^2.8.17',
+      '@types/compression': '^1.7.5',
       '@types/node': '^22.10.7',
       '@types/pg': '^8.11.10',
       '@types/joi': '^17.2.3',

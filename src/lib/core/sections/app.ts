@@ -31,6 +31,7 @@ export function scaffoldApp(
     "import express, { Application, Request, Response } from 'express';",
     "import cors from 'cors';",
     "import helmet from 'helmet';",
+    "import compression from 'compression';",
     "import logger from './app/utils/logger';",
     "import { cemWelcomePage } from './app/utils/welcomePage';",
   ];
@@ -55,9 +56,12 @@ export function scaffoldApp(
     '',
     'const app: Application = express();',
     '',
+    'app.disable(\'x-powered-by\');',
+    '',
     '// ── Global Middlewares ────────────────────────────────────────────────────────',
     'app.use(helmet());',
     'app.use(cors());',
+    'app.use(compression());',
   );
 
   if (useRateLimit) {

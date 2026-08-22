@@ -83,18 +83,25 @@ if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma;
 
     fs.writeFileSync(
       path.join(projectPath, 'src/server.ts'),
-      `import { prisma } from './app/utils/prisma';
+      `import { Server } from 'http';
+import { prisma } from './app/utils/prisma';
 import app from './app';
 import config from './app/config';
+
+let server: Server;
 
 async function bootstrap() {
   try {
     await prisma.$connect();
     console.log('✅ Prisma connected to database');
 
-    app.listen(config.port, () => {
+    server = app.listen(config.port, () => {
       console.log(\`🚀 Server running on http://localhost:\${config.port}\`);
     });
+
+    // Ensure Keep-Alive timeouts for reverse proxies (ALB/Nginx/Cloudflare)
+    server.keepAliveTimeout = 65000;
+    server.headersTimeout = 66000;
   } catch (error) {
     console.error('❌ Failed to connect to database:', error);
     await prisma.$disconnect();
@@ -103,6 +110,22 @@ async function bootstrap() {
 }
 
 bootstrap();
+
+process.on('unhandledRejection', async (reason) => {
+  console.error('Unhandled Rejection detected, shutting down server...', reason);
+  await prisma.$disconnect();
+  if (server) {
+    server.close(() => process.exit(1));
+  } else {
+    process.exit(1);
+  }
+});
+
+process.on('uncaughtException', async (error) => {
+  console.error('Uncaught Exception detected, shutting down server...', error);
+  await prisma.$disconnect();
+  process.exit(1);
+});
 `,
     );
   },

@@ -59,10 +59,13 @@ async function bootstrap() {
   try {
     await connectDB();
 
-    config.NODE_ENV === 'development' &&
-      (server = app.listen(config.port, () => {
-        logger.info(\`Server running on http://localhost:\${config.port}\`);
-      }));
+    server = app.listen(config.port, () => {
+      logger.info(\`Server running on http://localhost:\${config.port}\`);
+    });
+
+    // Ensure Keep-Alive timeouts for reverse proxies (ALB/Nginx/Cloudflare)
+    server.keepAliveTimeout = 65000;
+    server.headersTimeout = 66000;
   } catch (error) {
     logger.error('Failed to start server:', error);
     process.exit(1);
@@ -102,7 +105,12 @@ export async function connectDB(): Promise<void> {
   let dbUrl = config.databaseUrl;
 
   try {
-    await mongoose.connect(dbUrl, { serverSelectionTimeoutMS: 4000 });
+    await mongoose.connect(dbUrl, {
+      serverSelectionTimeoutMS: 3000,
+      maxPoolSize: 50,
+      minPoolSize: 10,
+      socketTimeoutMS: 45000,
+    });
     logger.info('MongoDB connected successfully');
   } catch (err) {
     if (config.NODE_ENV === 'development') {

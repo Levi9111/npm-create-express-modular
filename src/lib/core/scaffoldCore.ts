@@ -106,6 +106,11 @@ class QueryBuilder<T> {
     return this;
   }
 
+  lean() {
+    this.modelQuery = this.modelQuery.lean() as unknown as Query<T[], T>;
+    return this;
+  }
+
   async countTotal() {
     const filter = this.modelQuery.getFilter();
     const total = await this.modelQuery.model.countDocuments(filter);

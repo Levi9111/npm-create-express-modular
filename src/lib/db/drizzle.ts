@@ -68,7 +68,12 @@ export default defineConfig({
 import { Pool } from 'pg';
 import config from '../config';
 
-const pool = new Pool({ connectionString: config.databaseUrl });
+const pool = new Pool({
+  connectionString: config.databaseUrl,
+  max: 20,
+  idleTimeoutMillis: 30000,
+  connectionTimeoutMillis: 2000,
+});
 
 export const db = drizzle(pool);
 export { pool };
@@ -92,18 +97,25 @@ export { pool };
 
     fs.writeFileSync(
       path.join(projectPath, 'src/server.ts'),
-      `import { pool } from './app/db';
+      `import { Server } from 'http';
+import { pool } from './app/db';
 import app from './app';
 import config from './app/config';
+
+let server: Server;
 
 async function bootstrap() {
   try {
     await pool.connect();
     console.log('✅ Drizzle connected to PostgreSQL');
 
-    app.listen(config.port, () => {
+    server = app.listen(config.port, () => {
       console.log(\`🚀 Server running on http://localhost:\${config.port}\`);
     });
+
+    // Ensure Keep-Alive timeouts for reverse proxies (ALB/Nginx/Cloudflare)
+    server.keepAliveTimeout = 65000;
+    server.headersTimeout = 66000;
   } catch (error) {
     console.error('❌ Failed to connect to database:', error);
     process.exit(1);
@@ -111,6 +123,22 @@ async function bootstrap() {
 }
 
 bootstrap();
+
+process.on('unhandledRejection', async (reason) => {
+  console.error('Unhandled Rejection detected, shutting down server...', reason);
+  await pool.end();
+  if (server) {
+    server.close(() => process.exit(1));
+  } else {
+    process.exit(1);
+  }
+});
+
+process.on('uncaughtException', async (error) => {
+  console.error('Uncaught Exception detected, shutting down server...', error);
+  await pool.end();
+  process.exit(1);
+});
 `,
     );
   },
