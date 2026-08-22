@@ -1,4 +1,8 @@
-'use strict';
+/**
+ * src/lib/db/drizzle.ts
+ *
+ * Drizzle ORM database generator strategy.
+ */
 
 import fs from 'fs';
 import path from 'path';

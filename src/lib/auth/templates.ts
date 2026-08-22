@@ -387,6 +387,7 @@ export function buildModel(db: DbChoice, pm: PackageManager = 'npm'): string {
     npm: 'npx',
     yarn: 'yarn dlx',
     pnpm: 'pnpm dlx',
+    bun: 'bunx',
   };
   const exec = execMap[pm] || 'npx';
 

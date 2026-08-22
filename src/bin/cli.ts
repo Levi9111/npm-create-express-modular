@@ -1,7 +1,5 @@
 #!/usr/bin/env node
 
-'use strict';
-
 import fs from 'fs';
 import path from 'path';
 import { execSync } from 'child_process';
@@ -9,9 +7,10 @@ import { execSync } from 'child_process';
 import * as ui from '../lib/ui';
 import { detectPM, initialInstallCmd } from '../lib/pm';
 import { checkForUpdates, isUpdateAvailable } from '../lib/updateNotifier';
+import { copyFolderSync } from '../lib/utils/fs';
 import type { DbChoice, ValidatorChoice, TokenDelivery, PackageManager } from '../lib/types';
 
-// ─── VERSION ──────────────────────────────────────────────────────────────────
+// Version resolution
 let VERSION = '';
 try {
   // eslint-disable-next-line @typescript-eslint/no-require-imports
@@ -20,23 +19,9 @@ try {
   /* ignore */
 }
 
-// ─── HELPERS ─────────────────────────────────────────────────────────────────
-function copyFolderSync(from: string, to: string): void {
-  if (typeof fs.cpSync === 'function') {
-    fs.cpSync(from, to, { recursive: true });
-  } else {
-    fs.mkdirSync(to, { recursive: true });
-    fs.readdirSync(from).forEach((el) => {
-      const src = path.join(from, el);
-      const dest = path.join(to, el);
-      fs.lstatSync(src).isFile()
-        ? fs.copyFileSync(src, dest)
-        : copyFolderSync(src, dest);
-    });
-  }
-}
-
-// ─── UNKNOWN COMMAND HELP ─────────────────────────────────────────────────────
+/**
+ * Prints the formatted CLI command help menu.
+ */
 function printHelp(): void {
   ui.nl();
   ui.warn('Available commands:');
@@ -61,6 +46,9 @@ function printHelp(): void {
   ui.nl();
 }
 
+/**
+ * Represents answers gathered from interactive inquirer prompts or CLI flags.
+ */
 interface PromptAnswers {
   projectName: string;
   db: DbChoice;
@@ -71,17 +59,22 @@ interface PromptAnswers {
   useSwagger: boolean;
 }
 
-// ─── CLI ENTRYPOINT ───────────────────────────────────────────────────────────
+/**
+ * Main CLI entrypoint. Parses arguments, routes sub-commands,
+ * handles interactive prompting, and scaffolds projects.
+ *
+ * @returns Resolves when CLI execution finishes.
+ */
 async function runCLI(): Promise<void> {
   const args = process.argv.slice(2);
 
-  // ── version (instant exit without background network or PM checks)
+  // Version check (instant exit without background network or PM checks)
   if (args[0] === '--version' || args[0] === '-v') {
     console.log(VERSION);
     process.exit(0);
   }
 
-  // ── help (instant exit without background network or PM checks)
+  // Help menu (instant exit without background network or PM checks)
   if (args[0] === 'help' || args[0] === '--help' || args[0] === '-h') {
     ui.printBanner(VERSION);
     printHelp();
@@ -94,7 +87,9 @@ async function runCLI(): Promise<void> {
   // Fire off the update check in the background immediately
   const updateCheckPromise = checkForUpdates();
 
-  // ── notify helper — call before every clean exit ──────────────────────────
+  /**
+   * Triggers the update notice box if an update is available.
+   */
   async function notifyIfUpdateAvailable(): Promise<void> {
     try {
       const latest = await updateCheckPromise;
@@ -106,7 +101,7 @@ async function runCLI(): Promise<void> {
     }
   }
 
-  // ── COMMAND ROUTER ────────────────────────────────────────────────────────
+  // Command Router
 
   // cem dev
   if (args[0] === 'dev') {
@@ -235,7 +230,7 @@ async function runCLI(): Promise<void> {
     process.exit(0);
   }
 
-  // ── FLAG PARSING FOR SCAFFOLDING ──────────────────────────────────────────
+  // Flag parsing for scaffolding
   let initialProjectName = 'my-api';
   let useDefaults = false;
   let flagDb: DbChoice | undefined = undefined;
@@ -290,7 +285,7 @@ async function runCLI(): Promise<void> {
     }
   }
 
-  // ── PROJECT SCAFFOLDING ───────────────────────────────────────────────────
+  // Project scaffolding
   ui.printBanner(VERSION);
 
   let answers: PromptAnswers;
@@ -386,8 +381,9 @@ async function runCLI(): Promise<void> {
           default: flagUseSwagger ?? true,
         },
       ]);
-    } catch (e: any) {
-      if (e.name === 'ExitPromptError') {
+    } catch (e: unknown) {
+      const err = e as { name?: string };
+      if (err.name === 'ExitPromptError') {
         ui.nl();
         ui.warn('Scaffold cancelled.');
         ui.nl();
@@ -420,18 +416,19 @@ async function runCLI(): Promise<void> {
   const dbGen = getDbGenerator(db);
   const valGen = getValidatorGenerator(validator);
 
-  // ── CREATE DIR ────────────────────────────────────────────────────────────
+  // Target directory creation
   try {
     fs.mkdirSync(projectPath);
-  } catch (e: any) {
+  } catch (e: unknown) {
+    const err = e as { code?: string; message?: string };
     ui.abort(
-      e.code === 'EEXIST'
+      err.code === 'EEXIST'
         ? `Directory '${projectName}' already exists.`
-        : `Failed to create directory: ${e.message}`,
+        : `Failed to create directory: ${err.message}`,
     );
   }
 
-  // ── SCAFFOLDING PHASE ─────────────────────────────────────────────────────
+  // File Scaffolding Phase
   ui.sectionHeader('Scaffolding');
 
   ui.step('Project', projectName);
@@ -503,9 +500,9 @@ async function runCLI(): Promise<void> {
     saveCemConfig(cemConfig, projectPath);
 
     scaffoldSpin.succeed('Base architecture scaffolded');
-  } catch (e: any) {
+  } catch (e: unknown) {
     scaffoldSpin.fail('Failed to scaffold project files');
-    ui.abort(e.message);
+    ui.abort((e as Error).message);
   }
 
   ui.substep('cem-cli.json   ·  src/app.ts  ·  src/server.ts  ·  .env');
@@ -527,9 +524,9 @@ async function runCLI(): Promise<void> {
       ui.substep(`Token delivery: ${tokenDelivery === 'cookie' ? 'HTTP-only cookies' : 'Authorization header'}`);
       ui.nl();
       ui.warn('Replace stub credentials in auth.service.ts before going to production.');
-    } catch (e: any) {
+    } catch (e: unknown) {
       authSpin.fail('Auth scaffolding failed');
-      ui.err(e.message);
+      ui.err((e as Error).message);
     }
     ui.nl();
   }
@@ -542,9 +539,9 @@ async function runCLI(): Promise<void> {
       dockerSpin.succeed('Docker files generated');
       ui.substep('Dockerfile  ·  .dockerignore  ·  docker-compose.yml');
       ui.nl();
-    } catch (e: any) {
+    } catch (e: unknown) {
       dockerSpin.fail('Docker scaffold failed');
-      ui.err(e.message);
+      ui.err((e as Error).message);
     }
   }
 
@@ -561,9 +558,9 @@ async function runCLI(): Promise<void> {
       pm,
     });
     readmeSpin.succeed('README.md generated');
-  } catch (e: any) {
+  } catch (e: unknown) {
     readmeSpin.fail('README generation failed');
-    ui.err(e.message);
+    ui.err((e as Error).message);
   }
 
   const agentSpin = ui.spinner('Generating AGENTS.md & CLAUDE.md...');
@@ -579,13 +576,13 @@ async function runCLI(): Promise<void> {
       pm,
     });
     agentSpin.succeed('AGENTS.md & CLAUDE.md generated');
-  } catch (e: any) {
+  } catch (e: unknown) {
     agentSpin.fail('Agent docs generation failed');
-    ui.err(e.message);
+    ui.err((e as Error).message);
   }
   ui.nl();
 
-  // ── INSTALL PHASE ─────────────────────────────────────────────────────────
+  // Dependency installation phase
   ui.sectionHeader('Installing dependencies');
 
   try {
@@ -709,12 +706,12 @@ async function runCLI(): Promise<void> {
   try {
     execSync(initialInstallCmd(pm), { cwd: projectPath, stdio: 'pipe' });
     installSpin.succeed(`Dependencies installed (${uniqueProd.length} runtime, ${uniqueDev.length} dev)`);
-  } catch (e: any) {
+  } catch (e: unknown) {
     installSpin.fail('Dependencies install failed');
-    ui.abort(e.message);
+    ui.abort((e as Error).message);
   }
 
-  // ── DONE ──────────────────────────────────────────────────────────────────
+  // Summary and completion
   ui.printSummary({
     name: projectName,
     db,
@@ -731,6 +728,6 @@ async function runCLI(): Promise<void> {
   }
 }
 
-runCLI().catch((e: any) => {
-  ui.abort(`Unexpected error: ${e.message}`);
+runCLI().catch((e: unknown) => {
+  ui.abort(`Unexpected error: ${(e as Error).message}`);
 });

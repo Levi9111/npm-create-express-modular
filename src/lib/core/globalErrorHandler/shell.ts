@@ -1,7 +1,19 @@
-'use strict';
+/**
+ * src/lib/core/globalErrorHandler/shell.ts
+ *
+ * Constructs the target project's `globalErrorHandler.middleware.ts` file string.
+ */
 
 import type { ErrorBlock } from '../../types';
 
+/**
+ * Builds the code content for the global error handler middleware by combining
+ * the active database and validator error blocks.
+ *
+ * @param dbBlock - Error handler imports and handling logic for the selected DB.
+ * @param validatorBlock - Error handler imports and handling logic for the selected validator.
+ * @returns The complete TypeScript string for globalErrorHandler.middleware.ts.
+ */
 export function buildGlobalErrorHandler(
   dbBlock: ErrorBlock,
   validatorBlock: ErrorBlock,

@@ -10,6 +10,11 @@ import path from 'path';
 import * as ui from './ui';
 import { loadCemConfig } from './configLoader';
 
+/**
+ * Validates that current working directory is a CEM project root.
+ *
+ * @param projectRoot - Absolute path to check.
+ */
 function assertCemProject(projectRoot: string): void {
   if (!fs.existsSync(path.join(projectRoot, 'src/app'))) {
     ui.abort(
@@ -19,6 +24,12 @@ function assertCemProject(projectRoot: string): void {
   }
 }
 
+/**
+ * Safely reads a UTF-8 text file without throwing.
+ *
+ * @param filePath - Path to file.
+ * @returns Text contents or null if unreadable.
+ */
 function readFileSafe(filePath: string): string | null {
   try {
     return fs.readFileSync(filePath, 'utf8');
@@ -46,6 +57,9 @@ function _isSensitive(key: string): boolean {
   );
 }
 
+/**
+ * Lists all modules, middlewares, env vars, and utilities in the current CEM project.
+ */
 export function listProject(): void {
   const projectRoot = process.cwd();
   assertCemProject(projectRoot);

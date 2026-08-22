@@ -16,6 +16,12 @@ const IGNORED_FILES = ['.DS_Store', 'README.md', '.gitkeep', '.gitignore'];
 const REQUIRED_TYPES = ['controller', 'service', 'route'];
 
 
+/**
+ * Reads the central routes/index.ts file content.
+ *
+ * @param projectRoot - Path to target project root.
+ * @returns File content string or empty string on error.
+ */
 function readRoutesFile(projectRoot: string): string {
   try {
     return fs.readFileSync(
@@ -27,6 +33,12 @@ function readRoutesFile(projectRoot: string): string {
   }
 }
 
+/**
+ * Lists all module folder names inside src/app/modules.
+ *
+ * @param modulesPath - Absolute path to modules directory.
+ * @returns Array of directory names.
+ */
 function getModules(modulesPath: string): string[] {
   return fs
     .readdirSync(modulesPath, { withFileTypes: true })
@@ -40,6 +52,12 @@ interface GuardResult {
   warnCount: number;
 }
 
+/**
+ * Validates module architectural constraints (required layer files and router wiring).
+ *
+ * @param projectRoot - Path to target project root.
+ * @returns Result object containing error and warning status.
+ */
 function runArchitectureGuard(projectRoot: string): GuardResult {
   const modulesPath = path.join(projectRoot, 'src/app/modules');
 

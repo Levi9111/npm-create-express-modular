@@ -1,4 +1,9 @@
-'use strict';
+/**
+ * src/lib/validator/index.ts
+ *
+ * Validator strategy router factory. Resolves the appropriate schema validator
+ * implementation (Zod or Joi) based on user CLI configuration.
+ */
 
 import zod from './zod';
 import joi from './joi';
@@ -9,6 +14,12 @@ const generators: Record<ValidatorChoice, ValidatorGenerator> = {
   joi,
 };
 
+/**
+ * Returns the validator generator strategy implementation for a given choice.
+ *
+ * @param choice - Selected validator choice ('zod' | 'joi').
+ * @returns Selected validator generator strategy.
+ */
 export function getValidatorGenerator(choice: ValidatorChoice): ValidatorGenerator {
   const gen = generators[choice];
   if (!gen) {

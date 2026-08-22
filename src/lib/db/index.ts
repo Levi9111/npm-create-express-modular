@@ -1,4 +1,9 @@
-'use strict';
+/**
+ * src/lib/db/index.ts
+ *
+ * DB generator router factory. Resolves the appropriate database generator
+ * instance (Mongoose, Prisma, or Drizzle) based on user configuration.
+ */
 
 import mongoose from './mongoose';
 import prisma from './prisma';
@@ -11,6 +16,12 @@ const generators: Record<DbChoice, DbGenerator> = {
   drizzle,
 };
 
+/**
+ * Returns the database generator strategy implementation for a given DB choice.
+ *
+ * @param choice - Selected database choice ('mongoose' | 'prisma' | 'drizzle').
+ * @returns Selected DB generator implementation.
+ */
 export function getDbGenerator(choice: DbChoice): DbGenerator {
   const gen = generators[choice];
   if (!gen) {

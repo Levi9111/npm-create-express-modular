@@ -1,11 +1,15 @@
-'use strict';
+/**
+ * src/lib/db/mongoose.ts
+ *
+ * Mongoose (MongoDB) database generator strategy.
+ */
 
 import fs from 'fs';
 import path from 'path';
 import type { DbGenerator, ErrorBlock, GeneratorDependencies } from '../types';
 
 const mongooseGenerator: DbGenerator = {
-  // ─── SERVER + CONFIG ──────────────────────────────────────────────────────────
+  // Server and database config generator
   scaffoldServerAndConfig(projectPath: string): void {
     const envLines = [
       'PORT=5000',
@@ -131,7 +135,7 @@ export async function connectDB(): Promise<void> {
     );
   },
 
-  // ─── ERROR BLOCK ──────────────────────────────────────────────────────────────
+  // Error block definition
   errorBlock(): ErrorBlock {
     return {
       imports: `import { Error as MongooseError } from 'mongoose';
@@ -158,7 +162,7 @@ import handleDuplicateError from '../errors/handleDuplicateError';`,
     };
   },
 
-  // ─── ERROR HANDLER FILES ──────────────────────────────────────────────────────
+  // Error handler file generator
   scaffoldErrorFiles(projectPath: string): void {
     const errDir = path.join(projectPath, 'src/app/errors');
     fs.mkdirSync(errDir, { recursive: true });
@@ -216,7 +220,7 @@ export default handleDuplicateError;
     );
   },
 
-  // ─── DEPENDENCIES ─────────────────────────────────────────────────────────────
+  // Generator dependencies
   dependencies(): GeneratorDependencies {
     return {
       prod: ['mongoose'],
@@ -224,7 +228,7 @@ export default handleDuplicateError;
     };
   },
 
-  // ─── MODEL STUB ───────────────────────────────────────────────────────────────
+  // Model file template stub
   modelStub(moduleName: string): string {
     const lower = moduleName.toLowerCase();
     return `import { Schema, model } from 'mongoose';

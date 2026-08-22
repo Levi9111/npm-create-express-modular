@@ -1,4 +1,8 @@
-'use strict';
+/**
+ * src/lib/db/prisma.ts
+ *
+ * Prisma ORM database generator strategy.
+ */
 
 import fs from 'fs';
 import path from 'path';

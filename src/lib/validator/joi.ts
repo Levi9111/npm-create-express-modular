@@ -1,4 +1,8 @@
-'use strict';
+/**
+ * src/lib/validator/joi.ts
+ *
+ * Joi schema validator generator strategy.
+ */
 
 import fs from 'fs';
 import path from 'path';

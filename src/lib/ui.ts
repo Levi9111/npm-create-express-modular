@@ -18,6 +18,7 @@ const CODES: Record<string, string> = {
   green: `${ESC}32m`,
   yellow: `${ESC}33m`,
   magenta: `${ESC}35m`,
+  red: `${ESC}91m`,
   gray: `${ESC}90m`,
   white: `${ESC}37m`,
   brightCyan: `${ESC}96m`,
@@ -38,21 +39,28 @@ export const dim = (s: string): string => paint(CODES.dim, s);
 export const cyan = (s: string): string => paint(CODES.brightCyan, s);
 export const green = (s: string): string => paint(CODES.brightGreen, s);
 export const yellow = (s: string): string => paint(CODES.brightYellow, s);
+export const red = (s: string): string => paint(CODES.red, s);
 export const gray = (s: string): string => paint(CODES.gray, s);
 export const white = (s: string): string => paint(CODES.brightWhite, s);
 export const magenta = (s: string): string => paint(CODES.brightMagenta, s);
+export const bgCyan = (s: string): string =>
+  NO_COLOR ? `[${s}]` : `${CODES.bgCyan}${CODES.bold}\x1b[30m ${s} ${R}`;
 
-// Strip ANSI codes — used to compute visible string length for box padding
-const stripAnsi = (s: string): string => s.replace(/\x1b\[[0-9;]*m/g, '');
+/** Strips ANSI escape sequences from a string. */
+export const stripAnsi = (s: string): string => s.replace(/\x1b\[[0-9;]*m/g, '');
 const visLen = (s: string): number => stripAnsi(s).length;
 
-// ─── BADGE ───────────────────────────────────────────────────────────────────
+/** Formats a styled CLI badge tag. */
 export const badge = (text: string): string =>
   NO_COLOR
     ? `[${text}]`
     : `${CODES.bgCyan}${CODES.bold}${CODES.white} ${text} ${R}`;
 
-// ─── BANNER ───────────────────────────────────────────────────────────────────
+/**
+ * Prints the main CLI brand banner.
+ *
+ * @param version - Package version string.
+ */
 export function printBanner(version = ''): void {
   const line = gray('─'.repeat(52));
   const ver = version ? gray(`v${version}`) : '';
@@ -67,7 +75,11 @@ export function printBanner(version = ''): void {
   console.log();
 }
 
-// ─── SECTION HEADER ──────────────────────────────────────────────────────────
+/**
+ * Prints a section divider header label.
+ *
+ * @param label - Header label text.
+ */
 export function sectionHeader(label: string): void {
   console.log();
   console.log(`  ${gray('┄'.repeat(46))}`);
@@ -76,7 +88,6 @@ export function sectionHeader(label: string): void {
   console.log();
 }
 
-// ─── STEP / LOG PRIMITIVES ───────────────────────────────────────────────────
 /** Key–value config line:  ◆  Label    value  */
 export function step(label: string, value = ''): void {
   const val = value ? `  ${gray(value)}` : '';
@@ -106,7 +117,12 @@ export function err(label: string): void {
 /** Blank line shorthand */
 export const nl = (): void => { console.log(); };
 
-// ─── SPINNER ─────────────────────────────────────────────────────────────────
+/**
+ * Creates and starts a CLI spinner.
+ *
+ * @param label - Message shown alongside spinner.
+ * @returns Spinner control object (`succeed`, `fail`).
+ */
 export function spinner(label: string): Spinner {
   if (NO_COLOR || !process.stdout.isTTY) {
     process.stdout.write(`  … ${label}\n`);
@@ -143,7 +159,11 @@ export function spinner(label: string): Spinner {
   };
 }
 
-// ─── SUMMARY BOX ─────────────────────────────────────────────────────────────
+/**
+ * Prints the project scaffolding summary card box.
+ *
+ * @param options - Configuration choices summary.
+ */
 export function printSummary({ name, db, validator, auth, docker }: SummaryOptions): void {
   const W = 48;
 
@@ -183,7 +203,11 @@ export function printSummary({ name, db, validator, auth, docker }: SummaryOptio
   console.log();
 }
 
-// ─── NEXT STEPS ──────────────────────────────────────────────────────────────
+/**
+ * Prints recommended next-step commands to get started.
+ *
+ * @param projectName - Name of scaffolded directory.
+ */
 export function printNextSteps(projectName: string): void {
   console.log(`  ${bold('Next steps')}`);
   console.log();
@@ -199,6 +223,13 @@ export function printNextSteps(projectName: string): void {
   console.log();
 }
 
+/**
+ * Prints CLI update notification box.
+ *
+ * @param current - Current CLI version.
+ * @param latest - Latest available package version.
+ * @param pm - Package manager choice.
+ */
 export function printUpdateNotice(current: string, latest: string, pm: PackageManager = 'npm'): void {
   const W = 52;
   const border = (l: string, _m: string, r: string): string =>
@@ -225,12 +256,21 @@ export function printUpdateNotice(current: string, latest: string, pm: PackageMa
   console.log();
 }
 
+/** Prints banner for module addition workflow. */
 export function printModuleBanner(): void {
   console.log();
   console.log(`  ${cyan('◆')}  ${bold(white('CEM'))}  ${gray('module generator')}`);
   console.log();
 }
 
+/**
+ * Prints success message and summary for module creation.
+ *
+ * @param moduleName - Scaffolded domain module name.
+ * @param routePath - Mounted URL path prefix.
+ * @param validator - Validator choice used for schema.
+ * @param extras - Additional scaffolded files.
+ */
 export function printModuleSuccess(
   moduleName: string,
   routePath: string,
@@ -249,6 +289,11 @@ export function printModuleSuccess(
   console.log();
 }
 
+/**
+ * Prints an error message and aborts execution with exit code 1.
+ *
+ * @param message - Error message to print.
+ */
 export function abort(message: string): never {
   console.log();
   err(message);

@@ -12,28 +12,14 @@ import * as ui from './ui';
 
 const execAsync = promisify(exec);
 
-const R = '\x1b[0m';
-const ESC = '\x1b[';
-
-const NO_COLOR = !process.stdout.isTTY || Boolean(process.env.NO_COLOR);
-const paint = (code: string, s: string): string => (NO_COLOR ? s : `${code}${s}${R}`);
-
-const bold = (s: string): string => paint(`${ESC}1m`, s);
-const cyan = (s: string): string => paint(`${ESC}96m`, s);
-const green = (s: string): string => paint(`${ESC}92m`, s);
-const yellow = (s: string): string => paint(`${ESC}93m`, s);
-const gray = (s: string): string => paint(`${ESC}90m`, s);
-const white = (s: string): string => paint(`${ESC}97m`, s);
-const red = (s: string): string => paint(`${ESC}91m`, s);
-const bgCyan = (s: string): string =>
-  NO_COLOR ? `[${s}]` : `${ESC}46m${ESC}1m${ESC}30m ${s} ${R}`;
-
+/** Represents an individual system check task. */
 interface CheckTask {
   id: string;
   label: string;
   cmd: string;
 }
 
+/** Result object returned from a single check task execution. */
 interface CheckResult {
   id: string;
   label: string;
@@ -42,6 +28,13 @@ interface CheckResult {
   output?: string;
 }
 
+/**
+ * Runs a single verification command asynchronously and measures execution duration.
+ *
+ * @param task - Task object containing command and display label.
+ * @param cwd - Working directory for process execution.
+ * @returns Promise resolving to the task execution result.
+ */
 async function runTask(task: CheckTask, cwd: string): Promise<CheckResult> {
   const start = Date.now();
   try {
@@ -72,15 +65,18 @@ async function runTask(task: CheckTask, cwd: string): Promise<CheckResult> {
   }
 }
 
+/**
+ * Executes `cem check` pipeline — running TypeScript type checks, ESLint, and Prettier checks.
+ */
 export async function runCheck(): Promise<void> {
   const cwd = process.cwd();
 
-  console.log();
+  ui.nl();
   console.log(
-    `  ${bgCyan('CEM')}  ${bold(cyan('cem check'))}  ${gray('type · lint · format (concurrent)')}`,
+    `  ${ui.bgCyan('CEM')}  ${ui.bold(ui.cyan('cem check'))}  ${ui.gray('type · lint · format (concurrent)')}`,
   );
-  console.log(`  ${gray('─'.repeat(50))}`);
-  console.log();
+  console.log(`  ${ui.gray('─'.repeat(50))}`);
+  ui.nl();
 
   const tasks: CheckTask[] = [
     { id: 'types', label: 'Type check (tsc)…', cmd: 'node_modules/.bin/tsc --noEmit' },
@@ -90,13 +86,13 @@ export async function runCheck(): Promise<void> {
 
   const results = await Promise.all(tasks.map((task) => runTask(task, cwd)));
 
-  const TICK = green('✔');
-  const CROSS = red('✖');
+  const TICK = ui.green('✔');
+  const CROSS = ui.red('✖');
   const pad = 24;
 
   results.forEach((res) => {
-    const display = `${cyan('◆')}  ${white(res.label.padEnd(pad))}`;
-    const timing = gray(`${res.durationMs}ms`);
+    const display = `${ui.cyan('◆')}  ${ui.white(res.label.padEnd(pad))}`;
+    const timing = ui.gray(`${res.durationMs}ms`);
     if (res.passed) {
       console.log(`  ${display}${TICK}  ${timing}`);
     } else {
@@ -106,15 +102,15 @@ export async function runCheck(): Promise<void> {
           .split('\n')
           .slice(0, 20)
           .forEach((line: string) => {
-            console.log(`       ${red(line)}`);
+            console.log(`       ${ui.red(line)}`);
           });
       }
     }
   });
 
-  console.log();
-  console.log(`  ${gray('─'.repeat(50))}`);
-  console.log();
+  ui.nl();
+  console.log(`  ${ui.gray('─'.repeat(50))}`);
+  ui.nl();
 
   const passed = results.every((r) => r.passed);
   const total = results.length;
@@ -122,19 +118,19 @@ export async function runCheck(): Promise<void> {
 
   if (passed) {
     console.log(
-      `  ${green('◆')}  ${bold(green('All checks passed.'))}  ${gray(`(${total}/${total})`)}`,
+      `  ${ui.green('◆')}  ${ui.bold(ui.green('All checks passed.'))}  ${ui.gray(`(${total}/${total})`)}`,
     );
   } else {
     console.log(
-      `  ${red('✖')}  ${bold(red(`${failed} check${failed > 1 ? 's' : ''} failed.`))}  ${gray(`(${total - failed}/${total} passed)`)}`,
+      `  ${ui.red('✖')}  ${ui.bold(ui.red(`${failed} check${failed > 1 ? 's' : ''} failed.`))}  ${ui.gray(`(${total - failed}/${total} passed)`)}`,
     );
-    console.log();
+    ui.nl();
     const pm = detectPM();
     console.log(
-      `  ${yellow('tip')}  ${gray('Run')} ${cyan(runScript(pm, 'lint:fix'))} ${gray('or')} ${cyan(runScript(pm, 'prettier:fix'))} ${gray('to auto-fix issues.')}`,
+      `  ${ui.yellow('tip')}  ${ui.gray('Run')} ${ui.cyan(runScript(pm, 'lint:fix'))} ${ui.gray('or')} ${ui.cyan(runScript(pm, 'prettier:fix'))} ${ui.gray('to auto-fix issues.')}`,
     );
   }
 
-  console.log();
+  ui.nl();
   process.exit(passed ? 0 : 1);
 }

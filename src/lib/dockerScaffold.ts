@@ -1,9 +1,21 @@
-'use strict';
+/**
+ * src/lib/dockerScaffold.ts
+ *
+ * Scaffolds Dockerfile, .dockerignore, and docker-compose.yml files.
+ */
 
 import fs from 'fs';
 import path from 'path';
 import type { PackageManager, DbChoice } from './types';
 
+/**
+ * Scaffolds Docker and Docker Compose configuration into the target project.
+ *
+ * @param projectPath - Absolute path to the project root.
+ * @param projectName - Name of the scaffolded project.
+ * @param db - Selected database choice.
+ * @param pm - Package manager choice.
+ */
 export function scaffoldDocker(
   projectPath: string,
   projectName: string,
@@ -25,6 +37,7 @@ function _buildDockerfile(pm: PackageManager): string {
     npm: 'package-lock.json',
     yarn: 'yarn.lock',
     pnpm: 'pnpm-lock.yaml',
+    bun: 'bun.lockb',
   };
 
   const copyLock =
@@ -36,18 +49,21 @@ function _buildDockerfile(pm: PackageManager): string {
     npm: 'npm run build',
     yarn: 'yarn build',
     pnpm: 'pnpm build',
+    bun: 'bun run build',
   };
 
   const installAll: Record<PackageManager, string> = {
     npm: 'RUN npm ci',
     yarn: 'RUN yarn install --frozen-lockfile',
     pnpm: 'RUN pnpm install --frozen-lockfile',
+    bun: 'RUN bun install --frozen-lockfile',
   };
 
   const installProd: Record<PackageManager, string> = {
     npm: 'RUN npm ci --omit=dev && npm cache clean --force',
     yarn: 'RUN yarn install --frozen-lockfile --production && yarn cache clean',
     pnpm: 'RUN pnpm install --frozen-lockfile --prod',
+    bun: 'RUN bun install --frozen-lockfile --production',
   };
 
   return `# ── Build stage ───────────────────────────────────────────────
@@ -92,9 +108,10 @@ function _buildDockerignore(pm: PackageManager): string {
     npm: 'package-lock.json',
     yarn: 'yarn.lock',
     pnpm: 'pnpm-lock.yaml',
+    bun: 'bun.lockb',
   };
 
-  const lockfiles = ['package-lock.json', 'yarn.lock', 'pnpm-lock.yaml'];
+  const lockfiles = ['package-lock.json', 'yarn.lock', 'pnpm-lock.yaml', 'bun.lockb'];
   const unusedLocks = lockfiles
     .filter((f) => f !== currentLock[pm])
     .join('\n');

@@ -1,4 +1,8 @@
-'use strict';
+/**
+ * src/lib/validator/zod.ts
+ *
+ * Zod schema validator generator strategy.
+ */
 
 import fs from 'fs';
 import path from 'path';
