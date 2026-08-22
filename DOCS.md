@@ -42,6 +42,9 @@ yarn global add create-express-modular
 
 # pnpm
 pnpm add -g create-express-modular
+
+# bun
+bun add -g create-express-modular
 ```
 
 Or run without installing globally:
@@ -55,6 +58,9 @@ yarn dlx create-express-modular my-api
 
 # pnpm
 pnpm dlx create-express-modular my-api
+
+# bun
+bunx create-express-modular my-api
 ```
 
 The CLI **auto-detects** which package manager you used and adapts all install commands, generated files, and terminal output accordingly. Uses a **Batch 2-Pass Installer** (separate runtime & development passes) for ~80% faster project setup.
@@ -577,6 +583,7 @@ The Dockerfile is **package-manager-aware** — it uses the correct lock file, i
 | npm | `package-lock.json` | `npm ci` |
 | yarn | `yarn.lock` | `yarn install --frozen-lockfile` |
 | pnpm | `pnpm-lock.yaml` | `pnpm install --frozen-lockfile` |
+| bun | `bun.lockb` | `bun install --frozen-lockfile` |
 
 > **pnpm users:** The generated Dockerfile automatically runs `corepack enable` to make pnpm available inside the Alpine image — no separate install step needed.
 
@@ -605,8 +612,8 @@ The CLI auto-detects your package manager and adapts its behaviour:
 
 | Signal | Priority | Example |
 |---|---|---|
-| Lock file in project root | Highest | `pnpm-lock.yaml` → uses pnpm |
-| `npm_config_user_agent` env var | Medium | Set by npm/yarn/pnpm when they invoke scripts |
+| Lock file in project root | Highest | `bun.lockb` → uses bun, `pnpm-lock.yaml` → uses pnpm |
+| `npm_config_user_agent` env var | Medium | Set by npm/yarn/pnpm/bun when they invoke scripts |
 | Default | Lowest | Falls back to npm |
 
 The detected PM affects:
@@ -615,7 +622,7 @@ The detected PM affects:
 - **Generated README** — install and run-script commands match your PM
 - **CLI output** — update notices, error messages, and tips use the correct PM syntax
 
-The generated `package.json` includes a `packageManager` field (e.g. `"packageManager": "pnpm@latest"`) for yarn and pnpm projects so Corepack and CI environments automatically enforce the correct PM without extra configuration.
+The generated `package.json` includes a `packageManager` field (e.g. `"packageManager": "pnpm@latest"`) for yarn, pnpm, and bun projects so Corepack and CI environments automatically enforce the correct PM without extra configuration.
 
 > `cem dev`, `cem build`, `cem check`, and `cem start` are **PM-agnostic** — they invoke tools directly from `node_modules/.bin/` and work identically regardless of which package manager you use.
 
@@ -623,17 +630,17 @@ The generated `package.json` includes a `packageManager` field (e.g. `"packageMa
 
 ## Generated Project Scripts
 
-All scripts work with **npm**, **yarn**, or **pnpm** — the generated README and CLI output automatically use the correct syntax for your detected package manager.
+All scripts work with **npm**, **yarn**, **pnpm**, or **bun** — the generated README and CLI output automatically use the correct syntax for your detected package manager.
 
-| Script (npm) | Script (yarn / pnpm) | Equivalent to |
+| Script (npm) | Script (yarn / pnpm / bun) | Equivalent to |
 |---|---|---|
-| `npm run start:dev` | `yarn start:dev` / `pnpm start:dev` | `cem dev` |
-| `npm run build` | `yarn build` / `pnpm build` | `cem build` |
-| `npm run check` | `yarn check` / `pnpm check` | `cem check` |
-| `npm start` | `yarn start` / `pnpm start` | `cem start` |
-| `npm run lint` | `yarn lint` / `pnpm lint` | `eslint src` |
-| `npm run lint:fix` | `yarn lint:fix` / `pnpm lint:fix` | `eslint src --fix` |
-| `npm run prettier:fix` | `yarn prettier:fix` / `pnpm prettier:fix` | `prettier --write src` |
+| `npm run start:dev` | `yarn start:dev` / `pnpm start:dev` / `bun start:dev` | `cem dev` |
+| `npm run build` | `yarn build` / `pnpm build` / `bun run build` | `cem build` |
+| `npm run check` | `yarn check` / `pnpm check` / `bun run check` | `cem check` |
+| `npm start` | `yarn start` / `pnpm start` / `bun start` | `cem start` |
+| `npm run lint` | `yarn lint` / `pnpm lint` / `bun run lint` | `eslint src` |
+| `npm run lint:fix` | `yarn lint:fix` / `pnpm lint:fix` / `bun run lint:fix` | `eslint src --fix` |
+| `npm run prettier:fix` | `yarn prettier:fix` / `pnpm prettier:fix` / `bun run prettier:fix` | `prettier --write src` |
 
 ---
 
@@ -692,7 +699,7 @@ AI agents read these context files instantly, avoiding architectural confusion a
 ## Requirements
 
 - Node.js `>= 18`
-- **One of:** npm `>= 9`, yarn `>= 1.22`, or pnpm `>= 8`
+- **One of:** npm `>= 9`, yarn `>= 1.22`, pnpm `>= 8`, or bun `>= 1.0`
 - TypeScript `>= 5.5` (installed automatically)
 
 ---

@@ -29,7 +29,7 @@ By the end of this tutorial, you will master all the features the CEM CLI has to
 ## 🛠️ Prerequisites
 Before starting, ensure you have the following installed on your machine:
 *   **Node.js**: `v18.0.0` or higher
-*   **npm**: `v9.0.0` or higher
+*   **Package Manager**: `npm` (`v9+`), `yarn` (`v1.22+`), `pnpm` (`v8+`), or `bun` (`v1.0+`)
 *   **MongoDB**: A local instance or MongoDB Atlas connection string
 
 ---
