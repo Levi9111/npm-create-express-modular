@@ -1,6 +1,6 @@
 // ─── Shared Types ─────────────────────────────────────────────────────────────
 
-export type PackageManager = 'npm' | 'yarn' | 'pnpm';
+export type PackageManager = 'npm' | 'yarn' | 'pnpm' | 'bun';
 
 export type DbChoice = 'mongoose' | 'prisma' | 'drizzle';
 export type ValidatorChoice = 'zod' | 'joi';

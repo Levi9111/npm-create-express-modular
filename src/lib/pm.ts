@@ -16,12 +16,14 @@ import type { PackageManager } from './types';
  */
 export function detectPM(cwd: string = process.cwd()): PackageManager {
   // 1. Lock file (strongest signal — existing project)
+  if (fs.existsSync(path.join(cwd, 'bun.lockb')) || fs.existsSync(path.join(cwd, 'bun.lock'))) return 'bun';
   if (fs.existsSync(path.join(cwd, 'pnpm-lock.yaml'))) return 'pnpm';
   if (fs.existsSync(path.join(cwd, 'yarn.lock'))) return 'yarn';
   if (fs.existsSync(path.join(cwd, 'package-lock.json'))) return 'npm';
 
   // 2. User agent (set by the PM that invoked the CLI)
   const ua = process.env.npm_config_user_agent || '';
+  if (ua.startsWith('bun')) return 'bun';
   if (ua.startsWith('pnpm')) return 'pnpm';
   if (ua.startsWith('yarn')) return 'yarn';
 
@@ -58,6 +60,15 @@ const COMMANDS: Record<PackageManager, Record<string, string>> = {
     global: 'pnpm add -g',
     lockfile: 'pnpm-lock.yaml',
   },
+  bun: {
+    install: 'bun add',
+    installDev: 'bun add -d',
+    ci: 'bun install --frozen-lockfile',
+    run: 'bun run',
+    exec: 'bunx',
+    global: 'bun add -g',
+    lockfile: 'bun.lockb',
+  },
 };
 
 export function commands(pm: PackageManager): Record<string, string> {
@@ -81,11 +92,13 @@ export function installCmd(
 
 export function initialInstallCmd(pm: PackageManager): string {
   switch (pm) {
+    case 'bun':
+      return 'bun install';
     case 'yarn':
-      return 'yarn install --prefer-offline';
+      return 'yarn install --prefer-offline --non-interactive';
     case 'pnpm':
       return 'pnpm install --prefer-offline';
     default:
-      return 'npm install --no-audit --no-fund --loglevel=error --prefer-offline';
+      return 'npm install --no-audit --no-fund --no-progress --loglevel=error --prefer-offline';
   }
 }

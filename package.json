@@ -53,12 +53,11 @@
         "url": "https://github.com/Levi9111/npm-create-express-modular/issues"
     },
     "homepage": "https://create-express-modular.lovable.app/docs",
-    "dependencies": {
-        "inquirer": "^8.2.7"
-    },
+    "dependencies": {},
     "devDependencies": {
         "@types/inquirer": "^8.2.13",
         "@types/node": "^26.1.1",
+        "inquirer": "^8.2.7",
         "tsup": "^8.5.1",
         "typescript": "^7.0.2"
     }

@@ -215,7 +215,7 @@ export function printUpdateNotice(current: string, latest: string, pm: PackageMa
 
   console.log(blankRow());
 
-  const globalCmd = ({ npm: 'npm i -g', yarn: 'yarn global add', pnpm: 'pnpm add -g' } as Record<PackageManager, string>)[pm] || 'npm i -g';
+  const globalCmd = ({ npm: 'npm i -g', yarn: 'yarn global add', pnpm: 'pnpm add -g', bun: 'bun add -g' } as Record<PackageManager, string>)[pm] || 'npm i -g';
   const cmd = `Run ${cyan(`${globalCmd} create-express-modular`)} to update`;
   const pad2 = ' '.repeat(Math.max(0, W - visLen(cmd) - 4));
   console.log(`  ${yellow('│')}    ${cmd}${pad2}${yellow('│')}`);

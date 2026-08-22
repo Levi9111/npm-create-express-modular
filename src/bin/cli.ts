@@ -458,6 +458,7 @@ async function runCLI(): Promise<void> {
         npm: { node: '>=18', npm: '>=9' },
         yarn: { node: '>=18', yarn: '>=1.22' },
         pnpm: { node: '>=18', pnpm: '>=8' },
+        bun: { node: '>=18', bun: '>=1.0' },
       };
       pkg.engines = engineMap[pm] || engineMap.npm;
 

@@ -37,4 +37,5 @@ export default defineConfig({
   sourcemap: false,
   treeshake: true,
   shims: true,
+  noExternal: ['inquirer'],
 });
