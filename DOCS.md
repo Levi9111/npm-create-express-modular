@@ -31,19 +31,17 @@
 
 ---
 
-## Installation
+## Installation (Recommended)
+
+Installing `create-express-modular` globally is the recommended approach to access the `cem` CLI across your workspace:
 
 ```bash
-# npm
+# npm (recommended)
 npm install -g create-express-modular
 
-# yarn
+# yarn / pnpm / bun
 yarn global add create-express-modular
-
-# pnpm
 pnpm add -g create-express-modular
-
-# bun
 bun add -g create-express-modular
 ```
 

@@ -36,13 +36,16 @@ Before starting, ensure you have the following installed on your machine:
 
 ## 🚀 Step 1: Scaffolding a New Project (`cem`)
 
-Let's initialize our backend project using the interactive scaffolding wizard. 
-
-Run the following command:
+First, install the CLI globally (recommended):
 ```bash
-npx create-express-modular taskflow-api
+npm install -g create-express-modular
 ```
-*(Alternatively, if you have installed the package globally via `npm install -g create-express-modular`, you can simply run `cem taskflow-api`.)*
+
+Then initialize your backend project using the `cem` CLI command:
+```bash
+cem taskflow-api
+```
+*(Alternatively, you can run directly without global installation using `npx create-express-modular taskflow-api`.)*
 
 ### Interactive Prompt Selections
 The wizard will guide you through 6 setup questions. For this tutorial, select the following options:
