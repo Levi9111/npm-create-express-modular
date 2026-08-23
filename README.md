@@ -18,24 +18,30 @@ Choose your database, your validator, and optionally add JWT auth — all from o
 
 ---
 
-## Installation
+## Installation (Recommended)
 
-To install the CLI globally:
+Install the CLI globally to access the `cem` executable across your workspace:
 
 ```bash
+# Using npm (recommended)
 npm install -g create-express-modular
+
+# Or using pnpm / yarn / bun
+
 ```
 
 ## Quick Start
 
-Run the CLI using `npx` (no installation required) or call the globally installed command:
+Scaffold a new project using the `cem` CLI (recommended):
 
 ```bash
-# Using npx (recommended)
-npx create-express-modular my-api
-
-# Or using the globally installed package
+# Using globally installed CLI (recommended)
 cem my-api
+
+# Or using npx / bunx without global installation
+npx create-express-modular my-api
+# or
+bunx create-express-modular my-api
 ```
 
 Then:
