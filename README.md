@@ -25,9 +25,6 @@ Install the CLI globally to access the `cem` executable across your workspace:
 ```bash
 # Using npm (recommended)
 npm install -g create-express-modular
-
-# Or using pnpm / yarn / bun
-
 ```
 
 ## Quick Start
@@ -44,7 +41,7 @@ npx create-express-modular my-api
 bunx create-express-modular my-api
 ```
 
-Then:
+Then start developing:
 
 ```bash
 cd my-api
@@ -60,12 +57,12 @@ Your server is live at `http://localhost:5000`. ✅
 Answer 5 prompts — get a complete, wired-up backend:
 
 | Prompt | Options |
-|---|---|
-| Database / ORM | Mongoose · Prisma · Drizzle |
-| Validator | Zod · Joi |
-| JWT Auth | Yes / No (bcrypt + refresh tokens + rate limiting) |
-| Token delivery | HTTP-only cookies · Authorization header |
-| Docker | Yes / No (Dockerfile + docker-compose + DB sidecar) |
+| :--- | :--- |
+| **Database / ORM** | Mongoose · Prisma · Drizzle |
+| **Validator** | Zod · Joi |
+| **JWT Auth** | Yes / No (bcrypt + refresh tokens + rate limiting) |
+| **Token delivery** | HTTP-only cookies · Authorization header |
+| **Docker** | Yes / No (Dockerfile + docker-compose + DB sidecar) |
 
 ---
 
@@ -83,7 +80,7 @@ To support seamless development with AI assistants (Cursor, Claude Code, GitHub 
 ### 🛠️ Project Management
 
 | Command | Description |
-|---|---|
+| :--- | :--- |
 | **`cem dev`** | Start the dev server with live reload |
 | **`cem build`** | Run guards + compile TypeScript to `dist/` |
 | **`cem start`** | Start the production server with preflight checks |
@@ -93,7 +90,7 @@ To support seamless development with AI assistants (Cursor, Claude Code, GitHub 
 ### ➕ Generating Features
 
 | Command | Description |
-|---|---|
+| :--- | :--- |
 | **`cem add module <Name...>`** | Scaffold one or more complete feature modules |
 | **`cem add middleware <name...>`** | Create one or more middleware files under `src/app/middlewares/` |
 | **`cem add env <KEY...>`** | Add one or more env vars to `.env`, `.env.example`, and config |
@@ -101,32 +98,32 @@ To support seamless development with AI assistants (Cursor, Claude Code, GitHub 
 ### ❌ Removing Features
 
 | Command | Description |
-|---|---|
+| :--- | :--- |
 | **`cem remove module <Name...>`** | Delete module directory(ies) and unwire routes |
 | **`cem remove middleware <name...>`** | Delete one or more custom middleware files |
 | **`cem remove env <KEY...>`** | Remove env var(s) from all configurations |
 
 > 💡 **Command Shortcuts / Aliases:**
-> * **`cem rm`** is an alias for **`cem remove`**
-> * **`cem ls`** is an alias for **`cem list`**
+> - **`cem rm`** is an alias for **`cem remove`**
+> - **`cem ls`** is an alias for **`cem list`**
 
 ---
 
 ## Requirements
 
-- Node.js `>= 18`
-- One of: npm `>= 9` · yarn `>= 1.22` · pnpm `>= 8`
+- **Node.js**: `>= 18`
+- **Package Manager**: npm `>= 9` · yarn `>= 1.22` · pnpm `>= 8`
 
 ---
 
 ## Resources
 
 | Link | Description |
-|---|---|
-| [📖 Full Docs](https://create-express-modular.lovable.app/docs) | Complete CLI reference, guides, and examples |
-| [DOCS.md](./DOCS.md) | Offline version of the full documentation |
-| [ARCHITECTURE.md](./ARCHITECTURE.md) | Internal project architecture overview |
-| [npm](https://www.npmjs.com/package/create-express-modular) | Package page |
+| :--- | :--- |
+| **[📖 Full Docs](https://create-express-modular.lovable.app/docs)** | Complete CLI reference, guides, and examples |
+| **[DOCS.md](./DOCS.md)** | Offline version of the full documentation |
+| **[ARCHITECTURE.md](./ARCHITECTURE.md)** | Internal project architecture overview |
+| **[npm](https://www.npmjs.com/package/create-express-modular)** | Package page |
 
 ---
 
