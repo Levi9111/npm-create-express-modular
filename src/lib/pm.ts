@@ -31,6 +31,20 @@ export function detectPM(cwd: string = process.cwd()): PackageManager {
   return 'npm';
 }
 
+/**
+ * Resolve a valid Corepack/packageManager spec string (e.g. "yarn@1.22.22", "pnpm@9.1.0")
+ * from the invoking environment user agent if available.
+ * Returns null if no valid semver version can be extracted.
+ */
+export function getPackageManagerSpec(pm: PackageManager): string | null {
+  const ua = process.env.npm_config_user_agent || '';
+  const match = ua.match(new RegExp(`^${pm}\\/(\\d+\\.\\d+\\.\\d+[^\\s]*)`));
+  if (match) {
+    return `${pm}@${match[1]}`;
+  }
+  return null;
+}
+
 // ─── COMMAND MAPS ────────────────────────────────────────────────────────────
 const COMMANDS: Record<PackageManager, Record<string, string>> = {
   npm: {
@@ -95,7 +109,7 @@ export function initialInstallCmd(pm: PackageManager): string {
     case 'bun':
       return 'bun install';
     case 'yarn':
-      return 'yarn install --prefer-offline --non-interactive';
+      return 'yarn install';
     case 'pnpm':
       return 'pnpm install --prefer-offline';
     default:

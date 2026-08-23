@@ -5,7 +5,7 @@ import path from 'path';
 import { execSync } from 'child_process';
 
 import * as ui from '../lib/ui';
-import { detectPM, initialInstallCmd } from '../lib/pm';
+import { detectPM, getPackageManagerSpec, initialInstallCmd } from '../lib/pm';
 import { checkForUpdates, isUpdateAvailable } from '../lib/updateNotifier';
 import { copyFolderSync } from '../lib/utils/fs';
 import type { DbChoice, ValidatorChoice, TokenDelivery, PackageManager } from '../lib/types';
@@ -460,7 +460,10 @@ async function runCLI(): Promise<void> {
       pkg.engines = engineMap[pm] || engineMap.npm;
 
       if (pm !== 'npm') {
-        pkg.packageManager = `${pm}@latest`;
+        const spec = getPackageManagerSpec(pm);
+        if (spec) {
+          pkg.packageManager = spec;
+        }
       }
 
       fs.writeFileSync(pkgPath, JSON.stringify(pkg, null, 2));
@@ -685,6 +688,7 @@ async function runCLI(): Promise<void> {
       'typescript-eslint': '^8.20.0',
       'eslint-config-prettier': '^10.0.1',
       prettier: '^3.4.2',
+      'create-express-modular': `^${VERSION || '3.3.3'}`,
     };
 
     uniqueProd.forEach((p) => {
@@ -699,6 +703,10 @@ async function runCLI(): Promise<void> {
       }
     });
 
+    if (VERSION) {
+      pkg.devDependencies['create-express-modular'] = `^${VERSION}`;
+    }
+
     fs.writeFileSync(pkgPath, JSON.stringify(pkg, null, 2));
   }
 
@@ -708,7 +716,12 @@ async function runCLI(): Promise<void> {
     installSpin.succeed(`Dependencies installed (${uniqueProd.length} runtime, ${uniqueDev.length} dev)`);
   } catch (e: unknown) {
     installSpin.fail('Dependencies install failed');
-    ui.abort((e as Error).message);
+    const err = e as { stderr?: Buffer | string; stdout?: Buffer | string; message?: string };
+    const details =
+      err.stderr?.toString().trim() ||
+      err.stdout?.toString().trim() ||
+      (e as Error).message;
+    ui.abort(details);
   }
 
   // Summary and completion
