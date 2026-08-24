@@ -52,7 +52,7 @@ Or run without installing globally:
 npx create-express-modular my-api
 
 # yarn
-yarn dlx create-express-modular my-api
+yarn create express-modular my-api
 
 # pnpm
 pnpm dlx create-express-modular my-api
@@ -61,7 +61,7 @@ pnpm dlx create-express-modular my-api
 bunx create-express-modular my-api
 ```
 
-The CLI **auto-detects** which package manager you used and adapts all install commands, generated files, and terminal output accordingly. Uses a **Batch 2-Pass Installer** (separate runtime & development passes) for ~80% faster project setup.
+The CLI **auto-detects** which package manager you used and adapts all install commands, generated files, and terminal output accordingly. Uses a **single-pass ultra-fast dependency installer** (pre-populated version pins) for maximum installation speed.
 
 > **Yarn v1 users:** If `cem` is not found after `yarn global add`, your global bin directory likely isn't on your `PATH`. Fix it by running:
 > ```bash
