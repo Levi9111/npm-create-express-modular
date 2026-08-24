@@ -122,7 +122,7 @@ export function buildController(tokenDelivery: TokenDelivery): string {
     ? `const login = catchAsync(async (req: Request, res: Response) => {
   const result = await AuthService.loginUser(req.body);
 
-  const isProduction = process.env.NODE_ENV === 'production';
+  const isProduction = config.NODE_ENV === 'production';
   const cookieOptions = {
     httpOnly: true,
     secure: isProduction,
@@ -173,12 +173,14 @@ export function buildController(tokenDelivery: TokenDelivery): string {
     ? `export const AuthControllers = { login, logout, getProfile };`
     : `export const AuthControllers = { login, getProfile };`;
 
+  const configImport = cookieMode ? "\nimport config from '../../config';" : '';
+
   return `import { Request, Response } from 'express';
 import { StatusCodes } from 'http-status-codes';
 import { catchAsync } from '../../utils/catchAsync';
 import sendResponse from '../../utils/sendResponse';
 import { AuthService } from './auth.service';
-import { TLoginResponse } from './auth.interface';
+import { TLoginResponse } from './auth.interface';${configImport}
 
 ${loginBody}
 
