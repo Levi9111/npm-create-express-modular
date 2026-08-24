@@ -62,7 +62,9 @@ export default sendResponse;
 
   fs.writeFileSync(
     path.join(utilsDir, 'logger.ts'),
-    `type LogLevel = 'info' | 'warn' | 'error' | 'debug';
+    `/* eslint-disable no-console */
+
+type LogLevel = 'info' | 'warn' | 'error' | 'debug';
 
 const isDev = process.env.NODE_ENV !== 'production';
 

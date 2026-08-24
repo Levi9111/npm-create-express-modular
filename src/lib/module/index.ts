@@ -159,7 +159,7 @@ export async function generateModule(providedName?: string | string[]): Promise<
     const wired = injectRoute(
       projectRoot,
       `import { ${moduleName}Routes } from '../modules/${moduleName}/${fileName}.route';`,
-      `  { path: '${routePath}', route: ${moduleName}Routes },`,
+      `{ path: '${routePath}', route: ${moduleName}Routes },`,
     );
 
     if (!wired) {

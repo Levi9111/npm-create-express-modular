@@ -83,7 +83,7 @@ export const verifyToken = (token: string, secret: string): JwtPayload => {
   injectRoute(
     projectPath,
     `import { AuthRoutes } from '../modules/Auth/auth.route';`,
-    `  { path: '/auth', route: AuthRoutes },`,
+    `{ path: '/auth', route: AuthRoutes },`,
   );
 
   scaffoldRateLimiter(mwDir);
@@ -103,7 +103,8 @@ export const globalRateLimiter = rateLimit({
   max: 100,
   message: {
     success: false,
-    message: 'Too many requests from this IP, please try again after 15 minutes',
+    message:
+      'Too many requests from this IP, please try again after 15 minutes',
   },
   standardHeaders: true,
   legacyHeaders: false,

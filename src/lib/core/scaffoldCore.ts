@@ -53,7 +53,7 @@ export function scaffoldCoreFiles(
 export function scaffoldQueryBuilder(projectPath: string): void {
   fs.writeFileSync(
     path.join(projectPath, 'src/app/utils/QueryBuilder.ts'),
-    `import { QueryFilter, Query } from 'mongoose';
+    `import { FilterQuery, Query } from 'mongoose';
 
 class QueryBuilder<T> {
   public modelQuery: Query<T[], T>;
@@ -71,7 +71,7 @@ class QueryBuilder<T> {
         $or: searchableFields.map((field) => ({
           [field]: { $regex: searchTerm, $options: 'i' },
         })),
-      } as QueryFilter<T>);
+      } as FilterQuery<T>);
     }
     return this;
   }
@@ -80,7 +80,7 @@ class QueryBuilder<T> {
     const queryObj = { ...this.query };
     const excludedFields = ['searchTerm', 'sort', 'limit', 'page', 'fields'];
     excludedFields.forEach((el) => delete queryObj[el]);
-    this.modelQuery = this.modelQuery.find(queryObj as QueryFilter<T>);
+    this.modelQuery = this.modelQuery.find(queryObj as FilterQuery<T>);
     return this;
   }
 

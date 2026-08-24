@@ -85,6 +85,7 @@ export const ${moduleName}Controllers = {
  */
 export function buildInterface(moduleName: string): string {
   return `export interface I${moduleName} {
+  id?: string;
   // TODO: Define your ${moduleName} fields here
   // name: string;
   // createdAt?: Date;
@@ -184,22 +185,22 @@ const create${moduleName} = async (payload: I${moduleName}) => {
   return payload;
 };
 
-const getAll${moduleName}s = async (query: Record<string, unknown>) => {
+const getAll${moduleName}s = async (_query: Record<string, unknown>) => {
   // TODO: Implement list logic (with filtering, sorting, pagination)
   return [];
 };
 
-const getSingle${moduleName} = async (id: string) => {
+const getSingle${moduleName} = async (_id: string) => {
   // TODO: Implement find-by-id logic
   return null;
 };
 
-const update${moduleName} = async (id: string, payload: Partial<I${moduleName}>) => {
+const update${moduleName} = async (_id: string, _payload: Partial<I${moduleName}>) => {
   // TODO: Implement update logic
   return null;
 };
 
-const delete${moduleName} = async (id: string) => {
+const delete${moduleName} = async (_id: string) => {
   // TODO: Implement delete logic
   return null;
 };

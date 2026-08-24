@@ -40,7 +40,7 @@ export default {
   NODE_ENV: process.env.NODE_ENV ?? 'development',
   port: process.env.PORT ?? 5000,
   databaseUrl: process.env.DATABASE_URL as string,
-  bcrypt_salt_rounds: Number(process.env.BCRYPT_SALT_ROUNDS) ?? 12,
+  bcrypt_salt_rounds: Number(process.env.BCRYPT_SALT_ROUNDS ?? 12),
   jwt_access_secret: process.env.JWT_ACCESS_SECRET,
   jwt_access_expires_in: process.env.JWT_ACCESS_EXPIRES_IN,
   jwt_refresh_secret: process.env.JWT_REFRESH_SECRET,
@@ -142,8 +142,7 @@ export async function connectDB(): Promise<void> {
 import handleCastError from '../errors/handleCastError';
 import handleValidationError from '../errors/handleValidationError';
 import handleDuplicateError from '../errors/handleDuplicateError';`,
-      handler: `
-  if (err instanceof MongooseError.CastError) {
+      handler: `if (err instanceof MongooseError.CastError) {
     const simplified = handleCastError(err);
     statusCode = simplified.statusCode;
     message = simplified.message;
@@ -158,7 +157,7 @@ import handleDuplicateError from '../errors/handleDuplicateError';`,
     statusCode = simplified.statusCode;
     message = simplified.message;
     errorSources = simplified.errorSources;
-  } else`,
+  } else `,
     };
   },
 
@@ -174,7 +173,10 @@ import { TErrorSources, TGenericErrorResponse } from '../interfaces/error';
 
 const handleCastError = (err: Error.CastError): TGenericErrorResponse => {
   const errorSources: TErrorSources = [
-    { path: err.path, message: \`Invalid value for field '\${err.path}': \${err.value}\` },
+    {
+      path: err.path,
+      message: \`Invalid value for field '\${err.path}': \${err.value}\`,
+    },
   ];
   return { statusCode: 400, message: 'Invalid ID', errorSources };
 };
@@ -188,7 +190,9 @@ export default handleCastError;
       `import { Error } from 'mongoose';
 import { TErrorSources, TGenericErrorResponse } from '../interfaces/error';
 
-const handleValidationError = (err: Error.ValidationError): TGenericErrorResponse => {
+const handleValidationError = (
+  err: Error.ValidationError,
+): TGenericErrorResponse => {
   const errorSources: TErrorSources = Object.values(err.errors).map(
     (val: Error.ValidatorError | Error.CastError) => ({
       path: val?.path,
@@ -206,7 +210,9 @@ export default handleValidationError;
       path.join(errDir, 'handleDuplicateError.ts'),
       `import { TErrorSources, TGenericErrorResponse } from '../interfaces/error';
 
-const handleDuplicateError = (err: { message: string }): TGenericErrorResponse => {
+const handleDuplicateError = (err: {
+  message: string;
+}): TGenericErrorResponse => {
   const match = err.message.match(/"([^"]*)"/);
   const extractedMessage = match ? match[1] : 'Field';
   const errorSources: TErrorSources = [

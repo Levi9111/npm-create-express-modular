@@ -35,15 +35,14 @@ export default validateRequest;
   errorBlock(): ErrorBlock {
     return {
       imports: `import Joi from 'joi';`,
-      handler: `
-  if (err?.isJoi === true || err instanceof Joi.ValidationError) {
+      handler: `if (err?.isJoi === true || err instanceof Joi.ValidationError) {
     statusCode = 400;
     message = 'Validation Error';
     errorSources = err.details.map((detail: Joi.ValidationErrorItem) => ({
       path: String(detail.path[detail.path.length - 1] ?? ''),
       message: detail.message.replace(/['"]/g, ''),
     }));
-  } else`,
+  } else `,
     };
   },
 

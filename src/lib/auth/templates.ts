@@ -19,13 +19,17 @@ export function buildAuthMiddleware(tokenDelivery: TokenDelivery): string {
       const token = req.cookies?.accessToken;
 
       if (!token) {
-        return next(new AppError(StatusCodes.UNAUTHORIZED, 'You are not authorized!'));
+        return next(
+          new AppError(StatusCodes.UNAUTHORIZED, 'You are not authorized!'),
+        );
       }`
       : `
       const authHeader = req.headers.authorization;
 
       if (!authHeader?.startsWith('Bearer ')) {
-        return next(new AppError(StatusCodes.UNAUTHORIZED, 'You are not authorized!'));
+        return next(
+          new AppError(StatusCodes.UNAUTHORIZED, 'You are not authorized!'),
+        );
       }
 
       const token = authHeader.split(' ')[1];`;
@@ -38,6 +42,7 @@ import { verifyToken } from '../utils/jwt.utils';
 import config from '../config';
 
 declare global {
+  // eslint-disable-next-line @typescript-eslint/no-namespace
   namespace Express {
     interface Request {
       user: JwtPayload & { userId: string; role: string };
@@ -53,7 +58,10 @@ const auth = (...requiredRoles: string[]) => {
 
       if (requiredRoles.length && !requiredRoles.includes(decoded.role)) {
         return next(
-          new AppError(StatusCodes.FORBIDDEN, 'You do not have the required permissions!'),
+          new AppError(
+            StatusCodes.FORBIDDEN,
+            'You do not have the required permissions!',
+          ),
         );
       }
 
@@ -78,11 +86,9 @@ export function buildInterface(tokenDelivery: TokenDelivery): string {
   const loginResponse =
     tokenDelivery === 'cookie'
       ? `export type TLoginResponse = {
-  user: {
-    userId: string;
-    email: string;
-    role: TUserRole;
-  };
+  userId: string;
+  email: string;
+  role: TUserRole;
 };`
       : `export type TLoginResponse = {
   accessToken: string;
@@ -124,10 +130,16 @@ export function buildController(tokenDelivery: TokenDelivery): string {
     path: '/',
   };
 
-  res.cookie('accessToken',  result.accessToken,  { ...cookieOptions, maxAge: 15 * 60 * 1000 });
-  res.cookie('refreshToken', result.refreshToken, { ...cookieOptions, maxAge: 7 * 24 * 60 * 60 * 1000 });
+  res.cookie('accessToken', result.accessToken, {
+    ...cookieOptions,
+    maxAge: 15 * 60 * 1000,
+  });
+  res.cookie('refreshToken', result.refreshToken, {
+    ...cookieOptions,
+    maxAge: 7 * 24 * 60 * 60 * 1000,
+  });
 
-  sendResponse(res, {
+  sendResponse<TLoginResponse>(res, {
     statusCode: StatusCodes.OK,
     success: true,
     message: 'User logged in successfully',
@@ -436,11 +448,7 @@ userSchema.pre('save', async function () {
   if (!this.isModified('password')) {
     return;
   }
-  try {
-    this.password = await bcrypt.hash(this.password, 10);
-  } catch (error) {
-    throw error;
-  }
+  this.password = await bcrypt.hash(this.password, 10);
 });
 
 userSchema.methods.comparePassword = async function (
@@ -504,10 +512,12 @@ Tokens are stored in \`httpOnly\` cookies — JavaScript cannot read them.
 This protects against XSS attacks.
 
 **Login response sets two cookies automatically:**
+
 - \`accessToken\` — expires in 15 minutes
 - \`refreshToken\` — expires in 7 days
 
 **Logout clears both cookies:**
+
 \`\`\`bash
 POST /auth/logout
 \`\`\`
@@ -575,29 +585,31 @@ function getServiceDbLogic(db: DbChoice): { imports: string; findUser: string } 
     case 'mongoose':
       return {
         imports: `import { UserModel } from './auth.model';`,
-        findUser: `
-  const user = await UserModel.findOne({ email: payload.email }).select('+password');
-  if (!user) throw new AppError(StatusCodes.NOT_FOUND, 'User not found');
-`,
+        findUser: `const user = await UserModel.findOne({ email: payload.email }).select(
+    '+password',
+  );
+  if (!user) throw new AppError(StatusCodes.NOT_FOUND, 'User not found');`,
       };
 
     case 'prisma':
       return {
         imports: `import { PrismaClient } from '@prisma/client';\n\nconst prisma = new PrismaClient();`,
-        findUser: `
-  const user = await prisma.user.findUnique({ where: { email: payload.email } });
-  if (!user) throw new AppError(StatusCodes.NOT_FOUND, 'User not found');
-`,
+        findUser: `const user = await prisma.user.findUnique({
+    where: { email: payload.email },
+  });
+  if (!user) throw new AppError(StatusCodes.NOT_FOUND, 'User not found');`,
       };
 
     case 'drizzle':
       return {
         imports: `import { db } from '../../db';\nimport { users } from '../../db/schema';\nimport { eq } from 'drizzle-orm';`,
-        findUser: `
-  const result = await db.select().from(users).where(eq(users.email, payload.email)).limit(1);
+        findUser: `const result = await db
+    .select()
+    .from(users)
+    .where(eq(users.email, payload.email))
+    .limit(1);
   const user = result[0];
-  if (!user) throw new AppError(StatusCodes.NOT_FOUND, 'User not found');
-`,
+  if (!user) throw new AppError(StatusCodes.NOT_FOUND, 'User not found');`,
       };
   }
 }

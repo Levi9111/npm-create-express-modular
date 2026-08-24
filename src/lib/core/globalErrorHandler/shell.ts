@@ -47,9 +47,7 @@ const globalErrorHandler = (
 
   // ── Discriminated dispatch ────────────────────────────────────────────────
   // Order matters: most specific first, generic Error last
-  ${validatorBlock.handler}
-  ${dbBlock.handler}
-  if (err instanceof AppError) {
+  ${validatorBlock.handler}${dbBlock.handler}if (err instanceof AppError) {
     statusCode = err.statusCode;
     message = err.message;
     errorSources = [{ path: '', message: err.message }];

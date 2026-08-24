@@ -42,13 +42,12 @@ export default validateRequest;
     return {
       imports: `import { ZodError } from 'zod';
 import handleZodError from '../errors/handleZodError';`,
-      handler: `
-  if (err instanceof ZodError) {
+      handler: `if (err instanceof ZodError) {
     const simplified = handleZodError(err);
     statusCode = simplified.statusCode;
     message = simplified.message;
     errorSources = simplified.errorSources;
-  } else`,
+  } else `,
     };
   },
 
