@@ -7,7 +7,6 @@
 
 import { exec } from 'child_process';
 import { promisify } from 'util';
-import { detectPM, runScript } from './pm';
 import * as ui from './ui';
 
 const execAsync = promisify(exec);
@@ -67,21 +66,34 @@ async function runTask(task: CheckTask, cwd: string): Promise<CheckResult> {
 
 /**
  * Executes `cem check` pipeline — running TypeScript type checks, ESLint, and Prettier checks.
+ * When `fix` is true, ESLint and Prettier run in auto-fix mode instead of check-only.
+ *
+ * @param fix - If true, runs lint and format in fix mode.
  */
-export async function runCheck(): Promise<void> {
+export async function runCheck(fix = false): Promise<void> {
   const cwd = process.cwd();
+
+  const modeLabel = fix ? 'type · lint:fix · format:fix' : 'type · lint · format (concurrent)';
 
   ui.nl();
   console.log(
-    `  ${ui.bgCyan('CEM')}  ${ui.bold(ui.cyan('cem check'))}  ${ui.gray('type · lint · format (concurrent)')}`,
+    `  ${ui.bgCyan('CEM')}  ${ui.bold(ui.cyan(fix ? 'cem check --fix' : 'cem check'))}  ${ui.gray(modeLabel)}`,
   );
   console.log(`  ${ui.gray('─'.repeat(50))}`);
   ui.nl();
 
   const tasks: CheckTask[] = [
     { id: 'types', label: 'Type check (tsc)…', cmd: 'node_modules/.bin/tsc --noEmit' },
-    { id: 'lint', label: 'Lint (eslint)…', cmd: 'node_modules/.bin/eslint src' },
-    { id: 'format', label: 'Format check (prettier)…', cmd: 'node_modules/.bin/prettier --check src' },
+    {
+      id: 'lint',
+      label: fix ? 'Lint fix (eslint --fix)…' : 'Lint (eslint)…',
+      cmd: fix ? 'node_modules/.bin/eslint src --fix' : 'node_modules/.bin/eslint src',
+    },
+    {
+      id: 'format',
+      label: fix ? 'Format fix (prettier --write)…' : 'Format check (prettier)…',
+      cmd: fix ? 'node_modules/.bin/prettier --write src' : 'node_modules/.bin/prettier --check src',
+    },
   ];
 
   const results = await Promise.all(tasks.map((task) => runTask(task, cwd)));
@@ -118,17 +130,18 @@ export async function runCheck(): Promise<void> {
 
   if (passed) {
     console.log(
-      `  ${ui.green('◆')}  ${ui.bold(ui.green('All checks passed.'))}  ${ui.gray(`(${total}/${total})`)}`,
+      `  ${ui.green('◆')}  ${ui.bold(ui.green(fix ? 'All fixes applied & checks passed.' : 'All checks passed.'))}  ${ui.gray(`(${total}/${total})`)}`,
     );
   } else {
     console.log(
       `  ${ui.red('✖')}  ${ui.bold(ui.red(`${failed} check${failed > 1 ? 's' : ''} failed.`))}  ${ui.gray(`(${total - failed}/${total} passed)`)}`,
     );
     ui.nl();
-    const pm = detectPM();
-    console.log(
-      `  ${ui.yellow('tip')}  ${ui.gray('Run')} ${ui.cyan(runScript(pm, 'lint:fix'))} ${ui.gray('or')} ${ui.cyan(runScript(pm, 'prettier:fix'))} ${ui.gray('to auto-fix issues.')}`,
-    );
+    if (!fix) {
+      console.log(
+        `  ${ui.yellow('tip')}  ${ui.gray('Run')} ${ui.cyan('cem check --fix')} ${ui.gray('or')} ${ui.cyan('cem fix')} ${ui.gray('to auto-fix lint and format issues.')}`,
+      );
+    }
   }
 
   ui.nl();

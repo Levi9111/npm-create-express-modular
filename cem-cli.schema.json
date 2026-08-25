@@ -1,0 +1,113 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "CEM CLI Configuration",
+  "description": "Configuration schema for create-express-modular projects (cem-cli.json)",
+  "type": "object",
+  "required": ["version", "project", "structure", "features"],
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "description": "JSON Schema reference for editor autocompletion."
+    },
+    "version": {
+      "type": "string",
+      "description": "The CEM CLI version that scaffolded this project.",
+      "pattern": "^\\d+\\.\\d+\\.\\d+"
+    },
+    "project": {
+      "type": "object",
+      "description": "Core project configuration chosen during scaffolding.",
+      "required": ["name", "db", "validator", "auth", "docker", "packageManager"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "The project name."
+        },
+        "db": {
+          "type": "string",
+          "enum": ["mongoose", "prisma", "drizzle"],
+          "description": "Database / ORM choice."
+        },
+        "validator": {
+          "type": "string",
+          "enum": ["zod", "joi"],
+          "description": "Request validation library."
+        },
+        "auth": {
+          "type": "boolean",
+          "description": "Whether JWT authentication was scaffolded."
+        },
+        "authTokenDelivery": {
+          "type": "string",
+          "enum": ["cookie", "header"],
+          "description": "JWT token delivery method (only when auth is true)."
+        },
+        "docker": {
+          "type": "boolean",
+          "description": "Whether Docker files were scaffolded."
+        },
+        "packageManager": {
+          "type": "string",
+          "enum": ["npm", "yarn", "pnpm", "bun"],
+          "description": "Detected package manager used during scaffolding."
+        }
+      },
+      "additionalProperties": false
+    },
+    "structure": {
+      "type": "object",
+      "description": "Directory layout paths relative to project root.",
+      "required": ["srcDir", "appDir", "modulesDir", "middlewaresDir", "utilsDir", "configDir"],
+      "properties": {
+        "srcDir": {
+          "type": "string",
+          "default": "src"
+        },
+        "appDir": {
+          "type": "string",
+          "default": "src/app"
+        },
+        "modulesDir": {
+          "type": "string",
+          "default": "src/app/modules"
+        },
+        "middlewaresDir": {
+          "type": "string",
+          "default": "src/app/middlewares"
+        },
+        "utilsDir": {
+          "type": "string",
+          "default": "src/app/utils"
+        },
+        "configDir": {
+          "type": "string",
+          "default": "src/app/config"
+        }
+      },
+      "additionalProperties": false
+    },
+    "features": {
+      "type": "object",
+      "description": "Optional feature toggles.",
+      "properties": {
+        "testing": {
+          "oneOf": [
+            { "type": "string", "enum": ["vitest", "jest"] },
+            { "type": "boolean", "const": false }
+          ],
+          "description": "Testing framework choice, or false if none."
+        },
+        "websocket": {
+          "type": "boolean",
+          "description": "Whether WebSocket support is enabled."
+        },
+        "swagger": {
+          "type": "boolean",
+          "description": "Whether Swagger API documentation is enabled."
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

@@ -15,6 +15,7 @@ const mongooseGenerator: DbGenerator = {
       'PORT=5000',
       'NODE_ENV=development',
       'DATABASE_URL=mongodb://localhost:27017/my-db',
+      'CORS_ORIGIN=http://localhost:3000',
       'BCRYPT_SALT_ROUNDS=12',
       'JWT_ACCESS_SECRET=your_super_secret_access_key',
       'JWT_ACCESS_EXPIRES_IN=1d',
@@ -36,10 +37,22 @@ import path from 'path';
 
 dotenv.config({ path: path.join(process.cwd(), '.env') });
 
+// ── Startup Validation ───────────────────────────────────────────────────────
+const requiredEnvVars = ['DATABASE_URL'] as const;
+for (const key of requiredEnvVars) {
+  if (!process.env[key]) {
+    throw new Error(
+      \`Missing required environment variable: \${key}. \` +
+        'Check your .env file or .env.example for reference.',
+    );
+  }
+}
+
 export default {
   NODE_ENV: process.env.NODE_ENV ?? 'development',
   port: process.env.PORT ?? 5000,
   databaseUrl: process.env.DATABASE_URL as string,
+  cors_origin: process.env.CORS_ORIGIN?.split(',') || ['http://localhost:3000'],
   bcrypt_salt_rounds: Number(process.env.BCRYPT_SALT_ROUNDS || 12),
   jwt_access_secret: process.env.JWT_ACCESS_SECRET,
   jwt_access_expires_in: process.env.JWT_ACCESS_EXPIRES_IN,
