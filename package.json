@@ -13,7 +13,8 @@
         "DOCS.md",
         "package.json",
         "LICENSE",
-        "CHANGELOG.md"
+        "CHANGELOG.md",
+        "cem-cli.schema.json"
     ],
     "engines": {
         "node": ">=18.0.0",

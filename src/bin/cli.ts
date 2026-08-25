@@ -32,6 +32,9 @@ function printHelp(): void {
   console.log('   cem build                    — compile TypeScript to dist/');
   console.log('   cem start                    — start the production server');
   console.log('   cem check                    — run type-check, lint, and format check');
+  console.log('   cem check --fix              — run type-check and auto-fix lint & format');
+  console.log('   cem fix                      — auto-fix lint and format issues');
+  console.log('   cem eject                    — eject project from CEM CLI dependency');
   console.log('   cem list                     — list modules, middlewares, and env vars');
   console.log('   cem add module <name...>     — generate one or more feature modules');
   console.log('   cem add middleware <name...> — generate one or more custom middlewares');
@@ -127,8 +130,23 @@ async function runCLI(): Promise<void> {
 
   // cem check
   if (args[0] === 'check') {
+    const fix = args.includes('--fix');
     const { runCheck } = await import('../lib/checker');
-    await runCheck();
+    await runCheck(fix);
+    return;
+  }
+
+  // cem fix
+  if (args[0] === 'fix') {
+    const { runFix } = await import('../lib/fixer');
+    await runFix();
+    return;
+  }
+
+  // cem eject
+  if (args[0] === 'eject') {
+    const { runEject } = await import('../lib/ejector');
+    await runEject();
     return;
   }
 

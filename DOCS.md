@@ -253,6 +253,45 @@ cem check
 
 If a check fails, the relevant error output is shown inline under the failed step.
 
+### Auto-Fix Mode (`cem check --fix`)
+You can pass the `--fix` flag to automatically fix ESLint and Prettier violations while checking types:
+
+```bash
+cem check --fix
+```
+
+---
+
+## `cem fix` — Auto-Fix Lint & Formatting
+
+Runs ESLint auto-fix (`eslint --fix`) and Prettier formatting (`prettier --write`) in sequence:
+
+```bash
+cem fix
+
+  [CEM]  cem fix  lint:fix · format:fix
+  ──────────────────────────────────────────────────────
+
+  ◆  Fixing lint issues (eslint --fix)…   ✔  1200ms
+  ◆  Fixing format issues (prettier)…     ✔  800ms
+
+  ──────────────────────────────────────────────────────
+
+  ◆  All fixes applied.  (2/2)
+```
+
+---
+
+## `cem eject` — Standalone Eject
+
+Replaces CEM-dependent `package.json` scripts with raw tool commands (`tsc`, `tsx`, `eslint`, `prettier`) and removes `create-express-modular` from `devDependencies`:
+
+```bash
+cem eject
+```
+
+After ejecting, your project becomes completely independent of the CEM CLI, and standard `npm run build`, `npm run start:dev`, and `npm run check` scripts continue working natively.
+
 ---
 
 ## `cem list` — Project Overview

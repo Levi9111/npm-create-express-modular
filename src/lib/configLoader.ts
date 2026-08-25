@@ -56,6 +56,7 @@ export function createInitialCemConfig(options: {
   version?: string;
 }): CemConfig {
   return {
+    $schema: 'https://unpkg.com/create-express-modular@latest/cem-cli.schema.json',
     version: options.version || '3.2.0',
     project: {
       name: options.projectName,

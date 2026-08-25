@@ -6,6 +6,8 @@ export default defineConfig({
     'lib/ui': 'src/lib/ui.ts',
     'lib/pm': 'src/lib/pm.ts',
     'lib/checker': 'src/lib/checker.ts',
+    'lib/fixer': 'src/lib/fixer.ts',
+    'lib/ejector': 'src/lib/ejector.ts',
     'lib/builder': 'src/lib/builder.ts',
     'lib/dev': 'src/lib/dev.ts',
     'lib/start': 'src/lib/start.ts',
