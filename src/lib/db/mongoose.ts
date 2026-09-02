@@ -116,13 +116,10 @@ process.on('uncaughtException', (error) => {
       `import mongoose from 'mongoose';
 import config from '../config';
 import logger from './logger';
-import { MongoMemoryServer } from 'mongodb-memory-server';
 
 export async function connectDB(): Promise<void> {
-  let dbUrl = config.databaseUrl;
-
   try {
-    await mongoose.connect(dbUrl, {
+    await mongoose.connect(config.databaseUrl, {
       serverSelectionTimeoutMS: 3000,
       maxPoolSize: 50,
       minPoolSize: 10,
@@ -130,18 +127,8 @@ export async function connectDB(): Promise<void> {
     });
     logger.info('MongoDB connected successfully');
   } catch (err) {
-    if (config.NODE_ENV === 'development') {
-      logger.warn(
-        'Local/Atlas MongoDB connection failed. Starting In-Memory MongoDB...',
-      );
-
-      const mongoServer = await MongoMemoryServer.create();
-      dbUrl = mongoServer.getUri();
-      await mongoose.connect(dbUrl);
-      logger.info(\`In-Memory MongoDB connected at \${dbUrl}\`);
-    } else {
-      throw err;
-    }
+    logger.error('Failed to connect to MongoDB:', err);
+    throw err;
   }
 }
 `,
@@ -243,7 +230,7 @@ export default handleDuplicateError;
   dependencies(): GeneratorDependencies {
     return {
       prod: ['mongoose'],
-      dev: ['@types/mongoose', 'mongodb-memory-server'],
+      dev: ['@types/mongoose'],
     };
   },
 
