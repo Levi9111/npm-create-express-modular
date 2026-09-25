@@ -63,16 +63,15 @@ jobs:
 
       - name: Scaffold test project (Mongoose + Zod + Swagger + Auth)
         run: |
-          node dist/bin/cli.js e2e-test-project -y --db mongoose --validator zod --swagger --auth --docker
+          node dist/bin/cli.js e2e-test-project -y --no-install --db mongoose --validator zod --swagger --auth --docker
 
       - name: Install scaffolded project dependencies
         working-directory: e2e-test-project
         run: npm install
 
-      - name: Link local CEM CLI to scaffolded project
-        run: |
-          cd e2e-test-project
-          npm link ../
+      - name: Install local CEM CLI into scaffolded project
+        working-directory: e2e-test-project
+        run: npm install ../
 
       - name: Verify scaffolded project type-check, lint, and format
         working-directory: e2e-test-project
@@ -81,9 +80,10 @@ jobs:
           npx prettier --check src
           npx tsc --noEmit
 
-      - name: Test feature module generation
+      - name: Test feature module generation and verify compilation
         working-directory: e2e-test-project
         run: |
           node ../dist/bin/cli.js add module Product -y
           node ../dist/bin/cli.js add middleware customLogger
           npx tsc --noEmit
+          npx eslint src

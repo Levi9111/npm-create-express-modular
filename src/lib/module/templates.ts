@@ -41,7 +41,7 @@ const getAll${moduleName}s = catchAsync(async (req: Request, res: Response) => {
 });
 
 const getSingle${moduleName} = catchAsync(async (req: Request, res: Response) => {
-  const result = await ${moduleName}Service.getSingle${moduleName}(req.params.id);
+  const result = await ${moduleName}Service.getSingle${moduleName}(req.params.id as string);
   sendResponse(res, {
     statusCode: StatusCodes.OK,
     success: true,
@@ -51,7 +51,7 @@ const getSingle${moduleName} = catchAsync(async (req: Request, res: Response) =>
 });
 
 const update${moduleName} = catchAsync(async (req: Request, res: Response) => {
-  const result = await ${moduleName}Service.update${moduleName}(req.params.id, req.body);
+  const result = await ${moduleName}Service.update${moduleName}(req.params.id as string, req.body);
   sendResponse(res, {
     statusCode: StatusCodes.OK,
     success: true,
@@ -61,7 +61,7 @@ const update${moduleName} = catchAsync(async (req: Request, res: Response) => {
 });
 
 const delete${moduleName} = catchAsync(async (req: Request, res: Response) => {
-  await ${moduleName}Service.delete${moduleName}(req.params.id);
+  await ${moduleName}Service.delete${moduleName}(req.params.id as string);
   sendResponse(res, {
     statusCode: StatusCodes.OK,
     success: true,
