@@ -22,6 +22,15 @@ jobs:
       - name: Install dependencies
         run: npm install
 
+      - name: Type check (tsc --noEmit)
+        run: npm run typecheck
+
+      - name: Run tests
+        run: npm test
+
+      - name: Build package (tsup)
+        run: npm run build
+
       - name: Publish to npm
         run: npm publish --access public
         env:

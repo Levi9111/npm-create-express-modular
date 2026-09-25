@@ -54,7 +54,9 @@ export async function removeModule(providedName: string | string[]): Promise<voi
   const projectRoot = process.cwd();
   assertCemProject(projectRoot);
 
-  const names = Array.isArray(providedName) ? providedName : [providedName].filter(Boolean);
+  const rawNames = Array.isArray(providedName) ? providedName : [providedName].filter(Boolean);
+  const skipConfirm = rawNames.some((n) => n === '-y' || n === '--yes' || n === '--force' || n === '-f');
+  const names = rawNames.filter((n) => !n.startsWith('-'));
   if (names.length === 0) ui.abort('Usage: cem remove module <ModuleName...>');
 
   for (const name of names) {
@@ -67,13 +69,15 @@ export async function removeModule(providedName: string | string[]): Promise<voi
       continue;
     }
 
-    const ok = await confirm(
-      `This will permanently delete src/app/modules/${ui.bold(ui.cyan(moduleName))}/ and remove its route entry.`,
-    );
+    if (!skipConfirm) {
+      const ok = await confirm(
+        `This will permanently delete src/app/modules/${ui.bold(ui.cyan(moduleName))}/ and remove its route entry.`,
+      );
 
-    if (!ok) {
-      ui.warn(`Skipped ${moduleName}.`);
-      continue;
+      if (!ok) {
+        ui.warn(`Skipped ${moduleName}.`);
+        continue;
+      }
     }
 
     rmDir(modulePath);
@@ -115,7 +119,9 @@ export async function removeMiddleware(providedName: string | string[]): Promise
   const projectRoot = process.cwd();
   assertCemProject(projectRoot);
 
-  const names = Array.isArray(providedName) ? providedName : [providedName].filter(Boolean);
+  const rawNames = Array.isArray(providedName) ? providedName : [providedName].filter(Boolean);
+  const skipConfirm = rawNames.some((n) => n === '-y' || n === '--yes' || n === '--force' || n === '-f');
+  const names = rawNames.filter((n) => !n.startsWith('-'));
   if (names.length === 0) ui.abort('Usage: cem remove middleware <name...>');
 
   const PROTECTED = ['globalErrorHandler', 'notFound', 'auth', 'rateLimiter'];
@@ -138,13 +144,15 @@ export async function removeMiddleware(providedName: string | string[]): Promise
       continue;
     }
 
-    const ok = await confirm(
-      `This will permanently delete src/app/middlewares/${ui.bold(ui.cyan(fileName))}.`,
-    );
+    if (!skipConfirm) {
+      const ok = await confirm(
+        `This will permanently delete src/app/middlewares/${ui.bold(ui.cyan(fileName))}.`,
+      );
 
-    if (!ok) {
-      ui.warn(`Skipped ${baseName}.`);
-      continue;
+      if (!ok) {
+        ui.warn(`Skipped ${baseName}.`);
+        continue;
+      }
     }
 
     fs.unlinkSync(filePath);

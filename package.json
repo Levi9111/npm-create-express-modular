@@ -22,8 +22,9 @@
     },
     "scripts": {
         "build": "tsup",
-        "prepublishOnly": "npm run build",
-        "test": "echo \"Error: no test specified\" && exit 1"
+        "typecheck": "tsc --noEmit",
+        "test": "node --test tests/**/*.test.mjs",
+        "prepublishOnly": "npm run typecheck && npm run test && npm run build"
     },
     "keywords": [
         "express",

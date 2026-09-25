@@ -42,6 +42,7 @@ function printHelp(): void {
   console.log('   cem remove module <name...>  — delete module(s) and unwire routes');
   console.log('   cem remove middleware <name...> — delete middleware file(s)');
   console.log('   cem remove env <KEY...>       — remove env var(s) from all config files');
+  console.log('   cem [name] --no-install      — scaffold without installing dependencies');
   console.log('   cem --version                — print the installed version');
   console.log('   cem --help                   — show this help message');
   ui.nl();
@@ -257,11 +258,14 @@ async function runCLI(): Promise<void> {
   let flagTokenDelivery: TokenDelivery | undefined = undefined;
   let flagUseDocker: boolean | undefined = undefined;
   let flagUseSwagger: boolean | undefined = undefined;
+  let flagNoInstall = false;
 
   for (let i = 0; i < args.length; i++) {
     const arg = args[i];
     if (arg === '-y' || arg === '--yes' || arg === '--defaults') {
       useDefaults = true;
+    } else if (arg === '--no-install' || arg === '--skip-install') {
+      flagNoInstall = true;
     } else if (arg === '--db') {
       const val = args[i + 1];
       if (['mongoose', 'prisma', 'drizzle'].includes(val)) {
@@ -733,18 +737,23 @@ async function runCLI(): Promise<void> {
     fs.writeFileSync(pkgPath, JSON.stringify(pkg, null, 2));
   }
 
-  const installSpin = ui.spinner(`Installing dependencies via ${pm}...`);
-  try {
-    execSync(initialInstallCmd(pm), { cwd: projectPath, stdio: 'pipe' });
-    installSpin.succeed(`Dependencies installed (${uniqueProd.length} runtime, ${uniqueDev.length} dev)`);
-  } catch (e: unknown) {
-    installSpin.fail('Dependencies install failed');
-    const err = e as { stderr?: Buffer | string; stdout?: Buffer | string; message?: string };
-    const details =
-      err.stderr?.toString().trim() ||
-      err.stdout?.toString().trim() ||
-      (e as Error).message;
-    ui.abort(details);
+  if (!flagNoInstall) {
+    const installSpin = ui.spinner(`Installing dependencies via ${pm}...`);
+    try {
+      execSync(initialInstallCmd(pm), { cwd: projectPath, stdio: 'pipe' });
+      installSpin.succeed(`Dependencies installed (${uniqueProd.length} runtime, ${uniqueDev.length} dev)`);
+    } catch (e: unknown) {
+      installSpin.fail('Dependencies install failed');
+      const err = e as { stderr?: Buffer | string; stdout?: Buffer | string; message?: string };
+      const details =
+        err.stderr?.toString().trim() ||
+        err.stdout?.toString().trim() ||
+        (e as Error).message;
+      ui.abort(details);
+    }
+  } else {
+    ui.nl();
+    ui.warn('Skipping dependencies installation (--no-install).');
   }
 
   // Summary and completion

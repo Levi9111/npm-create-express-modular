@@ -85,6 +85,11 @@ export async function generateModule(providedName?: string | string[]): Promise<
     names = [providedName];
   }
 
+  const useDefaults = names.some((n) => n === '-y' || n === '--yes');
+  const wantConstants = names.some((n) => n === '--constants');
+  const wantUtils = names.some((n) => n === '--utils');
+  names = names.filter((n) => !n.startsWith('-'));
+
   ui.printModuleBanner();
 
   if (names.length === 0) {
@@ -113,25 +118,31 @@ export async function generateModule(providedName?: string | string[]): Promise<
       continue;
     }
 
-    const answers = await inquirer.prompt<{
-      includeConstants: boolean;
-      includeUtils: boolean;
-    }>([
-      {
-        type: 'confirm',
-        name: 'includeConstants',
-        message: `📌 Include a constants file for module ${ui.cyan(moduleName)} (ENUMs, search fields)?`,
-        default: false,
-      },
-      {
-        type: 'confirm',
-        name: 'includeUtils',
-        message: `🛠️  Include a utils file for module ${ui.cyan(moduleName)} (helpers)?`,
-        default: false,
-      },
-    ]);
+    let includeConstants = wantConstants;
+    let includeUtils = wantUtils;
 
-    const { includeConstants, includeUtils } = answers;
+    if (!useDefaults && !wantConstants && !wantUtils) {
+      const answers = await inquirer.prompt<{
+        includeConstants: boolean;
+        includeUtils: boolean;
+      }>([
+        {
+          type: 'confirm',
+          name: 'includeConstants',
+          message: `📌 Include a constants file for module ${ui.cyan(moduleName)} (ENUMs, search fields)?`,
+          default: false,
+        },
+        {
+          type: 'confirm',
+          name: 'includeUtils',
+          message: `🛠️  Include a utils file for module ${ui.cyan(moduleName)} (helpers)?`,
+          default: false,
+        },
+      ]);
+      includeConstants = answers.includeConstants;
+      includeUtils = answers.includeUtils;
+    }
+
     const routePath = `/${pluralize(fileName)}`;
 
     fs.mkdirSync(modulePath, { recursive: true });
