@@ -230,7 +230,7 @@ export default handleDuplicateError;
   dependencies(): GeneratorDependencies {
     return {
       prod: ['mongoose'],
-      dev: ['@types/mongoose'],
+      dev: [],
     };
   },
 

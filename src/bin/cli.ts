@@ -701,29 +701,34 @@ async function runCLI(): Promise<void> {
       '@types/swagger-jsdoc': '^6.0.4',
       typescript: '^5.7.3',
       tsx: '^4.19.2',
-      eslint: '^9.18.0',
-      '@eslint/js': '^9.18.0',
+      eslint: '^10.0.0',
+      '@eslint/js': '^10.0.0',
       'typescript-eslint': '^8.20.0',
       'eslint-config-prettier': '^10.0.1',
       prettier: '^3.4.2',
-      'create-express-modular': `^${VERSION || '3.3.3'}`,
+      'create-express-modular': `^${VERSION || '3.3.8'}`,
     };
 
     uniqueProd.forEach((p) => {
-      if (!pkg.dependencies[p]) {
-        pkg.dependencies[p] = versionMap[p] || 'latest';
-      }
+      pkg.dependencies[p] = versionMap[p] || pkg.dependencies[p] || 'latest';
     });
 
     uniqueDev.forEach((p) => {
-      if (!pkg.devDependencies[p]) {
-        pkg.devDependencies[p] = versionMap[p] || 'latest';
-      }
+      pkg.devDependencies[p] = versionMap[p] || pkg.devDependencies[p] || 'latest';
     });
 
     if (VERSION) {
       pkg.devDependencies['create-express-modular'] = `^${VERSION}`;
     }
+
+    // Ensure transitive dependencies with deprecations/vulnerabilities (e.g. glob in swagger-jsdoc) are overridden
+    pkg.overrides = pkg.overrides || {};
+    pkg.overrides.glob = '^13.0.6';
+    pkg.resolutions = pkg.resolutions || {};
+    pkg.resolutions.glob = '^13.0.6';
+    pkg.pnpm = pkg.pnpm || {};
+    pkg.pnpm.overrides = pkg.pnpm.overrides || {};
+    pkg.pnpm.overrides.glob = '^13.0.6';
 
     fs.writeFileSync(pkgPath, JSON.stringify(pkg, null, 2));
   }

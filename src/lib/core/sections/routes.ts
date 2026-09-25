@@ -26,7 +26,7 @@ export function scaffoldRoutes(projectPath: string): void {
 
 const router = Router();
 
-const moduleRoutes = [
+const moduleRoutes: { path: string; route: Router }[] = [
   // --- INJECT ROUTES HERE ---
 ];
 
