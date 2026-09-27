@@ -13,7 +13,7 @@ function runCli(args, options = {}) {
   const cmd = `"${nodeBin}" "${CLI_PATH}" ${args}`;
   return execSync(cmd, {
     encoding: 'utf8',
-    env: { ...process.env, npm_config_user_agent: 'npm/10.0.0' },
+    env: { ...process.env, npm_config_user_agent: 'npm/10.0.0', CEM_TELEMETRY: 'off' },
     ...options,
   });
 }
