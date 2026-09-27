@@ -67,11 +67,9 @@ jobs:
 
       - name: Install scaffolded project dependencies
         working-directory: e2e-test-project
-        run: npm install
-
-      - name: Install local CEM CLI into scaffolded project
-        working-directory: e2e-test-project
-        run: npm install ../
+        run: |
+          npm install ../
+          npm install
 
       - name: Verify scaffolded project type-check, lint, and format
         working-directory: e2e-test-project
