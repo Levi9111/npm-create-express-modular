@@ -31,6 +31,7 @@ export default defineConfig({
     'lib/validator/joi': 'src/lib/validator/joi.ts',
     'lib/core/scaffoldCore': 'src/lib/core/scaffoldCore.ts',
     'lib/core/globalErrorHandler/shell': 'src/lib/core/globalErrorHandler/shell.ts',
+    'telemetry': 'src/telemetry.ts',
   },
   format: ['cjs'],
   clean: true,

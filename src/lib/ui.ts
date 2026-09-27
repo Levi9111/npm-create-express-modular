@@ -221,6 +221,10 @@ export function printNextSteps(projectName: string): void {
     `  ${gray('Docs →')}  ${gray('https://github.com/Levi9111/npm-create-express-modular')}`,
   );
   console.log();
+  console.log(
+    `  ${dim('Anonymous telemetry helps improve CEM (no personal data). Disable: ')}${gray('CEM_TELEMETRY=off')}`,
+  );
+  console.log();
 }
 
 /**

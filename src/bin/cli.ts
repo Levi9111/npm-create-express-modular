@@ -8,6 +8,7 @@ import * as ui from '../lib/ui';
 import { detectPM, getPackageManagerSpec, initialInstallCmd } from '../lib/pm';
 import { checkForUpdates, isUpdateAvailable } from '../lib/updateNotifier';
 import { copyFolderSync } from '../lib/utils/fs';
+import { reportInstall } from '../telemetry';
 import type { DbChoice, ValidatorChoice, TokenDelivery, PackageManager } from '../lib/types';
 
 // Version resolution
@@ -755,6 +756,9 @@ async function runCLI(): Promise<void> {
     ui.nl();
     ui.warn('Skipping dependencies installation (--no-install).');
   }
+
+  // Safe anonymous telemetry ping (respects CEM_TELEMETRY=off)
+  await reportInstall('create', VERSION, pm);
 
   // Summary and completion
   ui.printSummary({
