@@ -109,6 +109,38 @@ To support seamless development with AI assistants (Cursor, Claude Code, GitHub 
 
 ---
 
+## Telemetry
+
+`create-express-modular` sends an anonymous telemetry ping after a project is successfully scaffolded to help display real scaffold counts alongside npm downloads.
+
+### What is collected
+- **command**: `'create'`
+- **cliVersion**: Installed version of `create-express-modular`
+- **packageManager**: Package manager used (`npm`, `pnpm`, `yarn`, `bun`)
+- **nodeVersion**: Node runtime version
+- **os**: Platform and architecture (`linux-x64`, `darwin-arm64`, etc.)
+- **anonId**: Single-use random correlation UUID for deduplicating retries
+
+> **Privacy guarantee:** No project names, file paths, emails, user IDs, command arguments, or IP addresses are ever collected or stored.
+
+### Opting Out
+
+You can disable telemetry at any time by setting the `CEM_TELEMETRY` environment variable to `off`:
+
+```bash
+# Bash / Zsh
+export CEM_TELEMETRY=off
+
+# One-shot scaffold command
+CEM_TELEMETRY=off cem my-api
+
+# Windows PowerShell
+$env:CEM_TELEMETRY='off'
+cem my-api
+```
+
+---
+
 ## Requirements
 
 - **Node.js**: `>= 18`
