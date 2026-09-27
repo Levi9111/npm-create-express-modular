@@ -711,7 +711,7 @@ async function runCLI(): Promise<void> {
       'typescript-eslint': '^8.20.0',
       'eslint-config-prettier': '^10.0.1',
       prettier: '^3.4.2',
-      'create-express-modular': `^${VERSION || '3.3.8'}`,
+      'create-express-modular': `^${VERSION || '3.3.9'}`,
     };
 
     uniqueProd.forEach((p) => {

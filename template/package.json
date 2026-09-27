@@ -23,7 +23,7 @@
         "@types/cors": "^2.8.17",
         "@types/express": "^5.0.0",
         "@types/node": "^22.10.7",
-        "create-express-modular": "^3.3.8",
+        "create-express-modular": "^3.3.9",
         "eslint": "^10.0.0",
         "eslint-config-prettier": "^10.0.1",
         "prettier": "^3.4.2",
