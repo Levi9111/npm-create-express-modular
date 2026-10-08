@@ -59,7 +59,7 @@
     "devDependencies": {
         "@types/inquirer": "^8.2.13",
         "@types/node": "^26.1.1",
-        "inquirer": "^8.2.7",
+        "inquirer": "^14.2.3",
         "tsup": "^8.5.1",
         "typescript": "^7.0.2"
     }
