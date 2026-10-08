@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 💬 GitHub Discussions
+    url: https://github.com/Levi9111/npm-create-express-modular/discussions
+    about: Ask questions, share ideas, and showcase projects built with CEM.
+  - name: 📖 Online Documentation
+    url: https://create-express-modular.lovable.app/docs
+    about: Read the complete documentation and tutorial guides.

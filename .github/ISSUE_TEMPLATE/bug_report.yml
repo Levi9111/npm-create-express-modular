@@ -1,0 +1,55 @@
+name: 🐛 Bug Report
+description: Create a report to help us improve create-express-modular
+title: "[BUG]: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report an issue! Please verify existing issues before submitting.
+  - type: textarea
+    id: description
+    attributes:
+      label: Describe the Bug
+      description: A clear and concise description of what the bug is.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps to Reproduce
+      description: What command or prompt options did you run?
+      placeholder: |
+        1. Run 'npx create-express-modular my-app'
+        2. Select database 'Prisma'
+        3. See error
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected Behavior
+      description: What did you expect to happen?
+    validations:
+      required: true
+  - type: input
+    id: node-version
+    attributes:
+      label: Node.js Version
+      placeholder: "node -v (e.g., v20.10.0)"
+    validations:
+      required: true
+  - type: input
+    id: npm-version
+    attributes:
+      label: Package Manager & Version
+      placeholder: "npm 10.2.3 / pnpm 9.1.0 / bun 1.1.0"
+    validations:
+      required: true
+  - type: input
+    id: os
+    attributes:
+      label: Operating System
+      placeholder: "Linux Ubuntu 22.04 / macOS Sonoma / Windows 11"
+    validations:
+      required: true
