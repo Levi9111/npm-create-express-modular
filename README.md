@@ -2,10 +2,14 @@
 
 # create-express-modular
 
+[![CI](https://github.com/Levi9111/npm-create-express-modular/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/Levi9111/npm-create-express-modular/actions/workflows/ci.yml)
+[![Security](https://github.com/Levi9111/npm-create-express-modular/actions/workflows/security.yml/badge.svg?branch=main)](https://github.com/Levi9111/npm-create-express-modular/actions/workflows/security.yml)
 [![npm version](https://img.shields.io/npm/v/create-express-modular.svg?style=flat-square)](https://www.npmjs.com/package/create-express-modular)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=flat-square)](https://opensource.org/licenses/MIT)
+[![npm downloads](https://img.shields.io/npm/dm/create-express-modular.svg?style=flat-square)](https://www.npmjs.com/package/create-express-modular)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=flat-square)](LICENSE)
 [![Node.js](https://img.shields.io/badge/Node.js-v18+-green.svg?style=flat-square)](https://nodejs.org)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.5+-blue.svg?style=flat-square)](https://www.typescriptlang.org)
+[![Go Engine](https://img.shields.io/badge/Go%20Engine-Experimental%20(Sub--10ms)-00ADD8?logo=go&style=flat-square)](https://github.com/Levi9111/create-express-modular-go)
 
 **Scaffold a production-ready Express + TypeScript backend in seconds.**  
 Choose your database, your validator, and optionally add JWT auth — all from one interactive CLI.
@@ -128,6 +132,18 @@ To support seamless development with AI assistants (Cursor, Claude Code, GitHub 
 
 ---
 
+## Community & Contributing
+
+We welcome community contributions, bug reports, and suggestions!
+
+- **Contributing Guide:** [CONTRIBUTING.md](CONTRIBUTING.md)
+- **Code of Conduct:** [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md)
+- **Security Policy:** [SECURITY.md](SECURITY.md)
+- **Report Issues:** [GitHub Issues](https://github.com/Levi9111/npm-create-express-modular/issues/new/choose)
+- **Discussions:** [GitHub Discussions](https://github.com/Levi9111/npm-create-express-modular/discussions)
+
+---
+
 ## License
 
-[MIT](https://opensource.org/licenses/MIT)
+Distributed under the MIT License. See [LICENSE](LICENSE) for more information.
