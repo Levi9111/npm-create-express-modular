@@ -475,10 +475,10 @@ async function runCLI(): Promise<void> {
       pkg.name = projectName.toLowerCase().replace(/\s+/g, '-');
 
       const engineMap: Record<string, { node: string; [key: string]: string }> = {
-        npm: { node: '>=18', npm: '>=9' },
-        yarn: { node: '>=18', yarn: '>=1.22' },
-        pnpm: { node: '>=18', pnpm: '>=8' },
-        bun: { node: '>=18', bun: '>=1.0' },
+        npm: { node: '>=22', npm: '>=9' },
+        yarn: { node: '>=22', yarn: '>=1.22' },
+        pnpm: { node: '>=22', pnpm: '>=8' },
+        bun: { node: '>=22', bun: '>=1.0' },
       };
       pkg.engines = engineMap[pm] || engineMap.npm;
 
