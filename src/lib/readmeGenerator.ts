@@ -55,7 +55,7 @@ export function generateReadme(projectPath: string, opts: ReadmeOptions): void {
   lines.push('');
   lines.push(`| Layer | Choice |`);
   lines.push(`|---|---|`);
-  lines.push(`| Runtime | Node.js ≥ 18 |`);
+  lines.push(`| Runtime | Node.js ≥ 22 |`);
   lines.push(`| Framework | Express |`);
   lines.push(`| Language | TypeScript |`);
   lines.push(`| Database / ORM | ${dbLabel} |`);
