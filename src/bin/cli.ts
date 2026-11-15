@@ -8,6 +8,7 @@ import * as ui from '../lib/ui';
 import { detectPM, getPackageManagerSpec, initialInstallCmd } from '../lib/pm';
 import { checkForUpdates, isUpdateAvailable } from '../lib/updateNotifier';
 import { copyFolderSync } from '../lib/utils/fs';
+import { isValidProjectName } from '../lib/utils/string';
 import { reportInstall } from '../telemetry';
 import type { DbChoice, ValidatorChoice, TokenDelivery, PackageManager } from '../lib/types';
 
@@ -491,6 +492,9 @@ async function runCLI(): Promise<void> {
 
   const { projectName, db, validator, useAuth, useDocker, useSwagger, authTokenDelivery } = answers;
   const useTesting = Boolean(answers.useTesting ?? flagUseTesting);
+  if (!isValidProjectName(projectName)) {
+    ui.abort(`Invalid project name "${projectName}". Use only letters, numbers, hyphens, underscores, or dots (no path separators or "..").`);
+  }
   const tokenDelivery: TokenDelivery = useAuth ? authTokenDelivery || 'cookie' : 'header';
   const projectPath = path.join(process.cwd(), projectName);
   const templatePath = path.join(__dirname, '../../template');
@@ -581,7 +585,7 @@ async function runCLI(): Promise<void> {
 
     scaffoldCoreFiles(projectPath, useAuth, tokenDelivery, useSwagger);
     if (db === 'mongoose') scaffoldQueryBuilder(projectPath);
-    dbGen.scaffoldServerAndConfig(projectPath);
+    dbGen.scaffoldServerAndConfig(projectPath, useAuth);
     dbGen.scaffoldErrorFiles(projectPath);
     valGen.scaffoldValidateRequest(projectPath);
     valGen.scaffoldErrorFile(projectPath);
