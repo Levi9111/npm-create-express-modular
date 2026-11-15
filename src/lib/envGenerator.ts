@@ -8,6 +8,7 @@
 import fs from 'fs';
 import path from 'path';
 import * as ui from './ui';
+import { updateCemState } from './configLoader';
 
 export interface NormalisedKey {
   upperKey: string;
@@ -30,9 +31,9 @@ export function normaliseKey(key: string): NormalisedKey {
 /**
  * Adds one or more new environment variables to .env, .env.example, and config/index.ts
  */
-export function addEnvVar(key: string | string[]): void {
+export function addEnvVar(key: string | string[]): string[] {
   const keys = Array.isArray(key) ? key : [key];
-  if (keys.length === 0) return;
+  if (keys.length === 0) return [];
 
   const projectRoot = process.cwd();
   const envPath = path.join(projectRoot, '.env');
@@ -114,6 +115,10 @@ export function addEnvVar(key: string | string[]): void {
   } else {
     ui.warn('config/index.ts not found — skipping config injection.');
   }
+
+  const upperKeys = keys.map((k) => normaliseKey(k).upperKey);
+  updateCemState(projectRoot, 'env', 'add', upperKeys);
+  return upperKeys;
 }
 
 /**

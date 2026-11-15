@@ -107,6 +107,28 @@
         }
       },
       "additionalProperties": false
+    },
+    "state": {
+      "type": "object",
+      "description": "Live manifest of scaffolded modules, middlewares, and env keys.",
+      "properties": {
+        "modules": {
+          "type": "array",
+          "items": { "type": "string" },
+          "default": []
+        },
+        "middlewares": {
+          "type": "array",
+          "items": { "type": "string" },
+          "default": []
+        },
+        "env": {
+          "type": "array",
+          "items": { "type": "string" },
+          "default": []
+        }
+      },
+      "additionalProperties": false
     }
   },
   "additionalProperties": false

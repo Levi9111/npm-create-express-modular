@@ -8,6 +8,7 @@
 import fs from 'fs';
 import path from 'path';
 import * as ui from './ui';
+import { updateCemState } from './configLoader';
 
 /**
  * Creates one or more middleware stub files.
@@ -15,7 +16,7 @@ import * as ui from './ui';
  *
  * @param providedName - One or more middleware names (with or without the `.middleware.ts` suffix).
  */
-export function generateMiddleware(providedName: string | string[]): void {
+export function generateMiddleware(providedName: string | string[]): string[] {
   const projectRoot = process.cwd();
   const mwDir = path.join(projectRoot, 'src/app/middlewares');
 
@@ -24,7 +25,9 @@ export function generateMiddleware(providedName: string | string[]): void {
   }
 
   const names = Array.isArray(providedName) ? providedName : [providedName];
-  if (names.length === 0) return;
+  if (names.length === 0) return [];
+
+  const created: string[] = [];
 
   for (const name of names) {
     const baseName = name.replace(/\.middleware(\.ts)?$/, '').replace(/\.ts$/, '');
@@ -50,5 +53,11 @@ export function generateMiddleware(providedName: string | string[]): void {
 
     fs.writeFileSync(filePath, lines.join('\n') + '\n');
     ui.success(`Middleware ${ui.cyan(baseName)} created at src/app/middlewares/${fileName}`);
+    created.push(baseName);
   }
+
+  if (created.length > 0) {
+    updateCemState(projectRoot, 'middlewares', 'add', created);
+  }
+  return created;
 }
