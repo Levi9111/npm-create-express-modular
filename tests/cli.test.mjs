@@ -133,3 +133,48 @@ test('Scaffolds Drizzle + Joi project structure', () => {
   assert.ok(pkg.dependencies?.['drizzle-orm'], 'drizzle-orm should be a dependency');
   assert.ok(pkg.dependencies?.['joi'], 'joi should be a dependency');
 });
+
+test('Supports --spec, --json, --testing, and live cem-cli.json state', () => {
+  const projectName = 'test-spec-api';
+  const projectPath = path.join(TEST_DIR, projectName);
+  const specPath = path.join(TEST_DIR, 'spec.json');
+
+  fs.writeFileSync(
+    specPath,
+    JSON.stringify({
+      name: projectName,
+      db: 'mongoose',
+      validator: 'zod',
+      auth: false,
+      docker: false,
+      swagger: false,
+      testing: true,
+      modules: ['Order'],
+      middlewares: ['auditLog'],
+      env: ['STRIPE_KEY'],
+    }),
+  );
+
+  const out = runCli(`--spec ${specPath} --no-install --json`, { cwd: TEST_DIR });
+  const parsed = JSON.parse(out.trim());
+  assert.equal(parsed.ok, true);
+  assert.equal(parsed.project, projectName);
+  assert.equal(parsed.testing, true);
+  assert.deepEqual(parsed.modules, ['Order']);
+  assert.deepEqual(parsed.middlewares, ['auditLog']);
+  assert.deepEqual(parsed.env, ['STRIPE_KEY']);
+
+  assert.ok(fs.existsSync(path.join(projectPath, 'vitest.config.ts')), 'vitest.config.ts exists');
+  assert.ok(fs.existsSync(path.join(projectPath, 'src/__tests__/health.test.ts')), 'health.test.ts exists');
+
+  const cemConfig = JSON.parse(fs.readFileSync(path.join(projectPath, 'cem-cli.json'), 'utf8'));
+  assert.equal(cemConfig.features.testing, 'vitest');
+  assert.deepEqual(cemConfig.state.modules, ['Order']);
+  assert.deepEqual(cemConfig.state.middlewares, ['auditLog']);
+  assert.deepEqual(cemConfig.state.env, ['STRIPE_KEY']);
+
+  const listOut = runCli('list --json', { cwd: projectPath });
+  const listParsed = JSON.parse(listOut.trim());
+  assert.equal(listParsed.ok, true);
+  assert.ok(listParsed.modules.some((m) => m.name === 'Order'));
+});

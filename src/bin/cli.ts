@@ -62,6 +62,31 @@ interface PromptAnswers {
   authTokenDelivery?: TokenDelivery;
   useDocker: boolean;
   useSwagger: boolean;
+  useTesting?: boolean;
+}
+
+interface ProjectSpec {
+  name?: string;
+  db?: DbChoice;
+  validator?: ValidatorChoice;
+  auth?: boolean;
+  tokenDelivery?: TokenDelivery;
+  docker?: boolean;
+  swagger?: boolean;
+  testing?: boolean;
+  modules?: string[];
+  middlewares?: string[];
+  env?: string[];
+}
+
+function loadSpec(specArg: string): ProjectSpec {
+  const trimmed = specArg.trim();
+  try {
+    const raw = trimmed.startsWith('{') ? trimmed : fs.readFileSync(path.resolve(trimmed), 'utf8');
+    return JSON.parse(raw) as ProjectSpec;
+  } catch (e: unknown) {
+    ui.abort(`Invalid --spec input: ${(e as Error).message}`);
+  }
 }
 
 /**
@@ -71,7 +96,15 @@ interface PromptAnswers {
  * @returns Resolves when CLI execution finishes.
  */
 async function runCLI(): Promise<void> {
-  const args = process.argv.slice(2);
+  const rawArgs = process.argv.slice(2);
+  const wantJson = rawArgs.includes('--json');
+  const wantQuiet = rawArgs.includes('--quiet') || rawArgs.includes('-q');
+  if (wantJson) {
+    ui.setOutputMode('json');
+  } else if (wantQuiet) {
+    ui.setOutputMode('quiet');
+  }
+  const args = rawArgs.filter((a) => a !== '--json' && a !== '--quiet' && a !== '-q');
 
   // Version check (instant exit without background network or PM checks)
   if (args[0] === '--version' || args[0] === '-v') {
@@ -89,8 +122,8 @@ async function runCLI(): Promise<void> {
   // Detect the user's package manager
   const pm = detectPM();
 
-  // Fire off the update check in the background immediately
-  const updateCheckPromise = checkForUpdates();
+  // Fire off the update check in the background immediately (skip in quiet/json modes)
+  const updateCheckPromise = ui.isSilent() ? Promise.resolve(null) : checkForUpdates();
 
   /**
    * Triggers the update notice box if an update is available.
@@ -170,7 +203,10 @@ async function runCLI(): Promise<void> {
         ui.abort('Please provide a module name. Example: cem add module Product');
       }
       const { generateModule } = await import('../lib/moduleGenerator');
-      await generateModule(moduleNames);
+      const created = await generateModule(moduleNames);
+      if (ui.getOutputMode() === 'json') {
+        ui.printJson({ ok: true, action: 'add', type: 'module', items: created });
+      }
       await notifyIfUpdateAvailable();
       process.exit(0);
     }
@@ -180,9 +216,13 @@ async function runCLI(): Promise<void> {
         ui.abort('Please provide a key name. Example: cem add env ACCESS_SECRET');
       }
       const { addEnvVar } = await import('../lib/envGenerator');
-      addEnvVar(keys);
-      const formattedKeys = keys.map((k) => ui.cyan(k)).join(', ');
-      ui.success(`Environment variable(s) ${formattedKeys} added to .env, .env.example, and config/index.ts`);
+      const added = addEnvVar(keys);
+      if (ui.getOutputMode() === 'json') {
+        ui.printJson({ ok: true, action: 'add', type: 'env', items: added });
+      } else {
+        const formattedKeys = keys.map((k) => ui.cyan(k)).join(', ');
+        ui.success(`Environment variable(s) ${formattedKeys} added to .env, .env.example, and config/index.ts`);
+      }
       await notifyIfUpdateAvailable();
       process.exit(0);
     }
@@ -193,7 +233,10 @@ async function runCLI(): Promise<void> {
         ui.abort('Please provide a middleware name. Example: cem add middleware calculate');
       }
       const { generateMiddleware } = await import('../lib/middlewareGenerator');
-      generateMiddleware(middlewareNames);
+      const created = generateMiddleware(middlewareNames);
+      if (ui.getOutputMode() === 'json') {
+        ui.printJson({ ok: true, action: 'add', type: 'middleware', items: created });
+      }
       await notifyIfUpdateAvailable();
       process.exit(0);
     }
@@ -215,19 +258,28 @@ async function runCLI(): Promise<void> {
 
     if (subcommand === 'module') {
       if (targets.length === 0) ui.abort('Usage: cem remove module <Name...>');
-      await removeModule(targets);
+      const removed = await removeModule(targets);
+      if (ui.getOutputMode() === 'json') {
+        ui.printJson({ ok: true, action: 'remove', type: 'module', items: removed });
+      }
       await notifyIfUpdateAvailable();
       process.exit(0);
     }
     if (subcommand === 'middleware') {
       if (targets.length === 0) ui.abort('Usage: cem remove middleware <name...>');
-      await removeMiddleware(targets);
+      const removed = await removeMiddleware(targets);
+      if (ui.getOutputMode() === 'json') {
+        ui.printJson({ ok: true, action: 'remove', type: 'middleware', items: removed });
+      }
       await notifyIfUpdateAvailable();
       process.exit(0);
     }
     if (subcommand === 'env') {
       if (targets.length === 0) ui.abort('Usage: cem remove env <KEY...>');
-      await removeEnvVar(targets);
+      const removed = await removeEnvVar(targets);
+      if (ui.getOutputMode() === 'json') {
+        ui.printJson({ ok: true, action: 'remove', type: 'env', items: removed });
+      }
       await notifyIfUpdateAvailable();
       process.exit(0);
     }
@@ -259,6 +311,8 @@ async function runCLI(): Promise<void> {
   let flagTokenDelivery: TokenDelivery | undefined = undefined;
   let flagUseDocker: boolean | undefined = undefined;
   let flagUseSwagger: boolean | undefined = undefined;
+  let flagUseTesting: boolean | undefined = undefined;
+  let flagSpec: ProjectSpec | undefined = undefined;
   let flagNoInstall = false;
 
   for (let i = 0; i < args.length; i++) {
@@ -299,6 +353,24 @@ async function runCLI(): Promise<void> {
       flagUseSwagger = true;
     } else if (arg === '--no-swagger') {
       flagUseSwagger = false;
+    } else if (arg === '--testing') {
+      flagUseTesting = true;
+    } else if (arg === '--no-testing') {
+      flagUseTesting = false;
+    } else if (arg === '--spec') {
+      const val = args[i + 1];
+      if (!val) ui.abort('--spec requires a file path or JSON string.');
+      flagSpec = loadSpec(val);
+      useDefaults = true;
+      if (flagSpec.name) initialProjectName = flagSpec.name;
+      if (flagSpec.db) flagDb = flagSpec.db;
+      if (flagSpec.validator) flagValidator = flagSpec.validator;
+      if (flagSpec.auth !== undefined) flagUseAuth = flagSpec.auth;
+      if (flagSpec.tokenDelivery) flagTokenDelivery = flagSpec.tokenDelivery;
+      if (flagSpec.docker !== undefined) flagUseDocker = flagSpec.docker;
+      if (flagSpec.swagger !== undefined) flagUseSwagger = flagSpec.swagger;
+      if (flagSpec.testing !== undefined) flagUseTesting = flagSpec.testing;
+      i++;
     } else if (!arg.startsWith('-')) {
       initialProjectName = arg;
     } else {
@@ -327,6 +399,7 @@ async function runCLI(): Promise<void> {
       authTokenDelivery: flagTokenDelivery || 'cookie',
       useDocker: flagUseDocker ?? true,
       useSwagger: flagUseSwagger ?? true,
+      useTesting: flagUseTesting ?? false,
     };
   } else {
     try {
@@ -417,6 +490,7 @@ async function runCLI(): Promise<void> {
   }
 
   const { projectName, db, validator, useAuth, useDocker, useSwagger, authTokenDelivery } = answers;
+  const useTesting = Boolean(answers.useTesting ?? flagUseTesting);
   const tokenDelivery: TokenDelivery = useAuth ? authTokenDelivery || 'cookie' : 'header';
   const projectPath = path.join(process.cwd(), projectName);
   const templatePath = path.join(__dirname, '../../template');
@@ -482,6 +556,12 @@ async function runCLI(): Promise<void> {
       };
       pkg.engines = engineMap[pm] || engineMap.npm;
 
+      if (useTesting) {
+        pkg.scripts = pkg.scripts || {};
+        pkg.scripts.test = 'vitest run';
+        pkg.scripts['test:watch'] = 'vitest';
+      }
+
       if (pm !== 'npm') {
         const spec = getPackageManagerSpec(pm);
         if (spec) {
@@ -520,10 +600,16 @@ async function runCLI(): Promise<void> {
       authTokenDelivery,
       useDocker,
       useSwagger,
+      useTesting,
       packageManager: pm,
       version: VERSION,
     });
     saveCemConfig(cemConfig, projectPath);
+
+    if (useTesting) {
+      const { scaffoldTesting } = await import('../lib/testScaffold');
+      scaffoldTesting(projectPath);
+    }
 
     scaffoldSpin.succeed('Base architecture scaffolded');
   } catch (e: unknown) {
@@ -656,6 +742,10 @@ async function runCLI(): Promise<void> {
     devDeps.push('@types/swagger-ui-express', '@types/swagger-jsdoc');
   }
 
+  if (useTesting) {
+    devDeps.push('vitest', 'supertest', '@types/supertest');
+  }
+
   const uniqueProd = Array.from(new Set(prodDeps));
   const uniqueDev = Array.from(new Set(devDeps));
 
@@ -711,6 +801,9 @@ async function runCLI(): Promise<void> {
       'typescript-eslint': '^8.20.0',
       'eslint-config-prettier': '^10.0.1',
       prettier: '^3.4.2',
+      vitest: '^3.0.0',
+      supertest: '^7.0.0',
+      '@types/supertest': '^6.0.2',
       'create-express-modular': `^${VERSION || '3.3.9'}`,
     };
 
@@ -757,8 +850,52 @@ async function runCLI(): Promise<void> {
     ui.warn('Skipping dependencies installation (--no-install).');
   }
 
+  // One-shot --spec extra scaffolding (modules, middlewares, env)
+  const specModules: string[] = [];
+  const specMiddlewares: string[] = [];
+  const specEnv: string[] = [];
+  if (flagSpec) {
+    const prevCwd = process.cwd();
+    process.chdir(projectPath);
+    try {
+      if (flagSpec.modules && flagSpec.modules.length > 0) {
+        const { generateModule } = await import('../lib/moduleGenerator');
+        specModules.push(...(await generateModule(['-y', ...flagSpec.modules])));
+      }
+      if (flagSpec.middlewares && flagSpec.middlewares.length > 0) {
+        const { generateMiddleware } = await import('../lib/middlewareGenerator');
+        specMiddlewares.push(...generateMiddleware(flagSpec.middlewares));
+      }
+      if (flagSpec.env && flagSpec.env.length > 0) {
+        const { addEnvVar } = await import('../lib/envGenerator');
+        specEnv.push(...addEnvVar(flagSpec.env));
+      }
+    } finally {
+      process.chdir(prevCwd);
+    }
+  }
+
   // Safe anonymous telemetry ping (respects CEM_TELEMETRY=off)
   await reportInstall('create', VERSION, pm);
+
+  if (ui.getOutputMode() === 'json') {
+    ui.printJson({
+      ok: true,
+      project: projectName,
+      path: projectPath,
+      db,
+      validator,
+      auth: useAuth,
+      docker: useDocker,
+      swagger: useSwagger,
+      testing: useTesting,
+      pm,
+      modules: specModules,
+      middlewares: specMiddlewares,
+      env: specEnv,
+    });
+    return;
+  }
 
   // Summary and completion
   ui.printSummary({
