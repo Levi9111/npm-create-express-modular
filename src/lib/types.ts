@@ -62,7 +62,7 @@ export interface GeneratorDependencies {
 }
 
 export interface DbGenerator {
-  scaffoldServerAndConfig(projectPath: string): void;
+  scaffoldServerAndConfig(projectPath: string, useAuth?: boolean): void;
   scaffoldErrorFiles(projectPath: string): void;
   errorBlock(): ErrorBlock;
   dependencies(): GeneratorDependencies;
