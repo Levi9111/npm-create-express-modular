@@ -7,7 +7,7 @@
 [![npm version](https://img.shields.io/npm/v/create-express-modular.svg?style=flat-square)](https://www.npmjs.com/package/create-express-modular)
 [![npm downloads](https://img.shields.io/npm/dm/create-express-modular.svg?style=flat-square)](https://www.npmjs.com/package/create-express-modular)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=flat-square)](LICENSE)
-[![Node.js](https://img.shields.io/badge/Node.js-v18+-green.svg?style=flat-square)](https://nodejs.org)
+[![Node.js](https://img.shields.io/badge/Node.js-v22+-green.svg?style=flat-square)](https://nodejs.org)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.5+-blue.svg?style=flat-square)](https://www.typescriptlang.org)
 [![Go Engine](https://img.shields.io/badge/Go%20Engine-Experimental%20(Sub--10ms)-00ADD8?logo=go&style=flat-square)](https://github.com/Levi9111/create-express-modular-go)
 
@@ -116,7 +116,7 @@ To support seamless development with AI assistants (Cursor, Claude Code, GitHub 
 
 ## Requirements
 
-- **Node.js**: `>= 18`
+- **Node.js**: `>= 22`
 - **Package Manager**: npm `>= 9` · yarn `>= 1.22` · pnpm `>= 8`
 
 ---

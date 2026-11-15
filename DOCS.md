@@ -735,7 +735,7 @@ AI agents read these context files instantly, avoiding architectural confusion a
 
 ## Requirements
 
-- Node.js `>= 18`
+- Node.js `>= 22`
 - **One of:** npm `>= 9`, yarn `>= 1.22`, pnpm `>= 8`, or bun `>= 1.0`
 - TypeScript `>= 5.5` (installed automatically)
 

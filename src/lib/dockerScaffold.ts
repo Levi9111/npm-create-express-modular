@@ -67,7 +67,7 @@ function _buildDockerfile(pm: PackageManager): string {
   };
 
   return `# ── Build stage ───────────────────────────────────────────────
-FROM node:20-alpine AS builder
+FROM node:22-alpine AS builder
 
 WORKDIR /app
 ${pnpmSetup}
@@ -80,7 +80,7 @@ COPY . .
 RUN ${buildCmd[pm]}
 
 # ── Production stage ───────────────────────────────────────────
-FROM node:20-alpine AS production
+FROM node:22-alpine AS production
 
 WORKDIR /app
 

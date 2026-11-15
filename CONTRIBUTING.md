@@ -8,7 +8,7 @@ Thank you for your interest in contributing to **create-express-modular**! We we
 
 ### Prerequisites
 
-- **Node.js:** Version `18.0.0` or higher
+- **Node.js:** Version `22.0.0` or higher
 - **npm:** Version `9.0.0` or higher
 - **Git**
 
