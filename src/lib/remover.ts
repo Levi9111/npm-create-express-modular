@@ -13,7 +13,7 @@ import * as ui from './ui';
 import { updateCemState } from './configLoader';
 import { detectPM, installCmd } from './pm';
 import { normaliseKey } from './envGenerator';
-import { pluralize } from './utils/string';
+import { pluralize, isValidIdentifier, isValidEnvKey, escapeRegExp } from './utils/string';
 
 let inquirer: typeof import('inquirer');
 try {
@@ -56,13 +56,19 @@ export async function removeModule(providedName: string | string[]): Promise<str
   assertCemProject(projectRoot);
 
   const rawNames = Array.isArray(providedName) ? providedName : [providedName].filter(Boolean);
-  const skipConfirm = rawNames.some((n) => n === '-y' || n === '--yes' || n === '--force' || n === '-f');
+  const skipConfirm =
+    rawNames.some((n) => n === '-y' || n === '--yes' || n === '--force' || n === '-f') ||
+    ui.isSilent() ||
+    !process.stdin.isTTY;
   const names = rawNames.filter((n) => !n.startsWith('-'));
   if (names.length === 0) ui.abort('Usage: cem remove module <ModuleName...>');
 
   const removed: string[] = [];
   for (const name of names) {
     const moduleName = name.trim().charAt(0).toUpperCase() + name.trim().slice(1);
+    if (!isValidIdentifier(moduleName)) {
+      ui.abort(`Invalid module name "${name}". Use only letters, numbers, and underscores, starting with a letter.`);
+    }
     const fileName = moduleName.toLowerCase();
     const modulePath = path.join(projectRoot, `src/app/modules/${moduleName}`);
 
@@ -90,14 +96,15 @@ export async function removeModule(providedName: string | string[]): Promise<str
       let content = fs.readFileSync(indexPath, 'utf8');
       const linesBefore = content.split('\n').length;
 
+      const safeMod = escapeRegExp(moduleName);
       content = content.replace(
-        new RegExp(`^import \\{ ${moduleName}Routes \\} from [^;]+;\\n?`, 'm'),
+        new RegExp(`^import \\{ ${safeMod}Routes \\} from [^;]+;\\n?`, 'm'),
         '',
       );
 
-      const routePath = `/${pluralize(fileName)}`;
+      const routePath = escapeRegExp(`/${pluralize(fileName)}`);
       content = content.replace(
-        new RegExp(`^\\s*\\{\\s*path:\\s*'${routePath}'\\s*,\\s*route:\\s*${moduleName}Routes\\s*\\},?\\n?`, 'm'),
+        new RegExp(`^\\s*\\{\\s*path:\\s*'${routePath}'\\s*,\\s*route:\\s*${safeMod}Routes\\s*\\},?\\n?`, 'm'),
         '',
       );
 
@@ -127,7 +134,10 @@ export async function removeMiddleware(providedName: string | string[]): Promise
   assertCemProject(projectRoot);
 
   const rawNames = Array.isArray(providedName) ? providedName : [providedName].filter(Boolean);
-  const skipConfirm = rawNames.some((n) => n === '-y' || n === '--yes' || n === '--force' || n === '-f');
+  const skipConfirm =
+    rawNames.some((n) => n === '-y' || n === '--yes' || n === '--force' || n === '-f') ||
+    ui.isSilent() ||
+    !process.stdin.isTTY;
   const names = rawNames.filter((n) => !n.startsWith('-'));
   if (names.length === 0) ui.abort('Usage: cem remove middleware <name...>');
 
@@ -139,6 +149,9 @@ export async function removeMiddleware(providedName: string | string[]): Promise
       .replace(/\.middleware\.ts$/, '')
       .replace(/\.middleware$/, '')
       .replace(/\.ts$/, '');
+    if (!isValidIdentifier(baseName)) {
+      ui.abort(`Invalid middleware name "${name}". Use only letters, numbers, and underscores, starting with a letter.`);
+    }
     const fileName = `${baseName}.middleware.ts`;
     const filePath = path.join(projectRoot, `src/app/middlewares/${fileName}`);
 
@@ -180,11 +193,20 @@ export async function removeEnvVar(providedKey: string | string[]): Promise<stri
   assertCemProject(projectRoot);
 
   const rawKeys = Array.isArray(providedKey) ? providedKey : [providedKey].filter(Boolean);
-  const skipConfirm = rawKeys.some((k) => k === '-y' || k === '--yes' || k === '--force' || k === '-f');
+  const skipConfirm =
+    rawKeys.some((k) => k === '-y' || k === '--yes' || k === '--force' || k === '-f') ||
+    ui.isSilent() ||
+    !process.stdin.isTTY;
   const keys = rawKeys.filter((k) => !k.startsWith('-'));
   if (keys.length === 0) ui.abort('Usage: cem remove env <KEY...>');
 
-  const normalised = keys.map((k) => normaliseKey(k));
+  const normalised = keys.map((k) => {
+    const n = normaliseKey(k);
+    if (!isValidEnvKey(n.upperKey)) {
+      ui.abort(`Invalid env key "${k}". Use only letters, numbers, and underscores, not starting with a digit.`);
+    }
+    return n;
+  });
   const label = normalised.map((n) => ui.cyan(n.upperKey)).join(', ');
 
   if (!skipConfirm) {
@@ -238,7 +260,7 @@ export async function removeEnvVar(providedKey: string | string[]): Promise<stri
       let cfg = fs.readFileSync(configPath, 'utf8');
       const before = cfg;
       cfg = cfg.replace(
-        new RegExp(`^\\s*${lowerKey}:\\s*process\\.env\\.${upperKey},?\\n?`, 'm'),
+        new RegExp(`^\\s*${escapeRegExp(lowerKey)}:\\s*process\\.env\\.${escapeRegExp(upperKey)},?\\n?`, 'm'),
         '',
       );
       if (cfg !== before) {
