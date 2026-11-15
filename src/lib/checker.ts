@@ -75,12 +75,14 @@ export async function runCheck(fix = false): Promise<void> {
 
   const modeLabel = fix ? 'type · lint:fix · format:fix' : 'type · lint · format (concurrent)';
 
-  ui.nl();
-  console.log(
-    `  ${ui.bgCyan('CEM')}  ${ui.bold(ui.cyan(fix ? 'cem check --fix' : 'cem check'))}  ${ui.gray(modeLabel)}`,
-  );
-  console.log(`  ${ui.gray('─'.repeat(50))}`);
-  ui.nl();
+  if (!ui.isSilent()) {
+    ui.nl();
+    console.log(
+      `  ${ui.bgCyan('CEM')}  ${ui.bold(ui.cyan(fix ? 'cem check --fix' : 'cem check'))}  ${ui.gray(modeLabel)}`,
+    );
+    console.log(`  ${ui.gray('─'.repeat(50))}`);
+    ui.nl();
+  }
 
   const tasks: CheckTask[] = [
     { id: 'types', label: 'Type check (tsc)…', cmd: 'node_modules/.bin/tsc --noEmit' },
@@ -97,6 +99,30 @@ export async function runCheck(fix = false): Promise<void> {
   ];
 
   const results = await Promise.all(tasks.map((task) => runTask(task, cwd)));
+  const passed = results.every((r) => r.passed);
+
+  if (ui.getOutputMode() === 'json') {
+    ui.printJson({
+      ok: passed,
+      fix,
+      results: results.map((r) => ({
+        id: r.id,
+        passed: r.passed,
+        durationMs: r.durationMs,
+        ...(r.output ? { output: r.output } : {}),
+      })),
+    });
+    process.exit(passed ? 0 : 1);
+  }
+
+  if (ui.getOutputMode() === 'quiet') {
+    if (!passed) {
+      results
+        .filter((r) => !r.passed)
+        .forEach((r) => console.error(`[${r.id}] ${r.output ?? 'failed'}`));
+    }
+    process.exit(passed ? 0 : 1);
+  }
 
   const TICK = ui.green('✔');
   const CROSS = ui.red('✖');
@@ -124,7 +150,6 @@ export async function runCheck(fix = false): Promise<void> {
   console.log(`  ${ui.gray('─'.repeat(50))}`);
   ui.nl();
 
-  const passed = results.every((r) => r.passed);
   const total = results.length;
   const failed = results.filter((r) => !r.passed).length;
 
