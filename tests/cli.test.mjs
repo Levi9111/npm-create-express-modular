@@ -178,3 +178,30 @@ test('Supports --spec, --json, --testing, and live cem-cli.json state', () => {
   assert.equal(listParsed.ok, true);
   assert.ok(listParsed.modules.some((m) => m.name === 'Order'));
 });
+
+test('CLI rejects path traversal and invalid identifiers across project, module, middleware, and env', () => {
+  assert.throws(() => runCli('../escaped-proj -y --no-install', { cwd: TEST_DIR }));
+
+  const safeProj = path.join(TEST_DIR, 'spec-app');
+  assert.throws(() => runCli('add module ../../evil', { cwd: safeProj }));
+  assert.throws(() => runCli('add middleware ../evil', { cwd: safeProj }));
+  assert.throws(() => runCli('add env BAD=VALUE', { cwd: safeProj }));
+  assert.throws(() => runCli('remove module ../evil', { cwd: safeProj }));
+});
+
+test('Auth scaffold generates random JWT secrets and validates them at startup', () => {
+  const projectName = 'auth-sec-app';
+  const projectPath = path.join(TEST_DIR, projectName);
+
+  runCli(`${projectName} -y --auth --no-install`, { cwd: TEST_DIR });
+
+  const envContent = fs.readFileSync(path.join(projectPath, '.env'), 'utf8');
+  assert.ok(!envContent.includes('your_super_secret_access_key'), 'should not contain hardcoded access secret');
+  assert.ok(!envContent.includes('your_jwt_refresh_secret'), 'should not contain hardcoded refresh secret');
+  assert.match(envContent, /JWT_ACCESS_SECRET=[0-9a-f]{96}/);
+  assert.match(envContent, /JWT_REFRESH_SECRET=[0-9a-f]{96}/);
+
+  const configTs = fs.readFileSync(path.join(projectPath, 'src/app/config/index.ts'), 'utf8');
+  assert.ok(configTs.includes('JWT_ACCESS_SECRET'), 'config/index.ts should require JWT_ACCESS_SECRET');
+  assert.ok(configTs.includes('JWT_REFRESH_SECRET'), 'config/index.ts should require JWT_REFRESH_SECRET');
+});

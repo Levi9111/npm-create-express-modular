@@ -10,7 +10,11 @@ import fs from 'fs';
 import path from 'path';
 import os from 'os';
 
-const CACHE_FILE = path.join(os.tmpdir(), 'create-express-modular-update.json');
+const CACHE_DIR = path.join(
+  process.env.XDG_CACHE_HOME || path.join(os.homedir(), '.cache'),
+  'create-express-modular',
+);
+const CACHE_FILE = path.join(CACHE_DIR, 'update.json');
 const CACHE_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours
 
 interface UpdateCache {
@@ -38,7 +42,8 @@ function writeCache(latestVersion: string | null): void {
       timestamp: Date.now(),
       latestVersion,
     };
-    fs.writeFileSync(CACHE_FILE, JSON.stringify(data), 'utf8');
+    fs.mkdirSync(CACHE_DIR, { recursive: true, mode: 0o700 });
+    fs.writeFileSync(CACHE_FILE, JSON.stringify(data), { encoding: 'utf8', mode: 0o600 });
   } catch {
     /* non-fatal */
   }

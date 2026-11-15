@@ -4,20 +4,23 @@
  * Drizzle ORM database generator strategy.
  */
 
+import crypto from 'crypto';
 import fs from 'fs';
 import path from 'path';
 import type { DbGenerator, ErrorBlock, GeneratorDependencies } from '../types';
 
 const drizzleGenerator: DbGenerator = {
-  scaffoldServerAndConfig(projectPath: string): void {
+  scaffoldServerAndConfig(projectPath: string, useAuth = false): void {
+    const accessSecret = crypto.randomBytes(48).toString('hex');
+    const refreshSecret = crypto.randomBytes(48).toString('hex');
     const envLines = [
       'PORT=5000',
       'NODE_ENV=development',
       'DATABASE_URL=postgresql://user:password@localhost:5432/mydb',
       'CORS_ORIGIN=http://localhost:3000',
-      'JWT_ACCESS_SECRET=your_super_secret_access_key',
+      `JWT_ACCESS_SECRET=${accessSecret}`,
       'JWT_ACCESS_EXPIRES_IN=1d',
-      'JWT_REFRESH_SECRET=your_jwt_refresh_secret',
+      `JWT_REFRESH_SECRET=${refreshSecret}`,
       'JWT_REFRESH_EXPIRES_IN=365d',
     ];
     const envContent = envLines.join('\n') + '\n';
@@ -25,6 +28,10 @@ const drizzleGenerator: DbGenerator = {
 
     const envExampleContent = envLines.map((line) => line.split('=')[0] + '=').join('\n') + '\n';
     fs.writeFileSync(path.join(projectPath, '.env.example'), envExampleContent);
+
+    const requiredVars = useAuth
+      ? "['DATABASE_URL', 'JWT_ACCESS_SECRET', 'JWT_REFRESH_SECRET']"
+      : "['DATABASE_URL']";
 
     const configDir = path.join(projectPath, 'src/app/config');
     fs.mkdirSync(configDir, { recursive: true });
@@ -36,7 +43,7 @@ import path from 'path';
 dotenv.config({ path: path.join(process.cwd(), '.env') });
 
 // ── Startup Validation ───────────────────────────────────────────────────────
-const requiredEnvVars = ['DATABASE_URL'] as const;
+const requiredEnvVars = ${requiredVars} as const;
 for (const key of requiredEnvVars) {
   if (!process.env[key]) {
     throw new Error(

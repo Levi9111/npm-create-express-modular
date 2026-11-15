@@ -58,6 +58,26 @@ export function pluralize(word: string): string {
   return word + 's';
 }
 
+/** Validates a module or middleware identifier (alphanumeric + underscore, starting with a letter). */
+export function isValidIdentifier(name: string): boolean {
+  return /^[A-Za-z][A-Za-z0-9_]*$/.test(name);
+}
+
+/** Validates an environment variable key (letters, digits, underscores; cannot start with a digit). */
+export function isValidEnvKey(key: string): boolean {
+  return /^[A-Za-z_][A-Za-z0-9_]*$/.test(key);
+}
+
+/** Validates a project directory name (prevents path traversal and shell/path metacharacters). */
+export function isValidProjectName(name: string): boolean {
+  return /^[A-Za-z0-9][A-Za-z0-9._-]*$/.test(name) && !name.includes('..');
+}
+
+/** Escapes special regular expression characters in a literal string. */
+export function escapeRegExp(s: string): string {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
 /**
  * Capitalizes the first character of a string.
  *

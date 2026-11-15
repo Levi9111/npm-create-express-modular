@@ -9,6 +9,7 @@ import fs from 'fs';
 import path from 'path';
 import * as ui from './ui';
 import { updateCemState } from './configLoader';
+import { isValidEnvKey } from './utils/string';
 
 export interface NormalisedKey {
   upperKey: string;
@@ -34,6 +35,13 @@ export function normaliseKey(key: string): NormalisedKey {
 export function addEnvVar(key: string | string[]): string[] {
   const keys = Array.isArray(key) ? key : [key];
   if (keys.length === 0) return [];
+
+  for (const k of keys) {
+    const { upperKey } = normaliseKey(k);
+    if (!isValidEnvKey(upperKey)) {
+      ui.abort(`Invalid env key "${k}". Use only letters, numbers, and underscores, not starting with a digit.`);
+    }
+  }
 
   const projectRoot = process.cwd();
   const envPath = path.join(projectRoot, '.env');
