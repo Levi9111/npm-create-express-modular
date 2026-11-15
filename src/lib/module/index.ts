@@ -13,7 +13,7 @@ import * as ui from '../ui';
 import { loadCemConfig, updateCemState } from '../configLoader';
 import { getDbGenerator } from '../db';
 import type { DbChoice, ValidatorChoice } from '../types';
-import { pluralize, capitalize } from '../utils/string';
+import { pluralize, capitalize, isValidIdentifier } from '../utils/string';
 import { injectRoute } from '../utils/inject';
 import {
   buildController,
@@ -85,7 +85,8 @@ export async function generateModule(providedName?: string | string[]): Promise<
     names = [providedName];
   }
 
-  const useDefaults = names.some((n) => n === '-y' || n === '--yes');
+  const useDefaults =
+    names.some((n) => n === '-y' || n === '--yes') || ui.isSilent() || !process.stdin.isTTY;
   const wantConstants = names.some((n) => n === '--constants');
   const wantUtils = names.some((n) => n === '--utils');
   names = names.filter((n) => !n.startsWith('-'));
@@ -111,6 +112,9 @@ export async function generateModule(providedName?: string | string[]): Promise<
 
   for (const name of names) {
     const moduleName = capitalize(name.trim());
+    if (!isValidIdentifier(moduleName)) {
+      ui.abort(`Invalid module name "${name}". Use only letters, numbers, and underscores, starting with a letter.`);
+    }
     const fileName = moduleName.toLowerCase();
     const modulePath = path.join(projectRoot, `src/app/modules/${moduleName}`);
 
