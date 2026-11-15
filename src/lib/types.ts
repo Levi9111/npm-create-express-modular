@@ -32,6 +32,11 @@ export interface CemConfig {
     websocket?: boolean;
     swagger?: boolean;
   };
+  state?: {
+    modules: string[];
+    middlewares: string[];
+    env: string[];
+  };
 }
 
 // ─── CLI Prompt Answers ────────────────────────────────────────────────────────

@@ -10,6 +10,7 @@
 import fs from 'fs';
 import path from 'path';
 import * as ui from './ui';
+import { updateCemState } from './configLoader';
 import { detectPM, installCmd } from './pm';
 import { normaliseKey } from './envGenerator';
 import { pluralize } from './utils/string';
@@ -50,7 +51,7 @@ async function confirm(message: string): Promise<boolean> {
   return Boolean(confirmed);
 }
 
-export async function removeModule(providedName: string | string[]): Promise<void> {
+export async function removeModule(providedName: string | string[]): Promise<string[]> {
   const projectRoot = process.cwd();
   assertCemProject(projectRoot);
 
@@ -59,6 +60,7 @@ export async function removeModule(providedName: string | string[]): Promise<voi
   const names = rawNames.filter((n) => !n.startsWith('-'));
   if (names.length === 0) ui.abort('Usage: cem remove module <ModuleName...>');
 
+  const removed: string[] = [];
   for (const name of names) {
     const moduleName = name.trim().charAt(0).toUpperCase() + name.trim().slice(1);
     const fileName = moduleName.toLowerCase();
@@ -110,12 +112,17 @@ export async function removeModule(providedName: string | string[]): Promise<voi
     }
 
     ui.success(`Module ${ui.bold(ui.cyan(moduleName))} removed.`);
+    removed.push(moduleName);
   }
 
+  if (removed.length > 0) {
+    updateCemState(projectRoot, 'modules', 'remove', removed);
+  }
   ui.nl();
+  return removed;
 }
 
-export async function removeMiddleware(providedName: string | string[]): Promise<void> {
+export async function removeMiddleware(providedName: string | string[]): Promise<string[]> {
   const projectRoot = process.cwd();
   assertCemProject(projectRoot);
 
@@ -125,6 +132,7 @@ export async function removeMiddleware(providedName: string | string[]): Promise
   if (names.length === 0) ui.abort('Usage: cem remove middleware <name...>');
 
   const PROTECTED = ['globalErrorHandler', 'notFound', 'auth', 'rateLimiter'];
+  const removed: string[] = [];
 
   for (const name of names) {
     const baseName = name
@@ -157,36 +165,46 @@ export async function removeMiddleware(providedName: string | string[]): Promise
 
     fs.unlinkSync(filePath);
     ui.success(`Removed src/app/middlewares/${fileName}`);
+    removed.push(baseName);
   }
 
+  if (removed.length > 0) {
+    updateCemState(projectRoot, 'middlewares', 'remove', removed);
+  }
   ui.nl();
+  return removed;
 }
 
-export async function removeEnvVar(providedKey: string | string[]): Promise<void> {
+export async function removeEnvVar(providedKey: string | string[]): Promise<string[]> {
   const projectRoot = process.cwd();
   assertCemProject(projectRoot);
 
-  const keys = Array.isArray(providedKey) ? providedKey : [providedKey].filter(Boolean);
+  const rawKeys = Array.isArray(providedKey) ? providedKey : [providedKey].filter(Boolean);
+  const skipConfirm = rawKeys.some((k) => k === '-y' || k === '--yes' || k === '--force' || k === '-f');
+  const keys = rawKeys.filter((k) => !k.startsWith('-'));
   if (keys.length === 0) ui.abort('Usage: cem remove env <KEY...>');
 
   const normalised = keys.map((k) => normaliseKey(k));
   const label = normalised.map((n) => ui.cyan(n.upperKey)).join(', ');
 
-  const ok = await confirm(
-    `This will remove ${label} from .env, .env.example, and src/app/config/index.ts.`,
-  );
+  if (!skipConfirm) {
+    const ok = await confirm(
+      `This will remove ${label} from .env, .env.example, and src/app/config/index.ts.`,
+    );
 
-  if (!ok) {
-    ui.nl();
-    ui.warn('Aborted — nothing was removed.');
-    ui.nl();
-    return;
+    if (!ok) {
+      ui.nl();
+      ui.warn('Aborted — nothing was removed.');
+      ui.nl();
+      return [];
+    }
   }
 
   const envPath = path.join(projectRoot, '.env');
   const envExamplePath = path.join(projectRoot, '.env.example');
   const configPath = path.join(projectRoot, 'src/app/config/index.ts');
 
+  const removedKeys: string[] = [];
   for (const { upperKey, lowerKey } of normalised) {
     let removed = false;
 
@@ -231,10 +249,15 @@ export async function removeEnvVar(providedKey: string | string[]): Promise<void
 
     if (removed) {
       ui.success(`Removed ${ui.cyan(upperKey)} from .env, .env.example, and config/index.ts`);
+      removedKeys.push(upperKey);
     } else {
       ui.warn(`${upperKey} not found in any config file — skipping.`);
     }
   }
 
+  if (removedKeys.length > 0) {
+    updateCemState(projectRoot, 'env', 'remove', removedKeys);
+  }
   ui.nl();
+  return removedKeys;
 }

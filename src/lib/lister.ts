@@ -78,6 +78,49 @@ export function listProject(): void {
     }
   }
 
+  if (ui.getOutputMode() === 'json') {
+    const modulesDir = path.join(projectRoot, 'src/app/modules');
+    const modules = fs.existsSync(modulesDir)
+      ? fs
+          .readdirSync(modulesDir)
+          .filter((d) => fs.statSync(path.join(modulesDir, d)).isDirectory())
+          .map((mod) => ({
+            name: mod,
+            wired: _isModuleWired(projectRoot, mod),
+            files: fs.readdirSync(path.join(modulesDir, mod)).filter((f) => f.endsWith('.ts') || f.endsWith('.md')),
+          }))
+      : [];
+
+    const mwDir = path.join(projectRoot, 'src/app/middlewares');
+    const middlewares = fs.existsSync(mwDir)
+      ? fs.readdirSync(mwDir).filter((f) => f.endsWith('.ts'))
+      : [];
+
+    const envContent = readFileSafe(path.join(projectRoot, '.env'));
+    const env = envContent
+      ? envContent
+          .split('\n')
+          .filter((l) => l.trim() && !l.trim().startsWith('#') && l.includes('='))
+          .map((v) => v.split('=')[0].trim())
+      : [];
+
+    const utilsDir = path.join(projectRoot, 'src/app/utils');
+    const utils = fs.existsSync(utilsDir)
+      ? fs.readdirSync(utilsDir).filter((f) => f.endsWith('.ts'))
+      : [];
+
+    ui.printJson({
+      ok: true,
+      project: projectName,
+      config: config ? { db: config.project.db, validator: config.project.validator, auth: config.project.auth, features: config.features } : null,
+      modules,
+      middlewares,
+      env,
+      utils,
+    });
+    return;
+  }
+
   const line = ui.gray('─'.repeat(52));
   console.log();
   console.log(`  ${line}`);

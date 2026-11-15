@@ -10,7 +10,7 @@ import fs from 'fs';
 import path from 'path';
 import inquirer from 'inquirer';
 import * as ui from '../ui';
-import { loadCemConfig } from '../configLoader';
+import { loadCemConfig, updateCemState } from '../configLoader';
 import { getDbGenerator } from '../db';
 import type { DbChoice, ValidatorChoice } from '../types';
 import { pluralize, capitalize } from '../utils/string';
@@ -68,7 +68,7 @@ function resolveDb(projectRoot: string): DbChoice | null {
  * @param providedName - One module name, an array of names, or `undefined`
  *                       to prompt the user interactively.
  */
-export async function generateModule(providedName?: string | string[]): Promise<void> {
+export async function generateModule(providedName?: string | string[]): Promise<string[]> {
   const projectRoot = process.cwd();
 
   if (!fs.existsSync(path.join(projectRoot, 'src/app/modules'))) {
@@ -107,6 +107,7 @@ export async function generateModule(providedName?: string | string[]): Promise<
 
   const validator = resolveValidator(projectRoot);
   const dbChoice = resolveDb(projectRoot);
+  const created: string[] = [];
 
   for (const name of names) {
     const moduleName = capitalize(name.trim());
@@ -185,5 +186,11 @@ export async function generateModule(providedName?: string | string[]): Promise<
     if (includeUtils) extras.push(`${fileName}.utils.ts`);
 
     ui.printModuleSuccess(moduleName, routePath, validator, extras);
+    created.push(moduleName);
   }
+
+  if (created.length > 0) {
+    updateCemState(projectRoot, 'modules', 'add', created);
+  }
+  return created;
 }

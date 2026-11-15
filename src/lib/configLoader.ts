@@ -52,6 +52,7 @@ export function createInitialCemConfig(options: {
   authTokenDelivery?: TokenDelivery;
   useDocker: boolean;
   useSwagger?: boolean;
+  useTesting?: boolean;
   packageManager?: PackageManager;
   version?: string;
 }): CemConfig {
@@ -76,9 +77,43 @@ export function createInitialCemConfig(options: {
       configDir: 'src/app/config',
     },
     features: {
-      testing: false,
+      testing: options.useTesting ? 'vitest' : false,
       websocket: false,
       swagger: !!options.useSwagger,
     },
+    state: {
+      modules: [],
+      middlewares: [],
+      env: [],
+    },
   };
+}
+
+/**
+ * Updates `cem-cli.json` state arrays (`modules`, `middlewares`, `env`)
+ * when items are added or removed. No-op if `cem-cli.json` does not exist.
+ */
+export function updateCemState(
+  projectRoot: string,
+  kind: 'modules' | 'middlewares' | 'env',
+  action: 'add' | 'remove',
+  items: string[],
+): void {
+  const config = loadCemConfig(projectRoot);
+  if (!config || items.length === 0) return;
+
+  const state = config.state ?? { modules: [], middlewares: [], env: [] };
+  const current = new Set(state[kind] ?? []);
+
+  for (const item of items) {
+    if (action === 'add') {
+      current.add(item);
+    } else {
+      current.delete(item);
+    }
+  }
+
+  state[kind] = Array.from(current);
+  config.state = state;
+  saveCemConfig(config, projectRoot);
 }

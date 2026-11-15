@@ -8,6 +8,26 @@
 
 import type { SummaryOptions, Spinner, PackageManager } from './types';
 
+export type OutputMode = 'normal' | 'quiet' | 'json';
+
+let outputMode: OutputMode = 'normal';
+
+export function setOutputMode(mode: OutputMode): void {
+  outputMode = mode;
+}
+
+export function getOutputMode(): OutputMode {
+  return outputMode;
+}
+
+export function isSilent(): boolean {
+  return outputMode !== 'normal';
+}
+
+export function printJson(data: unknown): void {
+  process.stdout.write(JSON.stringify(data) + '\n');
+}
+
 const ESC = '\x1b[';
 const R = '\x1b[0m'; // reset
 
@@ -62,6 +82,7 @@ export const badge = (text: string): string =>
  * @param version - Package version string.
  */
 export function printBanner(version = ''): void {
+  if (isSilent()) return;
   const line = gray('─'.repeat(52));
   const ver = version ? gray(`v${version}`) : '';
   console.log();
@@ -81,6 +102,7 @@ export function printBanner(version = ''): void {
  * @param label - Header label text.
  */
 export function sectionHeader(label: string): void {
+  if (isSilent()) return;
   console.log();
   console.log(`  ${gray('┄'.repeat(46))}`);
   console.log(`  ${bold(gray(label))}`);
@@ -90,32 +112,40 @@ export function sectionHeader(label: string): void {
 
 /** Key–value config line:  ◆  Label    value  */
 export function step(label: string, value = ''): void {
+  if (isSilent()) return;
   const val = value ? `  ${gray(value)}` : '';
   console.log(`  ${cyan('◆')}  ${white(label)}${val}`);
 }
 
 /** Indented file/detail line  ·  path  */
 export function substep(label: string): void {
+  if (isSilent()) return;
   console.log(`     ${gray('·')}  ${gray(label)}`);
 }
 
 /** ✔  Success message */
 export function success(label: string): void {
+  if (isSilent()) return;
   console.log(`  ${green('✔')}  ${label}`);
 }
 
 /** ⚠  Warning message */
 export function warn(label: string): void {
+  if (isSilent()) return;
   console.log(`  ${yellow('⚠')}  ${yellow(label)}`);
 }
 
 /** ✖  Error message */
 export function err(label: string): void {
+  if (outputMode === 'json') return;
   console.log(`  ${magenta('✖')}  ${magenta(label)}`);
 }
 
 /** Blank line shorthand */
-export const nl = (): void => { console.log(); };
+export const nl = (): void => {
+  if (isSilent()) return;
+  console.log();
+};
 
 /**
  * Creates and starts a CLI spinner.
@@ -124,6 +154,14 @@ export const nl = (): void => { console.log(); };
  * @returns Spinner control object (`succeed`, `fail`).
  */
 export function spinner(label: string): Spinner {
+  if (isSilent()) {
+    return {
+      succeed: () => undefined,
+      fail: (msg: string) => {
+        if (outputMode === 'quiet') console.error(stripAnsi(msg));
+      },
+    };
+  }
   if (NO_COLOR || !process.stdout.isTTY) {
     process.stdout.write(`  … ${label}\n`);
     return {
@@ -165,6 +203,7 @@ export function spinner(label: string): Spinner {
  * @param options - Configuration choices summary.
  */
 export function printSummary({ name, db, validator, auth, docker }: SummaryOptions): void {
+  if (isSilent()) return;
   const W = 48;
 
   const border = (l: string, _m: string, r: string): string =>
@@ -209,6 +248,7 @@ export function printSummary({ name, db, validator, auth, docker }: SummaryOptio
  * @param projectName - Name of scaffolded directory.
  */
 export function printNextSteps(projectName: string): void {
+  if (isSilent()) return;
   console.log(`  ${bold('Next steps')}`);
   console.log();
   console.log(`  ${gray('1.')}  ${cyan('cd')} ${white(projectName)}`);
@@ -235,6 +275,7 @@ export function printNextSteps(projectName: string): void {
  * @param pm - Package manager choice.
  */
 export function printUpdateNotice(current: string, latest: string, pm: PackageManager = 'npm'): void {
+  if (isSilent()) return;
   const W = 52;
   const border = (l: string, _m: string, r: string): string =>
     `  ${yellow(l + '─'.repeat(W) + r)}`;
@@ -262,6 +303,7 @@ export function printUpdateNotice(current: string, latest: string, pm: PackageMa
 
 /** Prints banner for module addition workflow. */
 export function printModuleBanner(): void {
+  if (isSilent()) return;
   console.log();
   console.log(`  ${cyan('◆')}  ${bold(white('CEM'))}  ${gray('module generator')}`);
   console.log();
@@ -281,6 +323,7 @@ export function printModuleSuccess(
   validator: string,
   extras: string[] = [],
 ): void {
+  if (isSilent()) return;
   console.log();
   success(`Module ${bold(cyan(moduleName))} created`);
   console.log();
@@ -299,6 +342,14 @@ export function printModuleSuccess(
  * @param message - Error message to print.
  */
 export function abort(message: string): never {
+  if (outputMode === 'json') {
+    printJson({ ok: false, error: stripAnsi(message) });
+    process.exit(1);
+  }
+  if (outputMode === 'quiet') {
+    console.error(stripAnsi(message));
+    process.exit(1);
+  }
   console.log();
   err(message);
   console.log();
