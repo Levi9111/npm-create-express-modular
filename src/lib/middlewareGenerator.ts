@@ -9,6 +9,7 @@ import fs from 'fs';
 import path from 'path';
 import * as ui from './ui';
 import { updateCemState } from './configLoader';
+import { isValidIdentifier } from './utils/string';
 
 /**
  * Creates one or more middleware stub files.
@@ -31,6 +32,9 @@ export function generateMiddleware(providedName: string | string[]): string[] {
 
   for (const name of names) {
     const baseName = name.replace(/\.middleware(\.ts)?$/, '').replace(/\.ts$/, '');
+    if (!isValidIdentifier(baseName)) {
+      ui.abort(`Invalid middleware name "${name}". Use only letters, numbers, and underscores, starting with a letter.`);
+    }
     const fileName = `${baseName}.middleware.ts`;
     const filePath = path.join(mwDir, fileName);
 
