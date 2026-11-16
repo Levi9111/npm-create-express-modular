@@ -18,12 +18,19 @@ import { injectRoute } from '../utils/inject';
 import {
   buildController,
   buildInterface,
+  buildMongooseModel,
   buildRoute,
   buildService,
   buildValidation,
   buildConstants,
   buildUtils,
 } from './templates';
+import {
+  type ParsedField,
+  drizzleTableBlock,
+  parseFields,
+  prismaModelBlock,
+} from './fields';
 
 /**
  * Detects the validation library used by the project at `projectRoot`.
@@ -68,7 +75,19 @@ function resolveDb(projectRoot: string): DbChoice | null {
  * @param providedName - One module name, an array of names, or `undefined`
  *                       to prompt the user interactively.
  */
-export async function generateModule(providedName?: string | string[]): Promise<string[]> {
+export async function generateModule(
+  providedName?: string | string[],
+  fieldsSpec?: string,
+): Promise<string[]> {
+  let parsedFields: ParsedField[] = [];
+  if (fieldsSpec) {
+    try {
+      parsedFields = parseFields(fieldsSpec);
+    } catch (err: unknown) {
+      ui.abort((err as Error).message);
+    }
+  }
+
   const projectRoot = process.cwd();
 
   if (!fs.existsSync(path.join(projectRoot, 'src/app/modules'))) {
@@ -152,20 +171,53 @@ export async function generateModule(providedName?: string | string[]): Promise<
 
     fs.mkdirSync(modulePath, { recursive: true });
 
-    const modelContent = dbChoice
-      ? getDbGenerator(dbChoice).modelStub(moduleName)
-      : `// TODO: Define your ${moduleName} model/schema here\n`;
+    let modelContent: string;
+    if (dbChoice === 'mongoose' || !dbChoice) {
+      modelContent = buildMongooseModel(moduleName, fileName, parsedFields);
+    } else {
+      modelContent = getDbGenerator(dbChoice).modelStub(moduleName);
+      if (parsedFields.length > 0) {
+        if (dbChoice === 'prisma') {
+          const schemaPath = path.join(projectRoot, 'prisma/schema.prisma');
+          if (fs.existsSync(schemaPath)) {
+            const existing = fs.readFileSync(schemaPath, 'utf8');
+            if (!existing.includes(`model ${moduleName}`)) {
+              fs.appendFileSync(schemaPath, `\n${prismaModelBlock(moduleName, parsedFields)}\n`);
+            }
+          }
+        } else if (dbChoice === 'drizzle') {
+          const schemaPath = path.join(projectRoot, 'src/app/db/schema.ts');
+          const tableName = pluralize(fileName);
+          if (fs.existsSync(schemaPath)) {
+            let existing = fs.readFileSync(schemaPath, 'utf8');
+            if (!existing.includes(`export const ${tableName} =`)) {
+              const neededImports = ['pgTable', 'text', 'timestamp', 'uuid'];
+              if (parsedFields.some((f) => f.baseType === 'number')) neededImports.push('doublePrecision');
+              if (parsedFields.some((f) => f.baseType === 'boolean')) neededImports.push('boolean');
+              existing = existing.replace(
+                /import\s*\{[^}]*\}\s*from\s*'drizzle-orm\/pg-core';/,
+                `import { ${neededImports.join(', ')} } from 'drizzle-orm/pg-core';`,
+              );
+              fs.writeFileSync(schemaPath, `${existing.trimEnd()}\n\n${drizzleTableBlock(tableName, parsedFields)}\n`);
+            }
+          }
+        }
+      }
+    }
 
+    const effectiveDb = dbChoice || 'mongoose';
     const files: Record<string, string> = {
       controller: buildController(moduleName, fileName),
-      interface: buildInterface(moduleName),
+      interface: buildInterface(moduleName, parsedFields, effectiveDb),
       model: modelContent,
       route: buildRoute(moduleName, fileName),
-      service: buildService(moduleName),
-      validation: buildValidation(moduleName, validator),
+      service: buildService(moduleName, effectiveDb, parsedFields.length > 0),
+      validation: buildValidation(moduleName, validator, parsedFields),
     };
 
-    if (includeConstants) files['constant'] = buildConstants(moduleName);
+    if (includeConstants || effectiveDb === 'mongoose' || parsedFields.length > 0) {
+      files['constant'] = buildConstants(moduleName, parsedFields);
+    }
     if (includeUtils) files['utils'] = buildUtils(moduleName);
 
     Object.entries(files).forEach(([type, content]) => {

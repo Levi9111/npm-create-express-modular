@@ -66,6 +66,11 @@ interface PromptAnswers {
   useTesting?: boolean;
 }
 
+interface SpecModuleEntry {
+  name: string;
+  fields?: string;
+}
+
 interface ProjectSpec {
   name?: string;
   db?: DbChoice;
@@ -75,7 +80,7 @@ interface ProjectSpec {
   docker?: boolean;
   swagger?: boolean;
   testing?: boolean;
-  modules?: string[];
+  modules?: Array<string | SpecModuleEntry>;
   middlewares?: string[];
   env?: string[];
 }
@@ -199,12 +204,24 @@ async function runCLI(): Promise<void> {
     const subcommand = args[1];
 
     if (subcommand === 'module') {
-      const moduleNames = args.slice(2);
+      const rawModArgs = args.slice(2);
+      const moduleNames: string[] = [];
+      let fieldsSpec: string | undefined;
+      for (let i = 0; i < rawModArgs.length; i++) {
+        const arg = rawModArgs[i];
+        if (arg === '--fields' && i + 1 < rawModArgs.length) {
+          fieldsSpec = rawModArgs[++i];
+        } else if (arg.startsWith('--fields=')) {
+          fieldsSpec = arg.slice('--fields='.length);
+        } else {
+          moduleNames.push(arg);
+        }
+      }
       if (moduleNames.length === 0) {
         ui.abort('Please provide a module name. Example: cem add module Product');
       }
       const { generateModule } = await import('../lib/moduleGenerator');
-      const created = await generateModule(moduleNames);
+      const created = await generateModule(moduleNames, fieldsSpec);
       if (ui.getOutputMode() === 'json') {
         ui.printJson({ ok: true, action: 'add', type: 'module', items: created });
       }
@@ -864,7 +881,13 @@ async function runCLI(): Promise<void> {
     try {
       if (flagSpec.modules && flagSpec.modules.length > 0) {
         const { generateModule } = await import('../lib/moduleGenerator');
-        specModules.push(...(await generateModule(['-y', ...flagSpec.modules])));
+        for (const entry of flagSpec.modules) {
+          if (typeof entry === 'string') {
+            specModules.push(...(await generateModule(['-y', entry])));
+          } else if (entry && typeof entry === 'object' && entry.name) {
+            specModules.push(...(await generateModule(['-y', entry.name], entry.fields)));
+          }
+        }
       }
       if (flagSpec.middlewares && flagSpec.middlewares.length > 0) {
         const { generateMiddleware } = await import('../lib/middlewareGenerator');
