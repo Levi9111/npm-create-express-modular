@@ -287,3 +287,4 @@ export function drizzleTableBlock(tableName: string, fields: ParsedField[]): str
     `});`,
   ].join('\n');
 }
+
