@@ -30,7 +30,7 @@ const drizzleGenerator: DbGenerator = {
     fs.writeFileSync(path.join(projectPath, '.env.example'), envExampleContent);
 
     const requiredVars = useAuth
-      ? "['DATABASE_URL', 'JWT_ACCESS_SECRET', 'JWT_REFRESH_SECRET']"
+      ? "[\n  'DATABASE_URL',\n  'JWT_ACCESS_SECRET',\n  'JWT_REFRESH_SECRET',\n]"
       : "['DATABASE_URL']";
 
     const configDir = path.join(projectPath, 'src/app/config');
