@@ -38,7 +38,7 @@ function printHelp(): void {
   console.log('   cem fix                      — auto-fix lint and format issues');
   console.log('   cem eject                    — eject project from CEM CLI dependency');
   console.log('   cem list                     — list modules, middlewares, and env vars');
-  console.log('   cem add module <name...>     — generate one or more feature modules');
+  console.log('   cem add module <name...> [--fields "..."] — generate feature module(s) with CRUD & validation');
   console.log('   cem add middleware <name...> — generate one or more custom middlewares');
   console.log('   cem add env <KEY...>         — add one or more env variables');
   console.log('   cem remove module <name...>  — delete module(s) and unwire routes');

@@ -98,7 +98,7 @@ export function buildAgentsMd(opts: AgentDocsOptions): string {
   lines.push('');
   lines.push('## CLI Commands');
   lines.push('- `cem list --json` — full project state (modules, middlewares, env, utils)');
-  lines.push('- `cem add module <Name...> -y --json` — scaffold module(s) & auto-wire routes');
+  lines.push('- `cem add module <Name...> [--fields "name:string,price:number,inStock:boolean?,category:enum(a|b),owner:ref(User),tags:string[]?"] -y --json` — scaffold module(s) with typed schema, validation, wired routes, & CRUD service');
   lines.push('- `cem add middleware <name...> --json` — scaffold `<name>.middleware.ts`');
   lines.push('- `cem add env <KEY...> --json` — add env key(s) to `.env`, `.env.example`, `src/app/config/index.ts`');
   lines.push('- `cem remove module|middleware|env <name...> -y --json` — remove & unwire');

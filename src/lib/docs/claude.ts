@@ -29,7 +29,7 @@ export function buildClaudeMd(opts: AgentDocsOptions): string {
     '',
     '## Commands (Prefer `--json` / `--quiet` to minimize output)',
     '- `cem list --json` — inspect modules, middlewares, env',
-    '- `cem add module <Name...> -y --json` — generate module + wire route',
+    '- `cem add module <Name...> [--fields "name:string,price:number,flag:boolean?,role:enum(a|b),owner:ref(User)"] -y --json` — generate typed module, CRUD service, & wired route',
     '- `cem add middleware <name...> --json` — generate `<name>.middleware.ts`',
     '- `cem add env <KEY...> --json` — add env var to `.env`, `.env.example`, `src/app/config/index.ts`',
     '- `cem check --json` / `cem check --fix --json` — typecheck, lint, format',

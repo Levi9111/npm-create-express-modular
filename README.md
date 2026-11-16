@@ -95,7 +95,7 @@ To support seamless development with AI assistants (Cursor, Claude Code, GitHub 
 
 | Command                            | Description                                                      |
 | :--------------------------------- | :--------------------------------------------------------------- |
-| **`cem add module <Name...>`**     | Scaffold one or more complete feature modules                    |
+| **`cem add module <Name...> [--fields "..."]`** | Scaffold feature module(s) with typed schema, validation, wired routes, and CRUD service |
 | **`cem add middleware <name...>`** | Create one or more middleware files under `src/app/middlewares/` |
 | **`cem add env <KEY...>`**         | Add one or more env vars to `.env`, `.env.example`, and config   |
 
