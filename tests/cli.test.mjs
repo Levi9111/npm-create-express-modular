@@ -205,3 +205,81 @@ test('Auth scaffold generates random JWT secrets and validates them at startup',
   assert.ok(configTs.includes('JWT_ACCESS_SECRET'), 'config/index.ts should require JWT_ACCESS_SECRET');
   assert.ok(configTs.includes('JWT_REFRESH_SECRET'), 'config/index.ts should require JWT_REFRESH_SECRET');
 });
+
+test('cem add module --fields generates typed interface, model, Zod validation, wired routes, and working CRUD service', () => {
+  const projectName = 'fields-crud-app';
+  const projectPath = path.join(TEST_DIR, projectName);
+  runCli(`${projectName} -y --no-install --json`, { cwd: TEST_DIR });
+  const out = runCli(
+    'add module Catalog --fields "title:string,price:number,inStock:boolean?,category:enum(book|tech),owner:ref(User),tags:string[]?" -y --json',
+    { cwd: projectPath },
+  );
+  const parsed = JSON.parse(out.trim());
+  assert.equal(parsed.ok, true);
+  assert.deepEqual(parsed.items, ['Catalog']);
+
+  const modDir = path.join(projectPath, 'src/app/modules/Catalog');
+  const iface = fs.readFileSync(path.join(modDir, 'catalog.interface.ts'), 'utf8');
+  assert.ok(iface.includes("import { Types } from 'mongoose'"));
+  assert.ok(iface.includes('title: string;'));
+  assert.ok(iface.includes('price: number;'));
+  assert.ok(iface.includes('inStock?: boolean;'));
+  assert.ok(iface.includes("category: 'book' | 'tech';"));
+  assert.ok(iface.includes('owner: Types.ObjectId;'));
+  assert.ok(iface.includes('tags?: string[];'));
+
+  const model = fs.readFileSync(path.join(modDir, 'catalog.model.ts'), 'utf8');
+  assert.ok(model.includes("enum: ['book', 'tech']"));
+  assert.ok(model.includes("ref: 'User'"));
+
+  const validation = fs.readFileSync(path.join(modDir, 'catalog.validation.ts'), 'utf8');
+  assert.ok(validation.includes("z.enum(['book', 'tech'])"));
+  assert.ok(validation.includes('createCatalogSchema.shape.body.partial()'));
+
+  const route = fs.readFileSync(path.join(modDir, 'catalog.route.ts'), 'utf8');
+  assert.ok(route.includes('validateRequest(CatalogValidation.createCatalogSchema)'));
+  assert.ok(route.includes('validateRequest(CatalogValidation.updateCatalogSchema)'));
+
+  const service = fs.readFileSync(path.join(modDir, 'catalog.service.ts'), 'utf8');
+  assert.ok(service.includes('new QueryBuilder(CatalogModel.find(), query)'));
+  assert.ok(service.includes('CatalogModel.findByIdAndUpdate'));
+
+  const constant = fs.readFileSync(path.join(modDir, 'catalog.constant.ts'), 'utf8');
+  assert.ok(constant.includes("'title'") && constant.includes("'category'"));
+});
+
+test('cem --spec supports module objects with fields', () => {
+  const projectName = 'spec-fields-app';
+  const projectPath = path.join(TEST_DIR, projectName);
+  const specPath = path.join(TEST_DIR, 'spec-fields.json');
+
+  fs.writeFileSync(
+    specPath,
+    JSON.stringify({
+      name: projectName,
+      db: 'prisma',
+      validator: 'joi',
+      auth: false,
+      docker: false,
+      swagger: false,
+      modules: [{ name: 'Invoice', fields: 'amount:number,paid:boolean?' }],
+    }),
+  );
+
+  const out = runCli(`--spec ${specPath} --no-install --json`, { cwd: TEST_DIR });
+  const parsed = JSON.parse(out.trim());
+  assert.equal(parsed.ok, true);
+  assert.deepEqual(parsed.modules, ['Invoice']);
+
+  const prismaSchema = fs.readFileSync(path.join(projectPath, 'prisma/schema.prisma'), 'utf8');
+  assert.ok(prismaSchema.includes('model Invoice {'));
+  assert.ok(prismaSchema.includes('amount'));
+  assert.ok(prismaSchema.includes('Boolean?'));
+
+  const joiVal = fs.readFileSync(
+    path.join(projectPath, 'src/app/modules/Invoice/invoice.validation.ts'),
+    'utf8',
+  );
+  assert.ok(joiVal.includes('amount: Joi.number().required()'));
+  assert.ok(joiVal.includes('paid: Joi.boolean().optional()'));
+});
