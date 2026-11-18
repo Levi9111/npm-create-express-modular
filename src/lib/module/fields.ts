@@ -67,6 +67,13 @@ export function parseFields(raw?: string): ParsedField[] {
       if (enumValues.length === 0) {
         throw new Error(`Enum field "${name}" must specify at least one value, e.g. enum(a|b).`);
       }
+      for (const val of enumValues) {
+        if (!/^[A-Za-z0-9_-]+$/.test(val)) {
+          throw new Error(
+            `Invalid enum value "${val}" on field "${name}". Use only letters, numbers, underscores, or hyphens.`,
+          );
+        }
+      }
       fields.push({ name, baseType: 'enum', isArray, optional, enumValues });
       continue;
     }
