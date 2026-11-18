@@ -67,6 +67,25 @@ export default {
 `,
     );
 
+    const userModel = useAuth
+      ? `model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  role      String   @default("USER")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+`
+      : `// TODO: Define your models here
+// model User {
+//   id        String   @id @default(cuid())
+//   email     String   @unique
+//   createdAt DateTime @default(now())
+//   updatedAt DateTime @updatedAt
+// }
+`;
+
     const prismaDir = path.join(projectPath, 'prisma');
     fs.mkdirSync(prismaDir, { recursive: true });
     fs.writeFileSync(
@@ -80,14 +99,7 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// TODO: Define your models here
-// model User {
-//   id        String   @id @default(cuid())
-//   email     String   @unique
-//   createdAt DateTime @default(now())
-//   updatedAt DateTime @updatedAt
-// }
-`,
+${userModel}`,
     );
 
     const utilsDir = path.join(projectPath, 'src/app/utils');
@@ -137,7 +149,10 @@ async function bootstrap() {
 bootstrap();
 
 process.on('unhandledRejection', async (reason) => {
-  console.error('Unhandled Rejection detected, shutting down server...', reason);
+  console.error(
+    'Unhandled Rejection detected, shutting down server...',
+    reason,
+  );
   await prisma.$disconnect();
   if (server) {
     server.close(() => process.exit(1));
@@ -157,9 +172,8 @@ process.on('uncaughtException', async (error) => {
 
   errorBlock(): ErrorBlock {
     return {
-      imports: `import { Prisma } from '@prisma/client';`,
-      handler: `
-  if (err instanceof Prisma.PrismaClientKnownRequestError) {
+      imports: ``,
+      handler: `if (err?.name === 'PrismaClientKnownRequestError') {
     if (err.code === 'P2002') {
       const fields = (err.meta?.target as string[])?.join(', ') ?? 'field';
       statusCode = 409;
@@ -168,21 +182,36 @@ process.on('uncaughtException', async (error) => {
     } else if (err.code === 'P2025') {
       statusCode = 404;
       message = 'Record Not Found';
-      errorSources = [{ path: '', message: err.meta?.cause as string ?? 'Record does not exist' }];
+      errorSources = [
+        {
+          path: '',
+          message: (err.meta?.cause as string) ?? 'Record does not exist',
+        },
+      ];
     } else if (err.code === 'P2003') {
       statusCode = 400;
       message = 'Invalid Reference';
-      errorSources = [{ path: err.meta?.field_name as string ?? '', message: 'Referenced record does not exist' }];
+      errorSources = [
+        {
+          path: (err.meta?.field_name as string) ?? '',
+          message: 'Referenced record does not exist',
+        },
+      ];
     } else {
       statusCode = 400;
       message = 'Database Error';
       errorSources = [{ path: '', message: err.message }];
     }
-  } else if (err instanceof Prisma.PrismaClientValidationError) {
+  } else if (err?.name === 'PrismaClientValidationError') {
     statusCode = 400;
     message = 'Invalid Data';
-    errorSources = [{ path: '', message: 'One or more fields have invalid types or are missing' }];
-  } else`,
+    errorSources = [
+      {
+        path: '',
+        message: 'One or more fields have invalid types or are missing',
+      },
+    ];
+  } else `,
     };
   },
 
