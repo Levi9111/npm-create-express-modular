@@ -294,7 +294,7 @@ import bcrypt from 'bcrypt';
 import AppError from '../../errors/AppError';
 import config from '../../config';
 import { createToken } from '../../utils/jwt.utils';
-import { TLoginUser } from './auth.interface';
+import { TLoginUser, TUserRole } from './auth.interface';
 ${dbSpecific.imports}
 
 const loginUser = async (payload: TLoginUser) => {
@@ -306,10 +306,12 @@ const loginUser = async (payload: TLoginUser) => {
     throw new AppError(StatusCodes.UNAUTHORIZED, 'Invalid credentials');
   }
 
-  const jwtPayload = {
-    userId: user.id || user._id,
-    role: user.role,
-  };
+  const userId = String(
+    (user as { id?: string; _id?: unknown }).id ??
+      (user as { _id?: unknown })._id,
+  );
+  const role = user.role as TUserRole;
+  const jwtPayload = { userId, role };
 
   const accessToken = createToken(
     jwtPayload,
@@ -327,9 +329,9 @@ const loginUser = async (payload: TLoginUser) => {
     accessToken,
     refreshToken,
     user: {
-      userId: user.id || user._id,
+      userId,
       email: user.email,
-      role: user.role,
+      role,
     },
   };
 };

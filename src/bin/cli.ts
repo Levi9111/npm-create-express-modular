@@ -126,7 +126,7 @@ async function runCLI(): Promise<void> {
   }
 
   // Detect the user's package manager
-  const pm = detectPM();
+  let pm: PackageManager = detectPM();
 
   // Fire off the update check in the background immediately (skip in quiet/json modes)
   const updateCheckPromise = ui.isSilent() ? Promise.resolve(null) : checkForUpdates();
@@ -339,6 +339,14 @@ async function runCLI(): Promise<void> {
       useDefaults = true;
     } else if (arg === '--no-install' || arg === '--skip-install') {
       flagNoInstall = true;
+    } else if (arg === '--pm') {
+      const val = args[i + 1];
+      if (['npm', 'yarn', 'pnpm', 'bun'].includes(val)) {
+        pm = val as PackageManager;
+        i++;
+      } else {
+        ui.abort(`Invalid --pm choice "${val}". Allowed: npm, yarn, pnpm, bun`);
+      }
     } else if (arg === '--db') {
       const val = args[i + 1];
       if (['mongoose', 'prisma', 'drizzle'].includes(val)) {
@@ -381,10 +389,25 @@ async function runCLI(): Promise<void> {
       flagSpec = loadSpec(val);
       useDefaults = true;
       if (flagSpec.name) initialProjectName = flagSpec.name;
-      if (flagSpec.db) flagDb = flagSpec.db;
-      if (flagSpec.validator) flagValidator = flagSpec.validator;
+      if (flagSpec.db) {
+        if (!['mongoose', 'prisma', 'drizzle'].includes(flagSpec.db)) {
+          ui.abort(`Invalid spec.db choice "${flagSpec.db}". Allowed: mongoose, prisma, drizzle`);
+        }
+        flagDb = flagSpec.db;
+      }
+      if (flagSpec.validator) {
+        if (!['zod', 'joi'].includes(flagSpec.validator)) {
+          ui.abort(`Invalid spec.validator choice "${flagSpec.validator}". Allowed: zod, joi`);
+        }
+        flagValidator = flagSpec.validator;
+      }
       if (flagSpec.auth !== undefined) flagUseAuth = flagSpec.auth;
-      if (flagSpec.tokenDelivery) flagTokenDelivery = flagSpec.tokenDelivery;
+      if (flagSpec.tokenDelivery) {
+        if (!['cookie', 'header'].includes(flagSpec.tokenDelivery)) {
+          ui.abort(`Invalid spec.tokenDelivery "${flagSpec.tokenDelivery}". Allowed: cookie, header`);
+        }
+        flagTokenDelivery = flagSpec.tokenDelivery;
+      }
       if (flagSpec.docker !== undefined) flagUseDocker = flagSpec.docker;
       if (flagSpec.swagger !== undefined) flagUseSwagger = flagSpec.swagger;
       if (flagSpec.testing !== undefined) flagUseTesting = flagSpec.testing;
@@ -431,6 +454,9 @@ async function runCLI(): Promise<void> {
           validate: (v: string) => {
             const name = v.trim();
             if (!name) return 'Project name cannot be empty.';
+            if (!isValidProjectName(name)) {
+              return 'Invalid project name: avoid path separators or "..".';
+            }
             const targetPath = path.join(process.cwd(), name);
             if (fs.existsSync(targetPath)) {
               return `Directory '${name}' already exists in current folder. Please choose another name.`;

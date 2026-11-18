@@ -49,7 +49,8 @@ const getAll${moduleName}s = catchAsync(async (req: Request, res: Response) => {
 });
 
 const getSingle${moduleName} = catchAsync(async (req: Request, res: Response) => {
-  const result = await ${moduleName}Service.getSingle${moduleName}(req.params.id as string);
+  const id = req.params.id as string;
+  const result = await ${moduleName}Service.getSingle${moduleName}(id);
   sendResponse(res, {
     statusCode: StatusCodes.OK,
     success: true,
@@ -59,7 +60,8 @@ const getSingle${moduleName} = catchAsync(async (req: Request, res: Response) =>
 });
 
 const update${moduleName} = catchAsync(async (req: Request, res: Response) => {
-  const result = await ${moduleName}Service.update${moduleName}(req.params.id as string, req.body);
+  const id = req.params.id as string;
+  const result = await ${moduleName}Service.update${moduleName}(id, req.body);
   sendResponse(res, {
     statusCode: StatusCodes.OK,
     success: true,
@@ -245,6 +247,7 @@ export function buildService(
   hasFields = false,
 ): string {
   const fileName = moduleName.toLowerCase();
+  const camelName = moduleName.charAt(0).toLowerCase() + moduleName.slice(1);
   const plural = fileName.endsWith('s') ? fileName : `${fileName}s`;
 
   if (db === 'mongoose') {
@@ -315,7 +318,7 @@ import { I${moduleName} } from './${fileName}.interface';
 
 const prisma = new PrismaClient();
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-const modelDelegate = (prisma as unknown as Record<string, any>).${fileName};
+const modelDelegate = (prisma as unknown as Record<string, any>).${camelName};
 
 const create${moduleName} = async (payload: I${moduleName}) => {
   return modelDelegate.create({ data: payload });
@@ -329,7 +332,10 @@ const getAll${moduleName}s = async (query: Record<string, unknown>) => {
     modelDelegate.findMany({ skip, take: limit }),
     modelDelegate.count(),
   ]);
-  return { meta: { page, limit, total, totalPages: Math.ceil(total / limit) }, data };
+  return {
+    meta: { page, limit, total, totalPages: Math.ceil(total / limit) },
+    data,
+  };
 };
 
 const getSingle${moduleName} = async (id: string) => {
@@ -383,7 +389,11 @@ const getAll${moduleName}s = async (query: Record<string, unknown>) => {
 };
 
 const getSingle${moduleName} = async (id: string) => {
-  const [result] = await db.select().from(${plural}).where(eq(${plural}.id, id)).limit(1);
+  const [result] = await db
+    .select()
+    .from(${plural})
+    .where(eq(${plural}.id, id))
+    .limit(1);
   if (!result) {
     throw new AppError(StatusCodes.NOT_FOUND, '${moduleName} not found');
   }
@@ -403,7 +413,10 @@ const update${moduleName} = async (id: string, payload: Partial<I${moduleName}>)
 };
 
 const delete${moduleName} = async (id: string) => {
-  const [deleted] = await db.delete(${plural}).where(eq(${plural}.id, id)).returning();
+  const [deleted] = await db
+    .delete(${plural})
+    .where(eq(${plural}.id, id))
+    .returning();
   if (!deleted) {
     throw new AppError(StatusCodes.NOT_FOUND, '${moduleName} not found');
   }

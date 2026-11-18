@@ -105,19 +105,23 @@ export { pool };
 `,
     );
 
+    const usersTable = useAuth
+      ? `
+export const users = pgTable('users', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  email: text('email').notNull().unique(),
+  password: text('password').notNull(),
+  role: text('role').default('USER').notNull(),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
+`
+      : '';
+
     fs.writeFileSync(
       path.join(dbDir, 'schema.ts'),
-      `// Define your Drizzle ORM tables here.
-// Example:
-//
-// import { pgTable, serial, text, timestamp } from 'drizzle-orm/pg-core';
-//
-// export const users = pgTable('users', {
-//   id:        serial('id').primaryKey(),
-//   email:     text('email').notNull().unique(),
-//   createdAt: timestamp('created_at').defaultNow(),
-// });
-`,
+      `import { pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
+${usersTable}`,
     );
 
     fs.writeFileSync(
@@ -150,7 +154,10 @@ async function bootstrap() {
 bootstrap();
 
 process.on('unhandledRejection', async (reason) => {
-  console.error('Unhandled Rejection detected, shutting down server...', reason);
+  console.error(
+    'Unhandled Rejection detected, shutting down server...',
+    reason,
+  );
   await pool.end();
   if (server) {
     server.close(() => process.exit(1));
@@ -171,16 +178,17 @@ process.on('uncaughtException', async (error) => {
   errorBlock(): ErrorBlock {
     return {
       imports: ``,
-      handler: `
-  if ((err as any)?.code === '23505') {
+      handler: `if ((err as any)?.code === '23505') {
     statusCode = 409;
     message = 'Duplicate Entry';
-    errorSources = [{ path: '', message: 'A record with this value already exists' }];
+    errorSources = [
+      { path: '', message: 'A record with this value already exists' },
+    ];
   } else if ((err as any)?.code === '23503') {
     statusCode = 400;
     message = 'Invalid Reference';
     errorSources = [{ path: '', message: 'Referenced record does not exist' }];
-  } else`,
+  } else `,
     };
   },
 

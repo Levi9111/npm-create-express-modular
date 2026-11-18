@@ -18,14 +18,18 @@ export function buildGlobalErrorHandler(
   dbBlock: ErrorBlock,
   validatorBlock: ErrorBlock,
 ): string {
+  const extraImports = [validatorBlock.imports, dbBlock.imports]
+    .map((s) => s.trim())
+    .filter(Boolean)
+    .join('\n');
+
   return `/* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { Request, Response, NextFunction } from 'express';
 import { TErrorSources } from '../interfaces/error';
 import AppError from '../errors/AppError';
 import config from '../config';
-${validatorBlock.imports}
-${dbBlock.imports}
+${extraImports}
 
 const globalErrorHandler = (
   err: any,
@@ -47,7 +51,7 @@ const globalErrorHandler = (
 
   // ── Discriminated dispatch ────────────────────────────────────────────────
   // Order matters: most specific first, generic Error last
-  ${validatorBlock.handler}${dbBlock.handler}if (err instanceof AppError) {
+  ${validatorBlock.handler.trimEnd()} ${dbBlock.handler.trimEnd()} if (err instanceof AppError) {
     statusCode = err.statusCode;
     message = err.message;
     errorSources = [{ path: '', message: err.message }];

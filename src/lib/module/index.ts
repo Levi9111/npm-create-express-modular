@@ -194,9 +194,14 @@ export async function generateModule(
               const neededImports = ['pgTable', 'text', 'timestamp', 'uuid'];
               if (parsedFields.some((f) => f.baseType === 'number')) neededImports.push('doublePrecision');
               if (parsedFields.some((f) => f.baseType === 'boolean')) neededImports.push('boolean');
+              const singleImport = `import { ${neededImports.join(', ')} } from 'drizzle-orm/pg-core';`;
+              const formattedImport =
+                singleImport.length > 80
+                  ? `import {\n  ${neededImports.join(',\n  ')},\n} from 'drizzle-orm/pg-core';`
+                  : singleImport;
               existing = existing.replace(
                 /import\s*\{[^}]*\}\s*from\s*'drizzle-orm\/pg-core';/,
-                `import { ${neededImports.join(', ')} } from 'drizzle-orm/pg-core';`,
+                formattedImport,
               );
               fs.writeFileSync(schemaPath, `${existing.trimEnd()}\n\n${drizzleTableBlock(tableName, parsedFields)}\n`);
             }
