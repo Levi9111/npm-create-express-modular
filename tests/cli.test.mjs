@@ -282,4 +282,15 @@ test('cem --spec supports module objects with fields', () => {
   );
   assert.ok(joiVal.includes('amount: Joi.number().required()'));
   assert.ok(joiVal.includes('paid: Joi.boolean().optional()'));
+
+  const errHandler = fs.readFileSync(
+    path.join(projectPath, 'src/app/middlewares/globalErrorHandler.middleware.ts'),
+    'utf8',
+  );
+  assert.ok(!errHandler.includes('elseif'), 'globalErrorHandler must not contain elseif syntax error');
+  assert.ok(errHandler.includes('} else if'), 'globalErrorHandler must chain else if properly');
+
+  assert.throws(() =>
+    runCli('add module BadEnum --fields "role:enum(a\'|evil)" -y', { cwd: projectPath }),
+  );
 });
