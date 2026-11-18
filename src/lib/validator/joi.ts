@@ -20,11 +20,13 @@ import { NextFunction, Request, Response } from 'express';
 import { catchAsync } from './catchAsync';
 
 const validateRequest = (schema: Joi.ObjectSchema) => {
-  return catchAsync(async (req: Request, _res: Response, next: NextFunction) => {
-    const { error } = schema.validate(req.body, { abortEarly: false });
-    if (error) throw error;
-    return next();
-  });
+  return catchAsync(
+    async (req: Request, _res: Response, next: NextFunction) => {
+      const { error } = schema.validate(req.body, { abortEarly: false });
+      if (error) throw error;
+      return next();
+    },
+  );
 };
 
 export default validateRequest;
